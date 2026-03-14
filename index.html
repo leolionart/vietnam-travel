@@ -329,7 +329,7 @@
                     lucide.createIcons();
                     
                     try {
-                        const response = await fetch('/plans.json');
+                        const response = await fetch('./plans.json');
                         this.plans = await response.json();
                         
                         this.$nextTick(() => {
