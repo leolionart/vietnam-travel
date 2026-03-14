@@ -309,204 +309,35 @@
     <script>
         function travelApp() {
             return {
-                currentPlanId: 'xuyen-viet',
-                activeId: 101,
+                currentPlanId: 'plan-1',
+                activeId: 1,
                 map: null,
                 markers: {},
                 polyline: null,
-                plans: {
-                    'xuyen-viet': {
-                        name: 'Hành trình Di sản Xuyên Việt',
-                        dateRange: '01/07 - 15/07/2024',
-                        locations: [
-                            { id: 101, name: 'Hà Nội', province: 'Hà Nội', lat: 21.0285, lng: 105.8542, duration: 2, transport: 'Máy bay', highlight: 'Phố cổ & Hồ Gươm', description: 'Khởi hành từ Thủ đô ngàn năm văn hiến.', activities: ['Hồ Gươm', 'Văn Miếu', 'Phố cổ'], food: ['Phở', 'Bún chả'], adultPrice: 1500000, childPrice: 1000000, adults: 2, children: 1 },
-                            { id: 102, name: 'Tràng An', province: 'Ninh Bình', lat: 20.2539, lng: 105.8914, duration: 1, transport: 'Ô tô', highlight: 'Di sản thế giới', description: 'Khám phá quần thể danh thắng Tràng An.', activities: ['Đi thuyền', 'Thăm hang động'], food: ['Cơm cháy', 'Dê núi'], adultPrice: 800000, childPrice: 600000, adults: 2, children: 1 },
-                            { id: 103, name: 'Thành Nhà Hồ', province: 'Thanh Hóa', lat: 20.0761, lng: 105.6050, duration: 1, transport: 'Ô tô', highlight: 'Kinh đô đá', description: 'Di tích lịch sử độc đáo được UNESCO công nhận.', activities: ['Thăm thành cổ'], food: ['Nem chua'], adultPrice: 300000, childPrice: 200000, adults: 2, children: 1 },
-                            { id: 104, name: 'Quê Bác', province: 'Nghệ An', lat: 18.6500, lng: 105.5000, duration: 1, transport: 'Ô tô', highlight: 'Làng Sen', description: 'Thăm quê hương Chủ tịch Hồ Chí Minh vĩ đại.', activities: ['Làng Sen', 'Làng Chùa'], food: ['Súp lươn'], adultPrice: 200000, childPrice: 100000, adults: 2, children: 1 },
-                            { id: 105, name: 'Phong Nha', province: 'Quảng Bình', lat: 17.5900, lng: 106.2800, duration: 2, transport: 'Ô tô', highlight: 'Động Thiên Đường', description: 'Khám phá hệ thống hang động kỳ vĩ nhất thế giới.', activities: ['Động Phong Nha', 'Sông Chày'], food: ['Bánh lọc'], adultPrice: 1500000, childPrice: 1000000, adults: 2, children: 1 },
-                            { id: 106, name: 'Cố đô Huế', province: 'Thừa Thiên Huế', lat: 16.4637, lng: 107.5847, duration: 2, transport: 'Ô tô', highlight: 'Kinh thành Huế', description: 'Trở về quá khứ với những cung điện lộng lẫy.', activities: ['Đại Nội', 'Lăng tẩm'], food: ['Bún bò', 'Bánh bèo'], adultPrice: 1000000, childPrice: 700000, adults: 2, children: 1 },
-                            { id: 107, name: 'Đà Nẵng', province: 'Đà Nẵng', lat: 16.0544, lng: 108.2022, duration: 2, transport: 'Ô tô', highlight: 'Bà Nà Hills', description: 'Thành phố của những cây cầu và bãi biển đẹp.', activities: ['Bà Nà Hills', 'Cầu Vàng'], food: ['Mì Quảng'], adultPrice: 2500000, childPrice: 1800000, adults: 2, children: 1 },
-                            { id: 108, name: 'Hội An', province: 'Quảng Nam', lat: 15.8801, lng: 108.3380, duration: 2, transport: 'Ô tô', highlight: 'Phố cổ Hội An', description: 'Đô thị cổ lung linh dưới ánh đèn lồng.', activities: ['Thả hoa đăng', 'Làng gốm'], food: ['Cao lầu', 'Cơm gà'], adultPrice: 1200000, childPrice: 800000, adults: 2, children: 1 },
-                            { id: 109, name: 'Quy Nhơn', province: 'Bình Định', lat: 13.7827, lng: 109.2267, duration: 1, transport: 'Ô tô', highlight: 'Kỳ Co - Eo Gió', description: 'Vẻ đẹp hoang sơ của biển đảo miền Trung.', activities: ['Tắm biển', 'Lặn ngắm san hô'], food: ['Bún chả cá'], adultPrice: 800000, childPrice: 600000, adults: 2, children: 1 }
-                        ]
-                    },
-                    'northern-loop': {
-                        name: 'Tây Bắc Loop',
-                        dateRange: '15/04 - 22/04/2024',
-                        locations: [
-                            { 
-                                id: 1, 
-                                name: 'Hà Nội', 
-                                lat: 21.0285, 
-                                lng: 105.8542, 
-                                duration: 1, 
-                                transport: 'Máy bay',
-                                highlight: 'Phố cổ & Hồ Gươm',
-                                description: 'Thủ đô ngàn năm văn hiến với những nét đẹp cổ kính, ẩm thực đường phố phong phú và không khí đặc trưng của mùa xuân Bắc Bộ.',
-                                activities: ['Dạo hồ Hoàn Kiếm', 'Ăn bún chả Obama', 'Tham quan Văn Miếu'],
-                                food: ['Phở Thìn', 'Bún chả', 'Cà phê trứng'],
-                                adultPrice: 1500000,
-                                childPrice: 1200000,
-                                adults: 2,
-                                children: 0
-                            },
-                            { 
-                                id: 2, 
-                                name: 'Sapa', 
-                                lat: 22.3364, 
-                                lng: 103.8438, 
-                                duration: 3, 
-                                transport: 'Xe giường nằm',
-                                highlight: 'Đỉnh Fansipan',
-                                description: 'Thị trấn mờ sương với những thửa ruộng bậc thang kỳ vĩ, đỉnh Fansipan huyền thoại và bản sắc văn hóa độc đáo.',
-                                activities: ['Đi cáp treo Fansipan', 'Thăm bản Cát Cát', 'Chợ tình Sapa'],
-                                food: ['Thắng cố', 'Lợn cắp nách', 'Cá hồi Sapa'],
-                                adultPrice: 2500000,
-                                childPrice: 1800000,
-                                adults: 2,
-                                children: 0
-                            },
-                            { 
-                                id: 3, 
-                                name: 'Hà Giang', 
-                                lat: 22.8233, 
-                                lng: 104.9833, 
-                                duration: 3, 
-                                transport: 'Xe máy',
-                                highlight: 'Đèo Mã Pí Lèng',
-                                description: 'Vùng đất địa đầu tổ quốc với những cung đường đèo hiểm trở, cao nguyên đá Đồng Văn hùng vĩ.',
-                                activities: ['Đèo Mã Pí Lèng', 'Cột cờ Lũng Cú', 'Dinh thự họ Vương'],
-                                food: ['Cháo ấu tẩu', 'Bánh cuốn trứng', 'Rượu ngô'],
-                                adultPrice: 3200000,
-                                childPrice: 2200000,
-                                adults: 2,
-                                children: 0
-                            }
-                        ]
-                    },
-                    'central-heritage': {
-                        name: 'Di sản Miền Trung',
-                        dateRange: '10/05 - 15/05/2024',
-                        locations: [
-                            { 
-                                id: 4, 
-                                name: 'Đà Nẵng', 
-                                lat: 16.0544, 
-                                lng: 108.2022, 
-                                duration: 2, 
-                                transport: 'Máy bay',
-                                highlight: 'Bà Nà Hills',
-                                description: 'Thành phố đáng sống nhất Việt Nam với những bãi biển tuyệt đẹp và khu du lịch Bà Nà Hills đẳng cấp.',
-                                activities: ['Bà Nà Hills', 'Bán đảo Sơn Trà', 'Cầu Rồng'],
-                                food: ['Mì Quảng', 'Bánh tráng cuốn', 'Hải sản'],
-                                adultPrice: 2800000,
-                                childPrice: 2000000,
-                                adults: 2,
-                                children: 0
-                            },
-                            { 
-                                id: 5, 
-                                name: 'Hội An', 
-                                lat: 15.8801, 
-                                lng: 108.3380, 
-                                duration: 2, 
-                                transport: 'Taxi',
-                                highlight: 'Phố cổ Hội An',
-                                description: 'Đô thị cổ yên bình với những ngôi nhà vàng đặc trưng và dòng sông Hoài thơ mộng.',
-                                activities: ['Thả đèn hoa đăng', 'Đi thuyền sông Hoài', 'Làng gốm'],
-                                food: ['Cao lầu', 'Cơm gà', 'Bánh mì Phượng'],
-                                adultPrice: 1200000,
-                                childPrice: 800000,
-                                adults: 2,
-                                children: 0
-                            }
-                        ]
-                    },
-                    'nghe-an-family': {
-                        name: 'Về quê Nghệ An',
-                        dateRange: '20/06 - 25/06/2024',
-                        locations: [
-                            { 
-                                id: 6, 
-                                name: 'Vinh', 
-                                lat: 18.6734, 
-                                lng: 105.6813, 
-                                duration: 1, 
-                                transport: 'Máy bay',
-                                highlight: 'Hội quân gia đình',
-                                description: 'Bắt đầu hành trình từ TP.HCM. Bay ra Nghệ An để hội quân cùng gia đình.',
-                                activities: ['Khởi hành từ Tân Sơn Nhất', 'Bay ra Vinh'],
-                                food: ['Cơm tấm (Sân bay)', 'Súp lươn'],
-                                adultPrice: 1500000,
-                                childPrice: 1000000,
-                                adults: 2,
-                                children: 0
-                            },
-                            { 
-                                id: 7, 
-                                name: 'Nam Đàn', 
-                                lat: 18.7000, 
-                                lng: 105.5000, 
-                                duration: 2, 
-                                transport: 'Ô tô gia đình',
-                                highlight: 'Quê Bác',
-                                description: 'Thăm quê nội, quê ngoại Bác Hồ và cảm nhận không khí yên bình của làng quê Việt Nam.',
-                                activities: ['Thăm Làng Sen', 'Thăm Làng Chùa', 'Dâng hương mộ Bà Hoàng Thị Loan'],
-                                food: ['Tương Nam Đàn', 'Dê thui'],
-                                adultPrice: 500000,
-                                childPrice: 300000,
-                                adults: 2,
-                                children: 0
-                            },
-                            { 
-                                id: 8, 
-                                name: 'Cửa Lò', 
-                                lat: 18.8167, 
-                                lng: 105.7167, 
-                                duration: 1, 
-                                transport: 'Ô tô',
-                                highlight: 'Biển Cửa Lò',
-                                description: 'Tận hưởng không khí biển trong lành, tắm biển và thưởng thức hải sản tươi ngon.',
-                                activities: ['Tắm biển', 'Câu mực đêm', 'Dạo phố biển'],
-                                food: ['Mực nhảy', 'Ghẹ hấp', 'Cá giò'],
-                                adultPrice: 800000,
-                                childPrice: 500000,
-                                adults: 2,
-                                children: 0
-                            },
-                            { 
-                                id: 9, 
-                                name: 'Thanh Chương', 
-                                lat: 18.7833, 
-                                lng: 105.2833, 
-                                duration: 1, 
-                                transport: 'Ô tô',
-                                highlight: 'Đồi chè Thanh Chương',
-                                description: 'Khám phá "ốc đảo chè" xanh mướt giữa lòng Nghệ An, đi thuyền trên đập Cầu Cau.',
-                                activities: ['Đi thuyền quanh đồi chè', 'Chụp ảnh check-in', 'Thưởng thức trà'],
-                                food: ['Nhút Thanh Chương', 'Gà đồi'],
-                                adultPrice: 400000,
-                                childPrice: 250000,
-                                adults: 2,
-                                children: 0
-                            }
-                        ]
-                    }
-                },
+                plans: {},
 
                 get currentPlan() {
-                    return this.plans[this.currentPlanId];
+                    return this.plans[this.currentPlanId] || { locations: [] };
                 },
 
                 get activeLocation() {
+                    if (!this.currentPlan.locations.length) return {};
                     return this.currentPlan.locations.find(l => l.id === this.activeId) || this.currentPlan.locations[0];
                 },
 
-                init() {
+                async init() {
                     lucide.createIcons();
-                    this.$nextTick(() => {
-                        this.initMap();
-                    });
+                    
+                    try {
+                        const response = await fetch('/plans.json');
+                        this.plans = await response.json();
+                        
+                        this.$nextTick(() => {
+                            this.initMap();
+                        });
+                    } catch (e) {
+                        console.error("Lỗi khi tải dữ liệu kế hoạch:", e);
+                    }
 
                     this.$watch('activeId', () => {
                         this.$nextTick(() => lucide.createIcons());
@@ -528,7 +359,11 @@
                         attribution: '&copy; OpenStreetMap contributors'
                     }).addTo(this.map);
 
-                    this.changePlan('xuyen-viet');
+                    if (this.plans[this.currentPlanId]) {
+                        this.changePlan(this.currentPlanId);
+                    } else if (Object.keys(this.plans).length > 0) {
+                        this.changePlan(Object.keys(this.plans)[0]);
+                    }
                 },
 
                 updateMap(fitBounds = false) {
