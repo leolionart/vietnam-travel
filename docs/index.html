@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vietnam Summer Itinerary 2026</title>
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✈️</text></svg>">
     <!-- Tailwind CSS CDN -->
     <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
     <!-- Alpine.js CDN -->
@@ -59,9 +61,9 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-2">
                 <div class="bg-blue-600 p-2 rounded-lg">
-                    <i data-lucide="map-pin" class="text-white w-5 h-5"></i>
+                    <i data-lucide="compass" class="text-white w-5 h-5"></i>
                 </div>
-                <h1 class="text-xl font-bold tracking-tight text-slate-900">Vietnam Journey <span class="text-blue-600">2025-2026</span></h1>
+                <h1 class="text-xl font-bold tracking-tight text-slate-900">Travel <span class="text-blue-600">Planner</span></h1>
             </div>
             
             <!-- Plan Selector Dropdown -->
@@ -255,7 +257,7 @@
                     'northern-loop': {
                         title: 'Miền Bắc - 4 tuần 2026',
                         dateRange: '18/06 - 16/07',
-                        totalCost: '15.500.000đ',
+                        totalCost: '19.000.000đ',
                         locations: [
                             {
                                 id: 1,
@@ -270,22 +272,37 @@
                                 image: 'https://picsum.photos/seed/hanoi/800/600',
                                 activities: ['Khám phá 36 phố phường', 'Cà phê trứng Giảng', 'Dạo hồ Hoàn Kiếm', 'Văn Miếu'],
                                 foods: ['Bún chả', 'Phở bò', 'Cà phê trứng', 'Chả cá Lã Vọng'],
-                                transportNote: 'Điểm bắt đầu hành trình. Chuẩn bị di chuyển đến Nghệ An bằng xe giường nằm.'
+                                transportNote: 'Điểm bắt đầu hành trình. Chuẩn bị bay vào Đà Nẵng.'
+                            },
+                            {
+                                id: 5,
+                                name: 'Đà Nẵng & Bà Nà Hill',
+                                lat: 15.9961, lng: 107.9942,
+                                dateRange: '21/06 - 24/06',
+                                duration: '4 Ngày',
+                                stay: 'Mercure French Village',
+                                transport: 'Máy bay & Cáp treo',
+                                highlight: 'Làng Pháp & Cầu Vàng',
+                                cost: '4.500.000đ',
+                                image: 'https://picsum.photos/seed/banahill2026/800/600',
+                                activities: ['Check-in Cầu Vàng', 'Vui chơi Fantasy Park', 'Tắm biển Mỹ Khê', 'Phố cổ Hội An (Day trip)'],
+                                foods: ['Mì Quảng', 'Bánh tráng cuốn thịt heo', 'Bê thui Cầu Mống'],
+                                transportNote: 'Bay từ Hà Nội vào Đà Nẵng. Dành 2 đêm trên đỉnh Bà Nà để tận hưởng không khí se lạnh.'
                             },
                             {
                                 id: 3,
                                 name: 'Nghệ An',
                                 lat: 18.8214, lng: 105.7142,
-                                dateRange: '21/06 - 04/07',
-                                duration: '14 Ngày',
+                                dateRange: '25/06 - 04/07',
+                                duration: '10 Ngày',
                                 stay: 'Cửa Lò',
                                 transport: 'Xe giường nằm',
                                 highlight: 'Nghỉ dưỡng biển',
-                                cost: '5.000.000đ',
+                                cost: '4.000.000đ',
                                 image: 'https://picsum.photos/seed/nghean/800/600',
                                 activities: ['Tắm biển Cửa Lò', 'Thăm Quê Bác', 'Đảo Lan Châu', 'Thư giãn resort'],
                                 foods: ['Súp lươn', 'Cháo lươn', 'Mực nhảy', 'Nhút Thanh Chương'],
-                                transportNote: 'Chặng nghỉ dài nhất tập trung vào hồi phục sức khỏe. Tối 04/07 sẽ di chuyển đến Ninh Bình.'
+                                transportNote: 'Di chuyển từ Đà Nẵng ra Nghệ An bằng xe giường nằm hoặc tàu hỏa.'
                             },
                             {
                                 id: 2,
