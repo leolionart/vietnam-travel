@@ -56,16 +56,57 @@
 
     <!-- Header -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-2">
                 <div class="bg-blue-600 p-2 rounded-lg">
                     <i data-lucide="map-pin" class="text-white w-5 h-5"></i>
                 </div>
-                <h1 class="text-xl font-bold tracking-tight text-slate-900">Vietnam Journey <span class="text-blue-600">2026</span></h1>
+                <h1 class="text-xl font-bold tracking-tight text-slate-900">Vietnam Journey <span class="text-blue-600">2025-2026</span></h1>
             </div>
-            <div class="hidden md:flex items-center gap-6 text-sm font-medium text-slate-500">
-                <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-4 h-4"></i> 18/06 - 15/07</span>
-                <span class="flex items-center gap-1"><i data-lucide="users" class="w-4 h-4"></i> 4 Địa điểm</span>
+            
+            <!-- Plan Selector Dropdown -->
+            <div class="relative" x-data="{ open: false }" @click.away="open = false">
+                <button 
+                    @click="open = !open"
+                    class="flex items-center gap-3 bg-slate-100 px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-200 transition-all min-w-[200px] justify-between"
+                >
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="layers" class="w-4 h-4 text-blue-600"></i>
+                        <span class="text-sm font-bold text-slate-700 uppercase tracking-wider" x-text="currentPlan.title"></span>
+                    </div>
+                    <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform" :class="open ? 'rotate-180' : ''"></i>
+                </button>
+
+                <div 
+                    x-show="open"
+                    x-transition:enter="transition ease-out duration-100"
+                    x-transition:enter-start="transform opacity-0 scale-95"
+                    x-transition:enter-end="transform opacity-100 scale-100"
+                    class="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-[1001]"
+                >
+                    <div class="px-4 py-2 border-b border-slate-100 mb-1">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Chọn hành trình</p>
+                    </div>
+                    <template x-for="(plan, id) in plans" :key="id">
+                        <button 
+                            @click="switchPlan(id); open = false"
+                            class="w-full flex flex-col items-start px-4 py-3 hover:bg-slate-50 transition-colors text-left border-l-4"
+                            :class="currentPlanId === id ? 'border-blue-600 bg-blue-50/30' : 'border-transparent'"
+                        >
+                            <div class="flex justify-between w-full items-center">
+                                <span class="text-sm font-bold text-slate-900" x-text="plan.title"></span>
+                                <span class="text-[10px] font-bold text-blue-600" x-text="plan.totalCost"></span>
+                            </div>
+                            <span class="text-[10px] text-slate-500" x-text="plan.dateRange"></span>
+                        </button>
+                    </template>
+                </div>
+            </div>
+
+            <div class="hidden lg:flex items-center gap-6 text-sm font-medium text-slate-500">
+                <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-4 h-4"></i> <span x-text="currentPlan.dateRange"></span></span>
+                <span class="flex items-center gap-1"><i data-lucide="wallet" class="w-4 h-4"></i> <span x-text="currentPlan.totalCost"></span></span>
+                <span class="flex items-center gap-1"><i data-lucide="users" class="w-4 h-4"></i> <span x-text="currentPlan.locations.length"></span> Địa điểm</span>
             </div>
         </div>
     </header>
@@ -91,7 +132,7 @@
                             <p class="flex items-center gap-1"><span class="w-2 h-2 bg-slate-400 rounded-full"></span> Điểm đến</p>
                             <p class="flex items-center gap-1">
                                 <span class="w-3 h-0.5 bg-blue-500 inline-block"></span>
-                                Lộ trình xe bus
+                                Lộ trình di chuyển
                             </p>
                         </div>
                     </div>
@@ -99,7 +140,7 @@
 
                 <!-- Tabs di động -->
                 <div class="flex overflow-x-auto gap-2 pb-2 no-scrollbar">
-                    <template x-for="loc in [locations[0], locations[2], locations[1], locations[3]]" :key="loc.id">
+                    <template x-for="loc in currentPlan.locations" :key="loc.id">
                         <button 
                             @click="activeId = loc.id"
                             class="flex-none px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap"
@@ -127,7 +168,7 @@
                         <!-- Content -->
                         <div class="p-6 sm:p-8 space-y-8">
                             <!-- Overview -->
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
                                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
                                     <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Thời gian</p>
                                     <p class="text-sm font-semibold text-slate-700" x-text="activeLocation.duration"></p>
@@ -139,6 +180,10 @@
                                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
                                     <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Di chuyển</p>
                                     <p class="text-sm font-semibold text-slate-700" x-text="activeLocation.transport"></p>
+                                </div>
+                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                    <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Chi phí</p>
+                                    <p class="text-sm font-semibold text-blue-600" x-text="activeLocation.cost"></p>
                                 </div>
                                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
                                     <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Đặc điểm</p>
@@ -181,7 +226,7 @@
                                     <i data-lucide="bus" class="text-white w-5 h-5"></i>
                                 </div>
                                 <div>
-                                    <h4 class="text-sm font-bold text-blue-900 mb-1">Lưu ý di chuyển buổi tối</h4>
+                                    <h4 class="text-sm font-bold text-blue-900 mb-1">Thông tin di chuyển</h4>
                                     <p class="text-sm text-blue-700 leading-relaxed" x-text="activeLocation.transportNote"></p>
                                 </div>
                             </div>
@@ -194,99 +239,230 @@
 
     <footer class="bg-white border-t border-slate-200 py-12 mt-12">
         <div class="max-w-7xl mx-auto px-4 text-center">
-            <p class="text-slate-400 text-sm">© 2026 Vietnam Travel Planner. Tối ưu cho trải nghiệm nghỉ dưỡng và khám phá.</p>
+            <p class="text-slate-400 text-sm">© 2025-2026 Vietnam Travel Planner. Tối ưu cho trải nghiệm nghỉ dưỡng và khám phá.</p>
         </div>
     </footer>
 
     <script>
         function travelApp() {
             return {
+                currentPlanId: 'northern-loop',
                 activeId: 1,
                 map: null,
                 markers: {},
                 polyline: null,
-                locations: [
-                    {
-                        id: 1,
-                        name: 'Hà Nội',
-                        lat: 21.0285, lng: 105.8542,
-                        dateRange: '18/06 - 20/06',
-                        duration: '3 Ngày',
-                        stay: 'Phố Cổ',
-                        transport: 'Máy bay/Tàu',
-                        highlight: 'Văn hóa',
-                        image: 'https://picsum.photos/seed/hanoi/800/600',
-                        activities: [
-                            'Khám phá 36 phố phường cổ kính',
-                            'Thưởng thức Cà phê trứng Giảng nổi tiếng',
-                            'Dạo hồ Hoàn Kiếm lúc sáng sớm',
-                            'Tham quan Văn Miếu Quốc Tử Giám'
-                        ],
-                        foods: ['Bún chả', 'Phở bò', 'Cà phê trứng', 'Chả cá Lã Vọng'],
-                        transportNote: 'Điểm bắt đầu hành trình. Chuẩn bị di chuyển đến Nghệ An bằng xe giường nằm.'
+                plans: {
+                    'northern-loop': {
+                        title: 'Miền Bắc - 4 tuần 2026',
+                        dateRange: '18/06 - 16/07',
+                        totalCost: '15.500.000đ',
+                        locations: [
+                            {
+                                id: 1,
+                                name: 'Hà Nội',
+                                lat: 21.0285, lng: 105.8542,
+                                dateRange: '18/06 - 20/06',
+                                duration: '3 Ngày',
+                                stay: 'Phố Cổ',
+                                transport: 'Máy bay/Tàu',
+                                highlight: 'Văn hóa',
+                                cost: '2.500.000đ',
+                                image: 'https://picsum.photos/seed/hanoi/800/600',
+                                activities: ['Khám phá 36 phố phường', 'Cà phê trứng Giảng', 'Dạo hồ Hoàn Kiếm', 'Văn Miếu'],
+                                foods: ['Bún chả', 'Phở bò', 'Cà phê trứng', 'Chả cá Lã Vọng'],
+                                transportNote: 'Điểm bắt đầu hành trình. Chuẩn bị di chuyển đến Nghệ An bằng xe giường nằm.'
+                            },
+                            {
+                                id: 3,
+                                name: 'Nghệ An',
+                                lat: 18.8214, lng: 105.7142,
+                                dateRange: '21/06 - 04/07',
+                                duration: '14 Ngày',
+                                stay: 'Cửa Lò',
+                                transport: 'Xe giường nằm',
+                                highlight: 'Nghỉ dưỡng biển',
+                                cost: '5.000.000đ',
+                                image: 'https://picsum.photos/seed/nghean/800/600',
+                                activities: ['Tắm biển Cửa Lò', 'Thăm Quê Bác', 'Đảo Lan Châu', 'Thư giãn resort'],
+                                foods: ['Súp lươn', 'Cháo lươn', 'Mực nhảy', 'Nhút Thanh Chương'],
+                                transportNote: 'Chặng nghỉ dài nhất tập trung vào hồi phục sức khỏe. Tối 04/07 sẽ di chuyển đến Ninh Bình.'
+                            },
+                            {
+                                id: 2,
+                                name: 'Ninh Bình',
+                                lat: 20.2506, lng: 105.9745,
+                                dateRange: '05/07 - 11/07',
+                                duration: '1 Tuần',
+                                stay: 'Tam Cốc',
+                                transport: 'Xe giường nằm',
+                                highlight: 'Thiên nhiên',
+                                cost: '4.000.000đ',
+                                image: 'https://picsum.photos/seed/ninhbinh/800/600',
+                                activities: ['Chèo thuyền Tràng An', 'Leo Hang Múa', 'Đạp xe Tam Cốc', 'Thăm Hoa Lư'],
+                                foods: ['Cơm cháy', 'Thịt dê núi', 'Ốc núi', 'Rượu Kim Sơn'],
+                                transportNote: 'Di chuyển từ Nghệ An mất khoảng 3-4 tiếng. Nghỉ tại các homestay ở Tam Cốc.'
+                            },
+                            {
+                                id: 4,
+                                name: 'Hạ Long',
+                                lat: 20.9501, lng: 107.0733,
+                                dateRange: '12/07 - 16/07',
+                                duration: '5 Ngày',
+                                stay: 'Bãi Cháy',
+                                transport: 'Xe Cabin riêng',
+                                highlight: 'Kỳ quan',
+                                cost: '4.000.000đ',
+                                image: 'https://picsum.photos/seed/halong/800/600',
+                                activities: ['Tour tàu thăm vịnh', 'Bảo tàng Quảng Ninh', 'Sun World Hạ Long', 'Cầu Bãi Cháy'],
+                                foods: ['Chả mực', 'Sá sùng', 'Bún bề bề', 'Sam biển'],
+                                transportNote: 'Sử dụng xe Cabin riêng từ Ninh Bình để đảm bảo giấc ngủ ngon.'
+                            }
+                        ]
                     },
-                    {
-                        id: 2,
-                        name: 'Ninh Bình',
-                        lat: 20.2506, lng: 105.9745,
-                        dateRange: '08/07 - 14/07',
-                        duration: '1 Tuần',
-                        stay: 'Tam Cốc',
-                        transport: 'Xe giường nằm',
-                        highlight: 'Thiên nhiên',
-                        image: 'https://picsum.photos/seed/ninhbinh/800/600',
-                        activities: [
-                            'Chèo thuyền Tràng An (Vé 250k/người)',
-                            'Leo Hang Múa ngắm toàn cảnh Tam Cốc',
-                            'Đạp xe quanh các cánh đồng lúa',
-                            'Thăm Cố đô Hoa Lư'
-                        ],
-                        foods: ['Cơm cháy', 'Thịt dê núi', 'Ốc núi', 'Rượu Kim Sơn'],
-                        transportNote: 'Di chuyển từ Nghệ An mất khoảng 3-4 tiếng. Nghỉ tại các homestay ở Tam Cốc.'
-                    },
-                    {
-                        id: 3,
-                        name: 'Nghệ An',
-                        lat: 18.8214, lng: 105.7142,
-                        dateRange: '21/06 - 07/07',
-                        duration: '10 Ngày',
-                        stay: 'Cửa Lò',
-                        transport: 'Xe giường nằm',
-                        highlight: 'Nghỉ dưỡng biển',
-                        image: 'https://picsum.photos/seed/nghean/800/600',
-                        activities: [
-                            'Tắm biển Cửa Lò buổi sáng sớm',
-                            'Thăm Quê Bác (Kim Liên, Nam Đàn)',
-                            'Khám phá đảo Lan Châu',
-                            'Thư giãn tại các resort ven biển'
-                        ],
-                        foods: ['Súp lươn', 'Cháo lươn', 'Mực nhảy Cửa Lò', 'Nhút Thanh Chương'],
-                        transportNote: 'Chặng nghỉ dài nhất tập trung vào hồi phục sức khỏe. Tối 07/07 sẽ di chuyển đến Ninh Bình.'
-                    },
-                    {
-                        id: 4,
-                        name: 'Hạ Long',
-                        lat: 20.9501, lng: 107.0733,
-                        dateRange: '15/07 - 21/07',
-                        duration: '1 Tuần',
-                        stay: 'Bãi Cháy',
-                        transport: 'Xe Cabin riêng',
-                        highlight: 'Kỳ quan',
-                        image: 'https://picsum.photos/seed/halong/800/600',
-                        activities: [
-                            'Tour tàu thăm vịnh (700k - 1.2tr/vé)',
-                            'Check-in Bảo tàng Quảng Ninh',
-                            'Vui chơi tại Sun World Hạ Long',
-                            'Ngắm hoàng hôn trên cầu Bãi Cháy'
-                        ],
-                        foods: ['Chả mực', 'Sá sùng', 'Bún bề bề', 'Sam biển'],
-                        transportNote: 'Sử dụng xe Cabin riêng từ Ninh Bình để đảm bảo giấc ngủ ngon.'
+                    'central-north-2025': {
+                        title: 'Xuyên Việt - 4 tuần 2025',
+                        dateRange: '29/07 - 26/08',
+                        totalCost: '23.500.000đ',
+                        locations: [
+                            {
+                                id: 10,
+                                name: 'TP. Hồ Chí Minh',
+                                lat: 10.7626, lng: 106.6602,
+                                dateRange: '29/07 - 29/07',
+                                duration: 'Khởi hành',
+                                stay: 'N/A',
+                                transport: 'Ô tô',
+                                highlight: 'Bắt đầu',
+                                cost: '500.000đ',
+                                image: 'https://picsum.photos/seed/hcmc/800/600',
+                                activities: ['Kiểm tra xe', 'Sắp xếp hành lý', 'Khởi hành đi Đà Nẵng'],
+                                foods: ['Cơm tấm'],
+                                transportNote: 'Bắt đầu hành trình xuyên Việt bằng ô tô cá nhân từ TP.HCM.'
+                            },
+                            {
+                                id: 11,
+                                name: 'Đà Nẵng',
+                                lat: 16.0717, lng: 108.2452,
+                                dateRange: '30/07 - 03/08',
+                                duration: '5 Ngày',
+                                stay: 'Nalod Da Nang',
+                                transport: 'Ô tô',
+                                highlight: 'Biển Mỹ Khê',
+                                cost: '4.500.000đ',
+                                image: 'https://picsum.photos/seed/danang/800/600',
+                                activities: ['Tắm biển Mỹ Khê', 'Cầu Rồng phun lửa', 'Bán đảo Sơn Trà'],
+                                foods: ['Mì Quảng', 'Bánh tráng cuốn thịt heo'],
+                                transportNote: 'Di chuyển từ TP.HCM đến Đà Nẵng bằng ô tô, nghỉ tại Nalod Da Nang.'
+                            },
+                            {
+                                id: 12,
+                                name: 'Bà Nà Hill',
+                                lat: 15.9961, lng: 107.9942,
+                                dateRange: '04/08 - 05/08',
+                                duration: '2 Ngày',
+                                stay: 'Mercure French Village',
+                                transport: 'Ô tô & Cáp treo',
+                                highlight: 'Làng Pháp',
+                                cost: '3.500.000đ',
+                                image: 'https://picsum.photos/seed/banahills/800/600',
+                                activities: ['Check-in Cầu Vàng', 'Làng Pháp', 'Hầm rượu Debay'],
+                                foods: ['Buffet Bà Nà'],
+                                transportNote: 'Lái xe đến chân núi Bà Nà và di chuyển bằng cáp treo lên đỉnh.'
+                            },
+                            {
+                                id: 13,
+                                name: 'Hội An',
+                                lat: 15.8801, lng: 108.3380,
+                                dateRange: '06/08 - 07/08',
+                                duration: '2 Ngày',
+                                stay: 'Ký ức Hội An Villa',
+                                transport: 'Ô tô',
+                                highlight: 'Phố cổ',
+                                cost: '3.000.000đ',
+                                image: 'https://picsum.photos/seed/hoian/800/600',
+                                activities: ['Dạo phố đèn lồng', 'Show Ký ức Hội An', 'Thả hoa đăng'],
+                                foods: ['Cao lầu', 'Cơm gà Hội An'],
+                                transportNote: 'Di chuyển ngắn bằng ô tô từ Đà Nẵng sang Hội An.'
+                            },
+                            {
+                                id: 14,
+                                name: 'Nghệ An',
+                                lat: 18.8214, lng: 105.7142,
+                                dateRange: '08/08 - 21/08',
+                                duration: '14 Ngày',
+                                stay: 'Country House',
+                                transport: 'Ô tô',
+                                highlight: 'Gia đình',
+                                cost: '5.000.000đ',
+                                image: 'https://picsum.photos/seed/nghean2/800/600',
+                                activities: ['Thăm nhà bố Mỹ', 'Khám phá làng quê', 'Nghỉ ngơi'],
+                                foods: ['Súp lươn', 'Nhút'],
+                                transportNote: 'Lái xe đường dài từ Hội An ra Nghệ An, nghỉ tại Nhà bố Mỹ.'
+                            },
+                            {
+                                id: 15,
+                                name: 'Ninh Bình',
+                                lat: 20.2506, lng: 105.9745,
+                                dateRange: '22/08 - 24/08',
+                                duration: '3 Ngày',
+                                stay: 'Tràng An River View',
+                                transport: 'Ô tô',
+                                highlight: 'Tràng An',
+                                cost: '2.500.000đ',
+                                image: 'https://picsum.photos/seed/ninhbinh2/800/600',
+                                activities: ['Thuyền Tràng An', 'Cố đô Hoa Lư'],
+                                foods: ['Thịt dê', 'Cơm cháy'],
+                                transportNote: 'Di chuyển bằng ô tô từ Nghệ An ra Ninh Bình.'
+                            },
+                            {
+                                id: 16,
+                                name: 'Hà Nội',
+                                lat: 21.0285, lng: 105.8542,
+                                dateRange: '25/08 - 26/08',
+                                duration: '2 Ngày',
+                                stay: 'Salute Premium Hotel',
+                                transport: 'Ô tô',
+                                highlight: 'Thủ đô',
+                                cost: '2.000.000đ',
+                                image: 'https://picsum.photos/seed/hanoi2/800/600',
+                                activities: ['Phố Cổ', 'Hồ Tây', 'Ẩm thực Hà Nội'],
+                                foods: ['Bún chả', 'Phở'],
+                                transportNote: 'Chặng cuối hành trình đường bộ bằng ô tô.'
+                            },
+                            {
+                                id: 17,
+                                name: 'TP. Hồ Chí Minh',
+                                lat: 10.7626, lng: 106.6602,
+                                dateRange: '26/08 - 26/08',
+                                duration: 'Kết thúc',
+                                stay: 'Về nhà',
+                                transport: 'Máy bay',
+                                highlight: 'Trở về',
+                                cost: '2.500.000đ',
+                                image: 'https://picsum.photos/seed/hcmcreturn/800/600',
+                                activities: ['Bay từ Nội Bài về Tân Sơn Nhất', 'Kết thúc hành trình'],
+                                foods: ['Cơm nhà'],
+                                transportNote: 'Gửi xe ô tô về bằng tàu hỏa/xe tải và bay về lại TP.HCM.'
+                            }
+                        ]
                     }
-                ],
+                },
+                get currentPlan() {
+                    return this.plans[this.currentPlanId];
+                },
                 get activeLocation() {
-                    return this.locations.find(l => l.id === this.activeId);
+                    return this.currentPlan.locations.find(l => l.id === this.activeId);
                 },
                 init() {
+                    // Load plan from URL
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const planParam = urlParams.get('plan');
+                    if (planParam && this.plans[planParam]) {
+                        this.currentPlanId = planParam;
+                    }
+                    
+                    this.activeId = this.currentPlan.locations[0].id;
+
                     this.$nextTick(() => {
                         lucide.createIcons();
                         this.initMap();
@@ -299,26 +475,55 @@
                         });
                     });
                 },
+                switchPlan(id) {
+                    this.currentPlanId = id;
+                    this.activeId = this.currentPlan.locations[0].id;
+                    
+                    // Update URL
+                    const url = new URL(window.location);
+                    url.searchParams.set('plan', id);
+                    window.history.pushState({}, '', url);
+                    
+                    this.refreshMap();
+                    this.$nextTick(() => lucide.createIcons());
+                },
                 async initMap() {
-                    // Initialize Leaflet map
+                    if (this.map) return;
+                    
                     this.map = L.map('map', {
-                        center: [20.0, 106.5],
-                        zoom: 7,
+                        center: [16.0, 106.5],
+                        zoom: 6,
                         zoomControl: false
                     });
 
-                    // Add OpenStreetMap layer
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                         attribution: '&copy; OpenStreetMap contributors'
                     }).addTo(this.map);
 
                     L.control.zoom({ position: 'topright' }).addTo(this.map);
-
+                    
+                    this.drawPlanOnMap();
+                },
+                refreshMap() {
+                    // Clear existing markers
+                    Object.values(this.markers).forEach(m => this.map.removeLayer(m));
+                    this.markers = {};
+                    
+                    if (this.polyline) {
+                        this.map.removeLayer(this.polyline);
+                        this.polyline = null;
+                    }
+                    
+                    this.drawPlanOnMap();
+                },
+                async drawPlanOnMap() {
+                    const locations = this.currentPlan.locations;
+                    
                     // Add markers
-                    this.locations.forEach(loc => {
+                    locations.forEach(loc => {
                         const marker = L.circleMarker([loc.lat, loc.lng], {
                             radius: 8,
-                            fillColor: "#94a3b8",
+                            fillColor: loc.id === this.activeId ? "#2563eb" : "#94a3b8",
                             color: "#fff",
                             weight: 2,
                             opacity: 1,
@@ -332,24 +537,14 @@
                         this.markers[loc.id] = marker;
                     });
 
-                    // Fetch and draw actual road routes (Hanoi -> Nghe An -> Ninh Binh -> Ha Long -> Hanoi)
-                    const routePoints = [
-                        this.locations[0], // Hanoi
-                        this.locations[2], // Nghe An
-                        this.locations[1], // Ninh Binh
-                        this.locations[3], // Ha Long
-                        this.locations[0]  // Return to Hanoi
-                    ];
-
+                    // Draw route
                     try {
-                        const coordsString = routePoints.map(p => `${p.lng},${p.lat}`).join(';');
+                        const coordsString = locations.map(p => `${p.lng},${p.lat}`).join(';');
                         const response = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordsString}?overview=full&geometries=geojson`);
                         const data = await response.json();
 
                         if (data.routes && data.routes.length > 0) {
                             const routeGeoJSON = data.routes[0].geometry;
-                            
-                            // Draw the actual road route
                             this.polyline = L.geoJSON(routeGeoJSON, {
                                 style: {
                                     color: '#2563eb',
@@ -360,23 +555,13 @@
                                 }
                             }).addTo(this.map);
 
-                            // Add animation effect to the route
-                            let dashOffset = 0;
-                            setInterval(() => {
-                                dashOffset--;
-                                this.polyline.setStyle({ dashOffset: dashOffset.toString() });
-                            }, 50);
-
-                            // Fit map to show the entire route
                             this.map.fitBounds(this.polyline.getBounds(), {
-                                padding: [30, 30],
-                                maxZoom: 8
+                                padding: [50, 50]
                             });
                         }
                     } catch (error) {
                         console.error("Error fetching road route:", error);
-                        // Fallback to straight lines if API fails
-                        const fallbackCoords = routePoints.map(p => [p.lat, p.lng]);
+                        const fallbackCoords = locations.map(p => [p.lat, p.lng]);
                         this.polyline = L.polyline(fallbackCoords, {
                             color: '#2563eb',
                             weight: 3,
@@ -385,38 +570,25 @@
                         }).addTo(this.map);
 
                         this.map.fitBounds(this.polyline.getBounds(), {
-                            padding: [30, 30]
+                            padding: [50, 50]
                         });
                     }
-
-                    // Don't flyTo immediately on init to keep the overview
-                    this.updateMapSelection(this.activeId, true);
                 },
-                updateMapSelection(id, isInit = false) {
+                updateMapSelection(id) {
                     if (!this.map) return;
 
-                    // Reset all markers
-                    Object.values(this.markers).forEach(marker => {
-                        marker.setStyle({
-                            fillColor: "#94a3b8",
-                            radius: 8
+                    Object.keys(this.markers).forEach(markerId => {
+                        this.markers[markerId].setStyle({
+                            fillColor: parseInt(markerId) === id ? "#2563eb" : "#94a3b8",
+                            radius: parseInt(markerId) === id ? 10 : 8
                         });
                     });
 
-                    // Highlight active marker
-                    const activeLoc = this.locations.find(l => l.id === id);
-                    if (activeLoc && this.markers[id]) {
-                        this.markers[id].setStyle({
-                            fillColor: "#2563eb",
-                            radius: 10
+                    const activeLoc = this.activeLocation;
+                    if (activeLoc) {
+                        this.map.flyTo([activeLoc.lat, activeLoc.lng], 9, {
+                            duration: 1.5
                         });
-                        
-                        // Only flyTo if it's not the initial load
-                        if (!isInit) {
-                            this.map.flyTo([activeLoc.lat, activeLoc.lng], 9, {
-                                duration: 1.5
-                            });
-                        }
                     }
                 }
             }
