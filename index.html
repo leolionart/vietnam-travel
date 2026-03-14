@@ -145,6 +145,7 @@
                             <div class="pt-1">
                                 <h3 class="text-sm font-bold transition-colors" :class="activeId === loc.id ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'" x-text="loc.name"></h3>
                                 <p class="text-[10px] font-medium text-slate-500 mt-0.5" x-text="loc.highlight"></p>
+                                <p class="text-[9px] font-medium text-slate-500 mt-1" x-text="formatDateRangeCompact(loc.dateRange)"></p>
                             </div>
                         </div>
                     </div>
@@ -200,6 +201,7 @@
                     <div class="bg-white/5 rounded-2xl p-3 lg:p-4 border border-white/5">
                         <p class="text-[8px] lg:text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1 lg:mb-2">Thời gian</p>
                         <p class="text-xs lg:text-sm font-bold text-white" x-text="activeLocation.duration + ' Ngày'"></p>
+                        <p class="text-[10px] text-slate-400 mt-1" x-text="formatDateRangeCompact(activeLocation.dateRange)"></p>
                     </div>
                     <div class="bg-white/5 rounded-2xl p-3 lg:p-4 border border-white/5">
                         <p class="text-[8px] lg:text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1 lg:mb-2">Di chuyển</p>
@@ -237,6 +239,21 @@
                                 <button @click="activeLocation.children++" class="w-6 h-6 lg:w-7 lg:h-7 flex items-center justify-center hover:bg-white/10 rounded-lg transition-all">+</button>
                             </div>
                         </div>
+
+                        <div class="grid grid-cols-3 gap-3 pt-2 border-t border-white/10">
+                            <div>
+                                <p class="text-[9px] font-bold text-slate-400 uppercase">Lưu trú/đêm</p>
+                                <p class="text-[10px] font-medium text-slate-300" x-text="formatCurrency(activeLocation.stayCostPerNight || 0)"></p>
+                            </div>
+                            <div>
+                                <p class="text-[9px] font-bold text-slate-400 uppercase">Ăn uống/ngày</p>
+                                <p class="text-[10px] font-medium text-slate-300" x-text="formatCurrency(activeLocation.foodBudgetPerDay || 0)"></p>
+                            </div>
+                            <div>
+                                <p class="text-[9px] font-bold text-slate-400 uppercase">Vé xe chặng này</p>
+                                <p class="text-[10px] font-medium text-slate-300" x-text="formatCurrency(activeLocation.transportFare || 0)"></p>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mt-4 lg:mt-6 pt-4 lg:pt-6 border-t border-white/10 flex justify-between items-center">
@@ -271,11 +288,102 @@
             </div>
 
             <!-- Footer Action -->
-            <div class="p-6 lg:p-8 bg-white/5 border-t border-white/5">
+            <div class="p-6 lg:p-8 bg-white/5 border-t border-white/5 space-y-3">
                 <button @click="addToCalendar()" class="w-full bg-white text-slate-900 py-3 lg:py-4 rounded-2xl font-bold text-xs lg:text-sm hover:bg-slate-100 transition-all shadow-xl flex items-center justify-center gap-2">
                     <i data-lucide="calendar-plus" class="w-4 h-4"></i>
                     Thêm vào lịch
                 </button>
+
+                <div x-show="adminMode" x-cloak class="bg-white/5 border border-white/10 rounded-2xl p-3 space-y-3">
+                    <p class="text-[10px] font-bold text-amber-300 uppercase tracking-wider">Admin chỉnh điểm hiện tại</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="text-[10px] text-slate-300">Bắt đầu
+                            <input type="datetime-local" class="w-full mt-1 px-2 py-1 rounded bg-slate-900/70 border border-white/10 text-xs"
+                                x-model="activeDateStart" @change="applyActiveDateRange()">
+                            <p class="mt-1 text-[9px] text-slate-400" x-text="formatDateMeta(activeDateStart)"></p>
+                        </label>
+                        <label class="text-[10px] text-slate-300">Kết thúc
+                            <input type="datetime-local" class="w-full mt-1 px-2 py-1 rounded bg-slate-900/70 border border-white/10 text-xs"
+                                x-model="activeDateEnd" @change="applyActiveDateRange()">
+                            <p class="mt-1 text-[9px] text-slate-400" x-text="formatDateMeta(activeDateEnd)"></p>
+                        </label>
+                        <label class="text-[10px] text-slate-300">Giá NL
+                            <input type="text" inputmode="numeric" class="w-full mt-1 px-2 py-1 rounded bg-slate-900/70 border border-white/10 text-xs"
+                                :value="formatNumberInput(activeLocation.adultPrice)"
+                                @change="updateMoneyField(activeLocation, 'adultPrice', $event.target.value); markDirty()">
+                        </label>
+                        <label class="text-[10px] text-slate-300">Giá TE
+                            <input type="text" inputmode="numeric" class="w-full mt-1 px-2 py-1 rounded bg-slate-900/70 border border-white/10 text-xs"
+                                :value="formatNumberInput(activeLocation.childPrice)"
+                                @change="updateMoneyField(activeLocation, 'childPrice', $event.target.value); markDirty()">
+                        </label>
+                        <label class="text-[10px] text-slate-300">Số ngày lưu trú
+                            <input type="number" min="0" class="w-full mt-1 px-2 py-1 rounded bg-slate-900/70 border border-white/10 text-xs"
+                                x-model.number="activeLocation.duration" @change="activeLocation.duration = Math.max(0, Number(activeLocation.duration || 0)); markDirty()">
+                        </label>
+                        <label class="text-[10px] text-slate-300">Lưu trú/đêm
+                            <input type="text" inputmode="numeric" class="w-full mt-1 px-2 py-1 rounded bg-slate-900/70 border border-white/10 text-xs"
+                                :value="formatNumberInput(activeLocation.stayCostPerNight)"
+                                @change="updateMoneyField(activeLocation, 'stayCostPerNight', $event.target.value); markDirty()">
+                        </label>
+                        <label class="text-[10px] text-slate-300">Ăn/ngày
+                            <input type="text" inputmode="numeric" class="w-full mt-1 px-2 py-1 rounded bg-slate-900/70 border border-white/10 text-xs"
+                                :value="formatNumberInput(activeLocation.foodBudgetPerDay)"
+                                @change="updateMoneyField(activeLocation, 'foodBudgetPerDay', $event.target.value); markDirty()">
+                        </label>
+                        <label class="text-[10px] text-slate-300 col-span-2">Vé xe chặng này
+                            <input type="text" inputmode="numeric" class="w-full mt-1 px-2 py-1 rounded bg-slate-900/70 border border-white/10 text-xs"
+                                :value="formatNumberInput(activeLocation.transportFare)"
+                                @change="updateMoneyField(activeLocation, 'transportFare', $event.target.value); markDirty()">
+                        </label>
+                    </div>
+
+                    <div class="h-px bg-white/10"></div>
+
+                    <p class="text-[10px] font-bold text-blue-300 uppercase tracking-wider">Thêm địa điểm mới</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="text-[10px] text-slate-300 col-span-2">Tên địa điểm
+                            <input type="text" x-model="newLocation.name" class="w-full mt-1 px-2 py-1 rounded bg-slate-900/70 border border-white/10 text-xs">
+                        </label>
+                        <label class="text-[10px] text-slate-300 col-span-2">Tỉnh/TP
+                            <input type="text" x-model="newLocation.province" class="w-full mt-1 px-2 py-1 rounded bg-slate-900/70 border border-white/10 text-xs">
+                        </label>
+                        <label class="text-[10px] text-slate-300">Lat
+                            <input type="number" step="0.000001" x-model="newLocation.lat" class="w-full mt-1 px-2 py-1 rounded bg-slate-900/70 border border-white/10 text-xs">
+                        </label>
+                        <label class="text-[10px] text-slate-300">Lng
+                            <input type="number" step="0.000001" x-model="newLocation.lng" class="w-full mt-1 px-2 py-1 rounded bg-slate-900/70 border border-white/10 text-xs">
+                        </label>
+                        <label class="text-[10px] text-slate-300">Số ngày
+                            <input type="number" min="0" x-model.number="newLocation.duration" class="w-full mt-1 px-2 py-1 rounded bg-slate-900/70 border border-white/10 text-xs">
+                        </label>
+                        <label class="text-[10px] text-slate-300">Di chuyển
+                            <input type="text" x-model="newLocation.transport" class="w-full mt-1 px-2 py-1 rounded bg-slate-900/70 border border-white/10 text-xs">
+                        </label>
+                        <label class="text-[10px] text-slate-300">Bắt đầu
+                            <input type="datetime-local" x-model="newLocation.startAt" class="w-full mt-1 px-2 py-1 rounded bg-slate-900/70 border border-white/10 text-xs">
+                            <p class="mt-1 text-[9px] text-slate-400" x-text="formatDateMeta(newLocation.startAt)"></p>
+                        </label>
+                        <label class="text-[10px] text-slate-300">Kết thúc
+                            <input type="datetime-local" x-model="newLocation.endAt" class="w-full mt-1 px-2 py-1 rounded bg-slate-900/70 border border-white/10 text-xs">
+                            <p class="mt-1 text-[9px] text-slate-400" x-text="formatDateMeta(newLocation.endAt)"></p>
+                        </label>
+                        <label class="text-[10px] text-slate-300 col-span-2">Vé xe chặng này
+                            <input type="text" inputmode="numeric" :value="formatNumberInput(newLocation.transportFare)" @change="newLocation.transportFare = parseNumberInput($event.target.value)" class="w-full mt-1 px-2 py-1 rounded bg-slate-900/70 border border-white/10 text-xs">
+                        </label>
+                    </div>
+
+                    <button @click="addLocationFromAdminForm()" class="w-full py-2 rounded-xl bg-blue-500 text-white text-xs font-bold hover:bg-blue-400">
+                        Thêm điểm đến vào kế hoạch
+                    </button>
+                    <button @click="saveAdminChanges()" class="w-full py-2 rounded-xl bg-emerald-500 text-white text-xs font-bold hover:bg-emerald-400">
+                        Lưu thay đổi
+                    </button>
+                    <p class="text-[10px] text-slate-400" x-text="hasUnsavedChanges ? 'Có thay đổi chưa lưu' : (lastSavedAt ? `Đã lưu lúc: ${lastSavedAt}` : 'Chưa có bản lưu')"></p>
+                    <button @click="downloadCurrentPlanJson()" class="w-full py-2 rounded-xl bg-amber-400 text-slate-900 text-xs font-bold hover:bg-amber-300">
+                        Tải JSON kế hoạch hiện tại
+                    </button>
+                </div>
             </div>
         </div>
     </main>
@@ -296,6 +404,15 @@
             </div>
             
             <div class="flex items-center gap-2">
+                <button @click="toggleAdminMode()" class="w-8 h-8 lg:w-10 lg:h-10 rounded-xl flex items-center justify-center transition-all" :class="adminMode ? 'bg-amber-400 text-slate-900' : 'bg-white/5 hover:bg-white/10'" title="Admin mode">
+                    <i data-lucide="shield-check" class="w-3 h-3 lg:w-4 lg:h-4"></i>
+                </button>
+                <button x-show="adminMode" x-cloak @click="saveAdminChanges()" class="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center hover:bg-emerald-400 transition-all" title="Lưu thay đổi">
+                    <i data-lucide="save" class="w-3 h-3 lg:w-4 lg:h-4"></i>
+                </button>
+                <button x-show="adminMode" x-cloak @click="downloadCurrentPlanJson()" class="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-blue-500 text-white flex items-center justify-center hover:bg-blue-400 transition-all" title="Tải JSON kế hoạch">
+                    <i data-lucide="download" class="w-3 h-3 lg:w-4 lg:h-4"></i>
+                </button>
                 <button @click="printPlan()" class="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 transition-all">
                     <i data-lucide="printer" class="w-3 h-3 lg:w-4 lg:h-4"></i>
                 </button>
@@ -315,6 +432,24 @@
                 markers: {},
                 polyline: null,
                 plans: {},
+                adminMode: false,
+                adminPassword: 'admin123',
+                newLocation: {
+                    name: '',
+                    province: '',
+                    lat: '',
+                    lng: '',
+                    dateRange: '',
+                    startAt: '',
+                    endAt: '',
+                    duration: 1,
+                    transport: 'Ô tô',
+                    transportFare: 0,
+                },
+                activeDateStart: '',
+                activeDateEnd: '',
+                hasUnsavedChanges: false,
+                lastSavedAt: '',
 
                 get currentPlan() {
                     return this.plans[this.currentPlanId] || { locations: [] };
@@ -327,11 +462,38 @@
 
                 async init() {
                     lucide.createIcons();
-                    
+
                     try {
                         const response = await fetch('./plans.json');
                         this.plans = await response.json();
-                        
+
+                        const localOverride = localStorage.getItem('travel_plans_override');
+                        if (localOverride) {
+                            try {
+                                this.plans = JSON.parse(localOverride);
+                            } catch (error) {
+                                console.warn('Dữ liệu local bị lỗi, dùng dữ liệu gốc plans.json', error);
+                            }
+                        }
+
+                        this.lastSavedAt = localStorage.getItem('travel_plans_last_saved_at') || '';
+
+                        const url = new URL(window.location.href);
+                        const slugParam = url.searchParams.get('slug');
+                        if (slugParam) {
+                            const matchedPlanId = Object.keys(this.plans).find(id => this.plans[id]?.slug === slugParam);
+                            if (matchedPlanId) {
+                                this.currentPlanId = matchedPlanId;
+                            }
+                        } else {
+                            const planParam = url.searchParams.get('plan');
+                            if (planParam && this.plans[planParam]) {
+                                this.currentPlanId = planParam;
+                            }
+                        }
+
+                        this.syncActiveDateFieldsFromLocation();
+
                         this.$nextTick(() => {
                             this.initMap();
                         });
@@ -342,11 +504,16 @@
                     this.$watch('activeId', () => {
                         this.$nextTick(() => lucide.createIcons());
                         this.updateMap();
+                        this.syncActiveDateFieldsFromLocation();
                     });
                     this.$watch('currentPlanId', () => {
                         this.$nextTick(() => lucide.createIcons());
                         this.updateMap();
+                        this.syncPlanSlugToUrl();
+                        this.syncActiveDateFieldsFromLocation();
                     });
+
+                    this.syncPlanSlugToUrl();
                 },
 
                 initMap() {
@@ -450,8 +617,149 @@
                     });
                 },
 
+                syncPlanSlugToUrl() {
+                    const plan = this.currentPlan;
+                    if (!plan) return;
+
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('plan');
+
+                    if (plan.slug) {
+                        url.searchParams.set('slug', plan.slug);
+                    } else {
+                        url.searchParams.delete('slug');
+                    }
+
+                    window.history.replaceState({}, '', url);
+                },
+
                 formatCurrency(value) {
                     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+                },
+
+                formatNumberInput(value) {
+                    const numberValue = Number(value || 0);
+                    return new Intl.NumberFormat('vi-VN').format(numberValue);
+                },
+
+                parseNumberInput(value) {
+                    const normalized = String(value ?? '').replace(/[^\d]/g, '');
+                    const parsed = Number(normalized);
+                    return Number.isFinite(parsed) ? parsed : 0;
+                },
+
+                updateMoneyField(target, key, rawValue) {
+                    if (!target) return;
+                    target[key] = Math.max(0, this.parseNumberInput(rawValue));
+                },
+
+                parseDateTimeLocal(value) {
+                    if (!value) return null;
+                    const date = new Date(value);
+                    return Number.isNaN(date.getTime()) ? null : date;
+                },
+
+                parseDateRange(dateRange) {
+                    const raw = String(dateRange || '');
+                    const [startPart, endPart] = raw.split(' - ');
+                    const parsePart = (part) => {
+                        if (!part) return null;
+                        const [datePart, timePart = '00:00'] = part.trim().split(' ');
+                        const [day, month, year] = (datePart || '').split('/').map(Number);
+                        const [hour, minute] = (timePart || '').split(':').map(Number);
+                        if (![day, month, year, hour, minute].every(Number.isFinite)) return null;
+                        return new Date(year, month - 1, day, hour, minute);
+                    };
+                    return { start: parsePart(startPart), end: parsePart(endPart) };
+                },
+
+                toDateTimeLocalValue(date) {
+                    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+                    const pad = (n) => String(n).padStart(2, '0');
+                    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+                },
+
+                formatDateTimeDisplay(date) {
+                    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+                    const pad = (n) => String(n).padStart(2, '0');
+                    return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+                },
+
+                getDayOfYear(date) {
+                    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return null;
+                    const start = new Date(date.getFullYear(), 0, 1);
+                    const diff = date - start;
+                    return Math.floor(diff / 86400000) + 1;
+                },
+
+                formatDateMeta(value) {
+                    const date = this.parseDateTimeLocal(value);
+                    if (!date) return '';
+                    const weekday = date.toLocaleDateString('vi-VN', { weekday: 'long' });
+                    const dayOfYear = this.getDayOfYear(date);
+                    return `${weekday} · ngày thứ ${dayOfYear} trong năm`;
+                },
+
+                formatDateRangeCompact(dateRange) {
+                    const { start, end } = this.parseDateRange(dateRange);
+                    if (!start || !end) return String(dateRange || '');
+                    const startLabel = this.formatDateTimeDisplay(start);
+                    const endLabel = this.formatDateTimeDisplay(end);
+                    const weekdayStart = start.toLocaleDateString('vi-VN', { weekday: 'short' });
+                    const weekdayEnd = end.toLocaleDateString('vi-VN', { weekday: 'short' });
+                    return `${weekdayStart} ${startLabel} → ${weekdayEnd} ${endLabel}`;
+                },
+
+                syncActiveDateFieldsFromLocation() {
+                    const { start, end } = this.parseDateRange(this.activeLocation?.dateRange || '');
+                    this.activeDateStart = this.toDateTimeLocalValue(start);
+                    this.activeDateEnd = this.toDateTimeLocalValue(end);
+                },
+
+                applyActiveDateRange() {
+                    if (!this.activeLocation) return;
+                    const start = this.parseDateTimeLocal(this.activeDateStart);
+                    const end = this.parseDateTimeLocal(this.activeDateEnd);
+                    if (!start || !end) return;
+                    if (end < start) return;
+
+                    this.activeLocation.dateRange = `${this.formatDateTimeDisplay(start)} - ${this.formatDateTimeDisplay(end)}`;
+                    this.hasUnsavedChanges = true;
+                },
+
+                markDirty() {
+                    this.hasUnsavedChanges = true;
+                },
+
+                async saveAdminChanges() {
+                    const now = new Date().toLocaleString('vi-VN');
+
+                    try {
+                        const response = await fetch('/api/plans', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.plans),
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('API lưu file không khả dụng');
+                        }
+
+                        this.hasUnsavedChanges = false;
+                        this.lastSavedAt = now;
+                        localStorage.removeItem('travel_plans_override');
+                        localStorage.setItem('travel_plans_last_saved_at', now);
+                        alert('Đã lưu trực tiếp vào plans.json (dev mode)');
+                        return;
+                    } catch (error) {
+                        console.warn('Không lưu được vào file, fallback localStorage', error);
+                    }
+
+                    this.persistPlansToLocalStorage();
+                    this.hasUnsavedChanges = false;
+                    this.lastSavedAt = now;
+                    localStorage.setItem('travel_plans_last_saved_at', now);
+                    alert('Đã lưu trên trình duyệt này (localStorage)');
                 },
 
                 calculateLocationCost(loc) {
@@ -459,7 +767,14 @@
                     const days = typeof loc.duration === 'number' ? loc.duration : 1;
                     const adults = loc.adults || 0;
                     const children = loc.children || 0;
-                    return ((loc.adultPrice * adults) + (loc.childPrice * children)) * days;
+
+                    const travelerCost = ((loc.adultPrice || 0) * adults) + ((loc.childPrice || 0) * children);
+                    const dailyTravelerCost = travelerCost * days;
+                    const stayCost = (loc.stayCostPerNight || 0) * Math.max(days - 1, 0);
+                    const foodCost = (loc.foodBudgetPerDay || 0) * days;
+                    const transportFare = loc.transportFare || 0;
+
+                    return dailyTravelerCost + stayCost + foodCost + transportFare;
                 },
 
                 calculateTotalPlanCost(plan = this.currentPlan) {
@@ -471,7 +786,13 @@
 
                 sharePlan() {
                     const shareUrl = new URL(window.location.href);
-                    shareUrl.searchParams.set('plan', this.currentPlanId);
+                    if (this.currentPlan?.slug) {
+                        shareUrl.searchParams.delete('plan');
+                        shareUrl.searchParams.set('slug', this.currentPlan.slug);
+                    } else {
+                        shareUrl.searchParams.delete('slug');
+                        shareUrl.searchParams.set('plan', this.currentPlanId);
+                    }
                     const text = `Lịch trình ${this.currentPlan.name}`;
 
                     if (navigator.share) {
@@ -516,6 +837,9 @@
                                 <td>${escapeHtml(stayDays)}</td>
                                 <td>${escapeHtml(loc.transport)}</td>
                                 <td>${escapeHtml(loc.highlight)}</td>
+                                <td class="money">${formatMoney(loc.transportFare || 0)}</td>
+                                <td class="money">${formatMoney(loc.stayCostPerNight || 0)}</td>
+                                <td class="money">${formatMoney(loc.foodBudgetPerDay || 0)}</td>
                                 <td>${escapeHtml((loc.activities || []).join(', '))}</td>
                                 <td>${escapeHtml((loc.food || []).join(', '))}</td>
                                 <td class="num">${Number(loc.adults || 0)}</td>
@@ -652,13 +976,16 @@
           <th style="width:90px">Tỉnh/TP</th>
           <th style="width:95px">Ngày tháng</th>
           <th style="width:60px">Số ngày</th>
-          <th style="width:90px">Di chuyển</th>
-          <th style="width:70px">Nổi bật</th>
+          <th style="width:70px">Di chuyển</th>
+          <th style="width:55px">Nổi bật</th>
+          <th style="width:70px">Vé xe</th>
+          <th style="width:72px">Lưu trú/đêm</th>
+          <th style="width:72px">Ăn/ngày</th>
           <th>Hoạt động</th>
           <th>Ẩm thực</th>
-          <th style="width:40px">NL</th>
-          <th style="width:40px">TE</th>
-          <th style="width:90px">Thành tiền</th>
+          <th style="width:36px">NL</th>
+          <th style="width:36px">TE</th>
+          <th style="width:86px">Thành tiền</th>
         </tr>
       </thead>
       <tbody>
@@ -709,7 +1036,117 @@
                     calendarUrl.searchParams.set('dates', `${formatDate(start)}/${formatDate(end)}`);
 
                     window.open(calendarUrl.toString(), '_blank', 'noopener,noreferrer');
+                },
+
+                toggleAdminMode() {
+                    if (this.adminMode) {
+                        this.adminMode = false;
+                        return;
+                    }
+
+                    const input = window.prompt('Nhập mật khẩu Admin');
+                    if (input === null) return;
+
+                    if (input !== this.adminPassword) {
+                        alert('Mật khẩu không đúng');
+                        return;
+                    }
+
+                    this.adminMode = true;
+                },
+
+                addLocationFromAdminForm() {
+                    const form = this.newLocation;
+                    if (!form.name || form.lat === '' || form.lng === '') {
+                        alert('Vui lòng nhập tối thiểu: tên địa điểm, lat, lng');
+                        return;
+                    }
+
+                    const toNumber = (value, fallback = 0) => {
+                        const parsed = Number(value);
+                        return Number.isFinite(parsed) ? parsed : fallback;
+                    };
+
+                    const start = this.parseDateTimeLocal(form.startAt);
+                    const end = this.parseDateTimeLocal(form.endAt);
+                    const dateRange = start && end ? `${this.formatDateTimeDisplay(start)} - ${this.formatDateTimeDisplay(end)}` : '';
+
+                    const nextId = this.currentPlan.locations.reduce((maxId, location) => {
+                        const currentId = Number(location.id) || 0;
+                        return Math.max(maxId, currentId);
+                    }, 0) + 1;
+
+                    const location = {
+                        id: nextId,
+                        name: String(form.name).trim(),
+                        province: String(form.province || '').trim(),
+                        lat: toNumber(form.lat),
+                        lng: toNumber(form.lng),
+                        dateRange,
+                        duration: Math.max(0, toNumber(form.duration, 1)),
+                        transport: String(form.transport || '').trim() || 'Ô tô',
+                        transportFare: Math.max(0, toNumber(form.transportFare)),
+                        highlight: '',
+                        description: '',
+                        activities: [],
+                        food: [],
+                        adultPrice: 0,
+                        childPrice: 0,
+                        stayCostPerNight: 0,
+                        foodBudgetPerDay: 0,
+                        adults: 2,
+                        children: 0,
+                    };
+
+                    this.currentPlan.locations.push(location);
+                    this.activeId = location.id;
+                    this.hasUnsavedChanges = true;
+
+                    this.newLocation = {
+                        name: '',
+                        province: '',
+                        lat: '',
+                        lng: '',
+                        dateRange: '',
+                        startAt: '',
+                        endAt: '',
+                        duration: 1,
+                        transport: 'Ô tô',
+                        transportFare: 0,
+                    };
+
+                    this.$nextTick(() => {
+                        this.updateMap(true);
+                        lucide.createIcons();
+                    });
+                },
+
+                downloadCurrentPlanJson() {
+                    if (!this.currentPlan) return;
+
+                    const payload = {
+                        [this.currentPlanId]: this.currentPlan,
+                    };
+
+                    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `${this.currentPlanId}.json`;
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    URL.revokeObjectURL(url);
+                },
+
+                persistPlansToLocalStorage() {
+                    try {
+                        localStorage.setItem('travel_plans_override', JSON.stringify(this.plans));
+                    } catch (error) {
+                        console.warn('Không thể lưu localStorage', error);
+                    }
                 }
+
             }
         }
     </script>
