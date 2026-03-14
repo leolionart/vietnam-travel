@@ -1,0 +1,7 @@
+services:
+  travel-app:
+    build: .
+    ports:
+      - "3000:80"
+    restart: always
+    container_name: travel_itinerary_app
