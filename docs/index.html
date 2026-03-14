@@ -184,8 +184,9 @@
                                     <p class="text-sm font-semibold text-slate-700" x-text="activeLocation.transport"></p>
                                 </div>
                                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                                    <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Chi phí</p>
-                                    <p class="text-sm font-semibold text-blue-600" x-text="activeLocation.cost"></p>
+                                    <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Chi phí dự kiến</p>
+                                    <p class="text-sm font-semibold text-blue-600" x-text="formatCurrency(calculateLocationCost(activeLocation))"></p>
+                                    <p class="text-[8px] text-slate-400 mt-1" x-text="`(${formatCurrency(activeLocation.adultPrice)}/NL - ${formatCurrency(activeLocation.childPrice)}/TE)`"></p>
                                 </div>
                                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
                                     <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Đặc điểm</p>
@@ -250,6 +251,8 @@
             return {
                 currentPlanId: 'northern-loop',
                 activeId: 1,
+                adults: 2,
+                children: 0,
                 map: null,
                 markers: {},
                 polyline: null,
@@ -257,7 +260,6 @@
                     'northern-loop': {
                         title: 'Miền Bắc - 4 tuần 2026',
                         dateRange: '18/06 - 16/07',
-                        totalCost: '19.000.000đ',
                         locations: [
                             {
                                 id: 1,
@@ -268,7 +270,8 @@
                                 stay: 'Phố Cổ',
                                 transport: 'Máy bay/Tàu',
                                 highlight: 'Văn hóa',
-                                cost: '2.500.000đ',
+                                adultPrice: 1200000,
+                                childPrice: 800000,
                                 image: 'https://picsum.photos/seed/hanoi/800/600',
                                 activities: ['Khám phá 36 phố phường', 'Cà phê trứng Giảng', 'Dạo hồ Hoàn Kiếm', 'Văn Miếu'],
                                 foods: ['Bún chả', 'Phở bò', 'Cà phê trứng', 'Chả cá Lã Vọng'],
@@ -283,7 +286,8 @@
                                 stay: 'Mercure French Village',
                                 transport: 'Máy bay & Cáp treo',
                                 highlight: 'Làng Pháp & Cầu Vàng',
-                                cost: '4.500.000đ',
+                                adultPrice: 2000000,
+                                childPrice: 1500000,
                                 image: 'https://picsum.photos/seed/banahill2026/800/600',
                                 activities: ['Check-in Cầu Vàng', 'Vui chơi Fantasy Park', 'Tắm biển Mỹ Khê', 'Phố cổ Hội An (Day trip)'],
                                 foods: ['Mì Quảng', 'Bánh tráng cuốn thịt heo', 'Bê thui Cầu Mống'],
@@ -298,7 +302,8 @@
                                 stay: 'Cửa Lò',
                                 transport: 'Xe giường nằm',
                                 highlight: 'Nghỉ dưỡng biển',
-                                cost: '4.000.000đ',
+                                adultPrice: 1500000,
+                                childPrice: 1000000,
                                 image: 'https://picsum.photos/seed/nghean/800/600',
                                 activities: ['Tắm biển Cửa Lò', 'Thăm Quê Bác', 'Đảo Lan Châu', 'Thư giãn resort'],
                                 foods: ['Súp lươn', 'Cháo lươn', 'Mực nhảy', 'Nhút Thanh Chương'],
@@ -313,7 +318,8 @@
                                 stay: 'Tam Cốc',
                                 transport: 'Xe giường nằm',
                                 highlight: 'Thiên nhiên',
-                                cost: '4.000.000đ',
+                                adultPrice: 1800000,
+                                childPrice: 1200000,
                                 image: 'https://picsum.photos/seed/ninhbinh/800/600',
                                 activities: ['Chèo thuyền Tràng An', 'Leo Hang Múa', 'Đạp xe Tam Cốc', 'Thăm Hoa Lư'],
                                 foods: ['Cơm cháy', 'Thịt dê núi', 'Ốc núi', 'Rượu Kim Sơn'],
@@ -328,7 +334,8 @@
                                 stay: 'Bãi Cháy',
                                 transport: 'Xe Cabin riêng',
                                 highlight: 'Kỳ quan',
-                                cost: '4.000.000đ',
+                                adultPrice: 1800000,
+                                childPrice: 1200000,
                                 image: 'https://picsum.photos/seed/halong/800/600',
                                 activities: ['Tour tàu thăm vịnh', 'Bảo tàng Quảng Ninh', 'Sun World Hạ Long', 'Cầu Bãi Cháy'],
                                 foods: ['Chả mực', 'Sá sùng', 'Bún bề bề', 'Sam biển'],
@@ -339,7 +346,6 @@
                     'central-north-2025': {
                         title: 'Xuyên Việt - 4 tuần 2025',
                         dateRange: '29/07 - 26/08',
-                        totalCost: '23.500.000đ',
                         locations: [
                             {
                                 id: 10,
@@ -350,7 +356,8 @@
                                 stay: 'N/A',
                                 transport: 'Ô tô',
                                 highlight: 'Bắt đầu',
-                                cost: '500.000đ',
+                                adultPrice: 500000,
+                                childPrice: 300000,
                                 image: 'https://picsum.photos/seed/hcmc/800/600',
                                 activities: ['Kiểm tra xe', 'Sắp xếp hành lý', 'Khởi hành đi Đà Nẵng'],
                                 foods: ['Cơm tấm'],
@@ -365,7 +372,8 @@
                                 stay: 'Nalod Da Nang',
                                 transport: 'Ô tô',
                                 highlight: 'Biển Mỹ Khê',
-                                cost: '4.500.000đ',
+                                adultPrice: 2000000,
+                                childPrice: 1400000,
                                 image: 'https://picsum.photos/seed/danang/800/600',
                                 activities: ['Tắm biển Mỹ Khê', 'Cầu Rồng phun lửa', 'Bán đảo Sơn Trà'],
                                 foods: ['Mì Quảng', 'Bánh tráng cuốn thịt heo'],
@@ -380,7 +388,8 @@
                                 stay: 'Mercure French Village',
                                 transport: 'Ô tô & Cáp treo',
                                 highlight: 'Làng Pháp',
-                                cost: '3.500.000đ',
+                                adultPrice: 1800000,
+                                childPrice: 1300000,
                                 image: 'https://picsum.photos/seed/banahills/800/600',
                                 activities: ['Check-in Cầu Vàng', 'Làng Pháp', 'Hầm rượu Debay'],
                                 foods: ['Buffet Bà Nà'],
@@ -395,7 +404,8 @@
                                 stay: 'Ký ức Hội An Villa',
                                 transport: 'Ô tô',
                                 highlight: 'Phố cổ',
-                                cost: '3.000.000đ',
+                                adultPrice: 1500000,
+                                childPrice: 1000000,
                                 image: 'https://picsum.photos/seed/hoian/800/600',
                                 activities: ['Dạo phố đèn lồng', 'Show Ký ức Hội An', 'Thả hoa đăng'],
                                 foods: ['Cao lầu', 'Cơm gà Hội An'],
@@ -410,7 +420,8 @@
                                 stay: 'Country House',
                                 transport: 'Ô tô',
                                 highlight: 'Gia đình',
-                                cost: '5.000.000đ',
+                                adultPrice: 2000000,
+                                childPrice: 1400000,
                                 image: 'https://picsum.photos/seed/nghean2/800/600',
                                 activities: ['Thăm nhà bố Mỹ', 'Khám phá làng quê', 'Nghỉ ngơi'],
                                 foods: ['Súp lươn', 'Nhút'],
@@ -425,7 +436,8 @@
                                 stay: 'Tràng An River View',
                                 transport: 'Ô tô',
                                 highlight: 'Tràng An',
-                                cost: '2.500.000đ',
+                                adultPrice: 1200000,
+                                childPrice: 800000,
                                 image: 'https://picsum.photos/seed/ninhbinh2/800/600',
                                 activities: ['Thuyền Tràng An', 'Cố đô Hoa Lư'],
                                 foods: ['Thịt dê', 'Cơm cháy'],
@@ -440,7 +452,8 @@
                                 stay: 'Salute Premium Hotel',
                                 transport: 'Ô tô',
                                 highlight: 'Thủ đô',
-                                cost: '2.000.000đ',
+                                adultPrice: 1000000,
+                                childPrice: 700000,
                                 image: 'https://picsum.photos/seed/hanoi2/800/600',
                                 activities: ['Phố Cổ', 'Hồ Tây', 'Ẩm thực Hà Nội'],
                                 foods: ['Bún chả', 'Phở'],
@@ -455,7 +468,8 @@
                                 stay: 'Về nhà',
                                 transport: 'Máy bay',
                                 highlight: 'Trở về',
-                                cost: '2.500.000đ',
+                                adultPrice: 1500000,
+                                childPrice: 1000000,
                                 image: 'https://picsum.photos/seed/hcmcreturn/800/600',
                                 activities: ['Bay từ Nội Bài về Tân Sơn Nhất', 'Kết thúc hành trình'],
                                 foods: ['Cơm nhà'],
@@ -469,6 +483,17 @@
                 },
                 get activeLocation() {
                     return this.currentPlan.locations.find(l => l.id === this.activeId);
+                },
+                formatCurrency(value) {
+                    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+                },
+                calculateLocationCost(loc) {
+                    return (loc.adultPrice * this.adults) + (loc.childPrice * this.children);
+                },
+                calculateTotalPlanCost() {
+                    return this.currentPlan.locations.reduce((total, loc) => {
+                        return total + this.calculateLocationCost(loc);
+                    }, 0);
                 },
                 init() {
                     // Load plan from URL
