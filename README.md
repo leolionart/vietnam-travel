@@ -1,57 +1,74 @@
 # 🇻🇳 Vietnam Journey Planner
 
-Ứng dụng lập kế hoạch và chia sẻ hành trình du lịch Việt Nam chuyên nghiệp, trực quan và hiện đại.
+Ứng dụng lập kế hoạch và chia sẻ hành trình du lịch Việt Nam, với admin dashboard để quản lý dữ liệu và public frontend cho người xem.
 
-## 🌟 Tính năng nổi bật
+## 🛠 Công nghệ
 
-- **Quản lý nhiều kế hoạch (Multi-plan)**: Hỗ trợ lưu trữ và chuyển đổi linh hoạt giữa nhiều hành trình khác nhau (ví dụ: Tour Miền Bắc, Xuyên Việt 2025).
-- **Bản đồ tương tác (Interactive Map)**: Sử dụng Leaflet.js kết hợp với OSRM API để vẽ lộ trình thực tế trên đường bộ, không chỉ là đường chim bay.
-- **Chi tiết hành trình**: Cung cấp thông tin đầy đủ về nơi lưu trú, phương tiện di chuyển, hoạt động nổi bật và ẩm thực địa phương cho từng điểm đến.
-- **Chia sẻ dễ dàng**: Mỗi kế hoạch có một URL riêng biệt, giúp bạn dễ dàng gửi lộ trình cụ thể cho bạn bè hoặc người thân.
-- **Giao diện hiện đại**: Thiết kế tối giản, sang trọng với Tailwind CSS, tối ưu hóa cho cả thiết bị di động và máy tính.
-- **Tự động hóa CI/CD**: Tích hợp GitHub Actions để tự động build và push Docker image lên GitHub Container Registry (GHCR).
+- **Public frontend**: Alpine.js, Tailwind CSS, Leaflet.js, OSRM routing
+- **Admin dashboard**: React + Vite, dnd-kit drag-and-drop
+- **Backend**: Express + SQLite (better-sqlite3), JWT auth
+- **Deploy**: Docker, Caddy reverse proxy
 
-## 🛠 Công nghệ sử dụng
+## 🚀 Cài đặt & Chạy
 
-- **Frontend**: [Alpine.js](https://alpinejs.dev/) (Logic), [Tailwind CSS](https://tailwindcss.com/) (Styling), [Lucide](https://lucide.dev/) (Icons).
-- **Bản đồ**: [Leaflet.js](https://leafletjs.com/), [OSRM](http://project-osrm.org/) (Routing service).
-- **Công cụ build**: [Vite](https://vitejs.dev/).
-- **Triển khai**: [Docker](https://www.docker.com/), [GitHub Actions](https://github.com/features/actions).
-
-## 🚀 Hướng dẫn cài đặt
-
-### Chạy cục bộ (Development)
-
-1. Cài đặt dependencies:
-   ```bash
-   npm install
-   ```
-2. Chạy server phát triển:
-   ```bash
-   npm run dev
-   ```
-
-### Chạy với Docker
-
-Ứng dụng đã được đóng gói sẵn. Bạn có thể chạy nhanh bằng Docker Compose:
+### Development
 
 ```bash
-docker-compose up -d
+# 1. Cài dependencies
+cd api && npm install
+cd ../admin && npm install
+cd ../public && npm install
+
+# 2. Tạo file .env từ mẫu
+cp .env.example .env
+# Điền JWT_SECRET, ADMIN_PASSWORD theo ý muốn
+
+# 3. Chạy 3 server song song
+cd api   && npm run dev          # API :7321
+cd admin && npx vite --port 3002 # Admin :3002
+cd public && npx vite --port 3000 # Public :3000 (proxy /api và /admin)
 ```
 
-Ứng dụng sẽ khả dụng tại địa chỉ `http://localhost:3000`.
+Truy cập:
+- Public: http://localhost:3000
+- Admin: http://localhost:3000/admin
 
-## 📦 Cấu trúc dự án
+### Docker (Production)
 
-- `index.html`: File giao diện chính tích hợp logic Alpine.js.
-- `Dockerfile` & `docker-compose.yml`: Cấu hình đóng gói và triển khai.
-- `.github/workflows/`: Quy trình tự động hóa build & publish image.
+```bash
+cp .env.example .env
+# Chỉnh sửa .env với giá trị production (bắt buộc đổi JWT_SECRET + ADMIN_PASSWORD)
 
-## 📝 Ghi chú hành trình
+docker compose up -d
+```
 
-Hệ thống hiện tại hỗ trợ các lộ trình:
-1. **Miền Bắc**: Hà Nội - Nghệ An - Ninh Bình - Hạ Long.
-2. **Xuyên Việt 2025**: TP.HCM - Đà Nẵng - Bà Nà Hill - Hội An - Nghệ An - Ninh Bình - Hà Nội.
+Container production chỉ chạy trên Linux Docker host (image build bởi CI là linux/amd64).
+
+Sau đó cấu hình Caddy/nginx trỏ domain về port 7321.
+
+## ⚙️ Biến môi trường
+
+Tạo file `.env` từ `.env.example`:
+
+| Biến | Bắt buộc | Mô tả |
+|------|----------|-------|
+| `JWT_SECRET` | ✅ | Secret key để ký JWT (đặt chuỗi ngẫu nhiên dài) |
+| `ADMIN_PASSWORD` | ✅ | Mật khẩu đăng nhập admin dashboard |
+| `DB_PATH` | | Đường dẫn SQLite DB (mặc định `./travel.db`) |
+| `PORT` | | Port API server (mặc định `7321`) |
+| `VEXERE_USERNAME` | | Username tài khoản Vexere agent |
+| `VEXERE_PASSWORD` | | Password tài khoản Vexere agent |
+| `VEXERE_USE_UAT` | | `true` để dùng môi trường test của Vexere |
+
+## 🎫 Tích hợp Vexere (tùy chọn)
+
+Nếu cấu hình `VEXERE_USERNAME` và `VEXERE_PASSWORD`, API có thể gọi Vexere để lấy dữ liệu chuyến/giá.
+
+**Cách cấu hình:**
+1. Điền username và password tài khoản Vexere agent vào `.env`
+2. API sử dụng `grant_type=password` để lấy token từ `account-service.vexere.com`
+
+Nếu không cấu hình, phần tích hợp Vexere sẽ tự động tắt (mọi tính năng khác vẫn hoạt động bình thường).
 
 ---
 *Phát triển bởi [leolionart](https://github.com/leolionart)*

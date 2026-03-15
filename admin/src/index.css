@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    background-color: #0f172a;
+    color: #f8fafc;
+    font-family: 'Inter', system-ui, sans-serif;
+}
+
+@layer components {
+    .input-field {
+        @apply w-full px-3 py-2 bg-slate-800 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors;
+    }
+}
