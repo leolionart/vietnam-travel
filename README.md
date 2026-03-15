@@ -1,151 +1,174 @@
-# 🇻🇳 Vietnam Journey Planner
+# Vietnam Roadtrips — Visual travel planner powered by AI
 
-Ứng dụng lập kế hoạch du lịch Việt Nam — admin dashboard quản lý dữ liệu, public frontend cho người xem.
+> Chat with your AI. Get a shareable link. No login. No friction.
 
-## 🛠 Công nghệ
+**[trips.naai.studio](https://trips.naai.studio)**
 
-- **Public frontend**: `public/index.html` — Alpine.js, Tailwind CSS, Leaflet.js
-- **Admin dashboard**: `admin/` — React + Vite
-- **Backend**: `api/` — Express + SQLite (better-sqlite3), JWT auth
-- **Deploy**: Docker multi-stage, Caddy reverse proxy
+---
 
-## 🚀 Chạy local (dev)
+## The idea
 
-Cần **3 terminal song song**:
+Western travel culture loves roadtrips — hopping between towns, experiencing local food, sleeping somewhere new every night. Vietnam is *perfect* for this: the country stretches 1,650 km from north to south, packed with distinct provinces, each with its own cuisine, landscapes, and rhythm.
+
+Most AIs can plan a great multi-stop Vietnam itinerary — but the output is a wall of text. **Vietnam Roadtrips** gives that plan a visual home: an interactive timeline with a live map, estimated time at each attraction, transport between stops, food recommendations, and cost estimates. All rendered beautifully from a single shareable link.
+
+The workflow is simple:
+
+1. Attach the MCP to your AI (Claude, Cursor, or anything that supports MCP)
+2. Tell your AI to plan a trip and push it to the app
+3. Get a link — share it with whoever's coming
+
+---
+
+## Quick start — Add MCP to your AI
+
+**Step 1** — Clone the repo (one-time):
 
 ```bash
-# Terminal 1 — API (BẮT BUỘC chạy trước)
-cd api && npm install && npm run dev       # port 7321
-
-# Terminal 2 — Admin
-cd admin && npm install && npm run dev     # port 3002
-
-# Terminal 3 — Public frontend
-cd public && npm install && npm run dev    # port 3000, proxy /api → :7321
+git clone https://github.com/leolionart/vietnam-travel.git
+cd vietnam-travel/api && npm install
 ```
 
-- **Public**: http://localhost:3000
-- **Admin**: http://localhost:3000/admin
+**Step 2** — Add the MCP config to your AI client.
 
-> Không dùng `npm run dev` ở root — đó là file cũ, deprecated.
+### Claude Code
 
-## ⚙️ Biến môi trường
+`~/.claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "vietnam-roadtrips": {
+      "command": "npx",
+      "args": ["tsx", "/absolute/path/to/vietnam-travel/api/src/mcp.ts"],
+      "env": {
+        "REMOTE_API_URL": "https://trips.naai.studio"
+      }
+    }
+  }
+}
+```
+
+### Cursor
+
+`~/.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "vietnam-roadtrips": {
+      "command": "npx",
+      "args": ["tsx", "/absolute/path/to/vietnam-travel/api/src/mcp.ts"],
+      "env": {
+        "REMOTE_API_URL": "https://trips.naai.studio"
+      }
+    }
+  }
+}
+```
+
+> Replace `/absolute/path/to/vietnam-travel` with the actual path on your machine (e.g. `/Users/yourname/vietnam-travel`).
+
+> No `ADMIN_PASSWORD` needed. Plans you create are session-isolated — they don't appear in the main site listing and are only accessible via your unique share link.
+
+---
+
+## Try it now
+
+Once the MCP is connected, paste this into your AI:
+
+```
+Plan a 7-day Vietnam roadtrip from Hanoi heading south: Ninh Binh (2 nights),
+Phong Nha (2 nights), Hue (1 night), Da Nang (2 nights). Group of 2 adults.
+End of April 2026.
+
+For each stop: add the top 3–4 attractions with estimated visit duration and
+ticket prices, local food specialties, rough accommodation budget per night,
+and transport from the previous stop (bus/train, estimated fare and travel time).
+
+Use slug "hanoi-south-apr26" and push everything to Vietnam Roadtrips.
+Return the share link when done.
+```
+
+Your AI will use the MCP tools to build the full plan and return something like:
+
+```
+Here's your trip: https://trips.naai.studio/?session=a3f8c2e1d4b7
+```
+
+Open it. Share it. Done.
+
+---
+
+## What the app shows
+
+Each stop on your itinerary gets its own card on a vertical timeline, connected by transport info (vehicle type, duration, estimated fare). Click any stop to expand:
+
+- **Map** — all attractions pinned with geographic coordinates, routed in a logical order
+- **Attractions** — name, recommended visit time, adult/child ticket prices
+- **Food** — local dishes worth trying at that stop
+- **Stay** — accommodation name and nightly budget
+- **Cost overview** — running total across the whole trip (transport + attractions + food + stay)
+
+---
+
+## MCP tools reference
+
+| Tool | What it does |
+|------|-------------|
+| `create_plan` | Create a new trip with a custom slug → returns `shareUrl` |
+| `add_location` | Add a stop (province/city) with transport, accommodation, food, cost details |
+| `update_location` | Edit any field on a stop |
+| `delete_location` | Remove a stop |
+| `add_sub_location` | Add an attraction inside a stop (e.g. Ha Long Bay inside Quang Ninh) |
+| `update_sub_location` | Edit an attraction |
+| `delete_sub_location` | Remove an attraction |
+| `get_plan` | Read back the full plan (locations + attractions) |
+| `list_plans` | List all plans on the server |
+| `update_plan` | Rename or change the slug |
+| `delete_plan` | Delete the plan |
+
+---
+
+## Self-hosting
+
+If you want to run your own instance:
+
+```bash
+# 1. Clone and install
+git clone https://github.com/leolionart/vietnam-travel.git
+cd vietnam-travel
+cd api && npm install
+
+# 2. Configure
+cp .env.example .env   # set DB_PATH, ADMIN_PASSWORD, JWT_SECRET
+
+# 3. Run API server (port 7321)
+npm run dev
+
+# 4. Build and serve the frontend
+cd ../public && npm install && npm run dev   # port 3000
+```
+
+Then point your MCP at `http://localhost:7321` instead of `https://trips.naai.studio`.
+
+### Environment variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `JWT_SECRET` | ✅ | JWT signing secret |
+| `ADMIN_PASSWORD` | ✅ | Admin panel password |
+| `DB_PATH` | | SQLite file path (default: `./travel.db`) |
+| `PORT` | | API port (default: `7321`) |
+
+### Docker
 
 ```bash
 cp .env.example .env
-# Điền JWT_SECRET và ADMIN_PASSWORD
-```
-
-| Biến | Bắt buộc | Mô tả |
-|------|----------|-------|
-| `JWT_SECRET` | ✅ | Secret key JWT |
-| `ADMIN_PASSWORD` | ✅ | Mật khẩu admin |
-| `DB_PATH` | | Đường dẫn SQLite (mặc định `./travel.db`) |
-| `PORT` | | Port API (mặc định `7321`) |
-| `VEXERE_USERNAME` | | Tích hợp Vexere (tùy chọn) |
-| `VEXERE_PASSWORD` | | Tích hợp Vexere (tùy chọn) |
-
-## 🐳 Docker (Production)
-
-```bash
-cp .env.example .env   # chỉnh JWT_SECRET + ADMIN_PASSWORD
-mkdir -p data          # thư mục chứa DB
+mkdir -p data
 docker compose up -d
 ```
 
-Caddy/nginx trỏ domain về port 7321. Xem `DEPLOY.md` để biết quy trình deploy đầy đủ.
-
 ---
 
-## 🤖 MCP Server — Lập kế hoạch bằng AI
-
-Kết nối Claude Code, Cursor, hay bất kỳ AI client hỗ trợ MCP để lập kế hoạch du lịch và nhận link chia sẻ ngay, **không cần đăng nhập**.
-
-### Cách hoạt động
-
-1. AI dùng MCP tools để tạo plan với slug tuỳ chỉnh
-2. Thêm các điểm dừng, lịch trình, chi phí, ẩm thực địa phương
-3. Nhận link dạng `https://vietroadtrips.com/?session=<token>` để chia sẻ
-
-> Plans tạo qua public MCP là **session plans** — không xuất hiện trong danh sách chính của website, chỉ truy cập được qua link session. Điều này ngăn DB bị "ô nhiễm" bởi nội dung người dùng.
-
-### Cấu hình cho Claude Code / Cursor
-
-Thêm vào `~/.claude/claude_desktop_config.json` (Claude) hoặc `~/.cursor/mcp.json` (Cursor):
-
-```json
-{
-  "mcpServers": {
-    "viet-roadtrips": {
-      "command": "npx",
-      "args": ["-y", "tsx", "/đường-dẫn-tuyệt-đối/vietnam-travel/api/src/mcp.ts"],
-      "env": {
-        "REMOTE_API_URL": "https://vietroadtrips.com"
-      }
-    }
-  }
-}
-```
-
-> **Không cần `ADMIN_PASSWORD`** — plans tạo qua MCP dùng public API mở, không yêu cầu xác thực.
-
-### Cấu hình khi tự host (local)
-
-Nếu chạy server tại máy, bỏ `REMOTE_API_URL` để MCP truy cập SQLite trực tiếp:
-
-```json
-{
-  "mcpServers": {
-    "viet-roadtrips": {
-      "command": "npx",
-      "args": ["-y", "tsx", "/đường-dẫn/vietnam-travel/api/src/mcp.ts"],
-      "env": {
-        "DOTENV_CONFIG_PATH": "/đường-dẫn/vietnam-travel/.env"
-      }
-    }
-  }
-}
-```
-
-### Ví dụ prompt
-
-Sau khi cấu hình xong, thử nhắn với AI:
-
-```
-Lập kế hoạch 5 ngày Hà Nội → Ninh Bình → Sầm Sơn cho 2 người lớn, 1 trẻ em, tháng 7/2026.
-Tạo plan slug "ha-noi-ninh-binh-sam-son-t7", thêm điểm tham quan nổi bật mỗi điểm dừng,
-gợi ý đặc sản địa phương và ước tính chi phí. Trả về link chia sẻ.
-```
-
-AI sẽ tạo plan hoàn chỉnh và trả về link như:
-
-```
-https://vietroadtrips.com/?slug=ha-noi-ninh-binh-sam-son-t7
-```
-
-### Danh sách MCP tools
-
-| Tool | Mô tả |
-|------|-------|
-| `list_plans` | Liệt kê tất cả plans |
-| `get_plan` | Xem chi tiết plan (locations + sub-locations) |
-| `create_plan` | Tạo plan mới → trả về `shareUrl` |
-| `update_plan` | Đổi tên hoặc slug |
-| `delete_plan` | Xóa plan |
-| `add_location` | Thêm điểm dừng (tỉnh/thành) với đầy đủ thông tin |
-| `update_location` | Cập nhật thông tin điểm dừng |
-| `delete_location` | Xóa điểm dừng |
-| `add_sub_location` | Thêm điểm tham quan con (vd: Vịnh Hạ Long trong Quảng Ninh) |
-| `update_sub_location` | Cập nhật điểm tham quan con |
-| `delete_sub_location` | Xóa điểm tham quan con |
-
-### Biến môi trường MCP
-
-| Biến | Mô tả |
-|------|-------|
-| `REMOTE_API_URL` | URL server (vd: `https://vietroadtrips.com`). Nếu không set → dùng local DB. |
-| `ADMIN_PASSWORD` | Mật khẩu admin (tuỳ chọn). Nếu không set → dùng public API. |
-| `DOTENV_CONFIG_PATH` | Đường dẫn file `.env` khi dùng local mode. |
-
----
-*Phát triển bởi [leolionart](https://github.com/leolionart)*
+*Built by [leolionart](https://github.com/leolionart)*
