@@ -44,9 +44,6 @@ COPY api/src/db/schema.sql ./dist/db/schema.sql
 COPY --from=build-public /build/dist/public ./static/public
 COPY --from=build-admin  /build/dist/admin  ./static/admin
 
-# plans.json for fresh-DB seed
-COPY plans.json ./plans.json
-
 ENV PORT=7321
 ENV NODE_ENV=production
 
