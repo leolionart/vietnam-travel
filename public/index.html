@@ -777,11 +777,16 @@
                 },
 
                 locationImg(name) {
-                    // Hash tên → lock number để mỗi tỉnh luôn ra ảnh riêng biệt
-                    // Keywords cố định "vietnam,travel" để ảnh luôn phù hợp chủ đề
+                    // Strip dấu tiếng Việt → ASCII để loremflickr tìm đúng ảnh theo tên địa điểm
+                    const ascii = name
+                        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  // bỏ dấu
+                        .replace(/đ/gi, 'd')                                // đ → d
+                        .replace(/[^a-zA-Z0-9\s]/g, '')                    // bỏ ký tự đặc biệt
+                        .trim().replace(/\s+/g, ',');                       // spaces → commas
+                    // lock = hash của tên gốc để ảnh nhất quán mỗi lần load
                     let h = 0;
                     for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0x7fff;
-                    return `https://loremflickr.com/800/600/vietnam,travel/all?lock=${h}`;
+                    return `https://loremflickr.com/800/600/${ascii},vietnam/all?lock=${h}`;
                 },
 
                 // Getter có explicit dependency vào activeLocation.adults/children, excludedSubs và excludedLocations
