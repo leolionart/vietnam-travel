@@ -5,8 +5,18 @@ COPY admin/package*.json ./
 RUN npm ci
 COPY admin/ ./
 RUN npm run build
+# output → /build/dist/admin
 
-# ── Stage 2: Build API TypeScript ────────────────────────
+# ── Stage 2: Build public Alpine.js frontend ─────────────
+FROM node:20-alpine AS build-public
+WORKDIR /build/public
+COPY public/package*.json ./
+RUN npm ci
+COPY public/ ./
+RUN npm run build
+# output → /build/dist/public
+
+# ── Stage 3: Build API TypeScript ────────────────────────
 FROM node:20-alpine AS build-api
 WORKDIR /build/api
 COPY api/package*.json ./
@@ -31,11 +41,11 @@ COPY --from=build-api /build/api/dist ./dist
 COPY api/src/db/schema.sql ./dist/db/schema.sql
 
 # Static files: public SPA + admin dashboard
-COPY public/index.html  ./static/public/index.html
-COPY public/plans.json  ./static/public/plans.json
-COPY public/favicon.svg ./static/public/favicon.svg
-COPY public/plans.json  ./plans.json
-COPY --from=build-admin /build/dist/admin ./static/admin
+COPY --from=build-public /build/dist/public ./static/public
+COPY --from=build-admin  /build/dist/admin  ./static/admin
+
+# plans.json for fresh-DB seed
+COPY plans.json ./plans.json
 
 ENV PORT=7321
 ENV NODE_ENV=production
