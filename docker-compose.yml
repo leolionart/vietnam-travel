@@ -1,6 +1,7 @@
 services:
   app:
-    build: .
+    image: ghcr.io/leolionart/vietnam-travel:latest
+    # build: .   # uncomment to build locally instead of pulling from GHCR
     ports:
       - "7321:7321"
     environment:
