@@ -207,10 +207,7 @@
             <!-- Content -->
             <div class="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6 lg:space-y-8"
                  x-ref="scrollContainer"
-                 @scroll="
-                     if (!detailScrolled && $el.scrollTop > 30) detailScrolled = true;
-                     else if (detailScrolled && $el.scrollTop === 0) detailScrolled = false;
-                 ">
+                 @scroll="if (!detailScrolled && $el.scrollTop > 30) detailScrolled = true;">
 
                 <!-- Detail mode: numbered sub-location list -->
                 <template x-if="detailMode === 'detail' && activeLocation.subLocations?.length > 0">
