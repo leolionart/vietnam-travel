@@ -102,11 +102,18 @@ export function buildVexereUrl(params: {
 
     const fromSlug = toVexereSlug(params.fromProvince) || 'a';
     const toSlug = toVexereSlug(params.toProvince) || 'b';
-    const url = new URL(`https://vexere.com/vi-VN/ve-xe-khach-tu-${fromSlug}-di-${toSlug}-${fromId}t${toId}.html`);
+    // Vexere website deeplink uses different IDs from the Route Search API (1-63).
+    // Canonical website format: FROM = 100 + province_id, TO = (100 + province_id) * 10 + 1
+    // e.g. Nghệ An(41): FROM=141, Ninh Bình(42): TO=1421
+    const fromWebId = 100 + fromId;
+    const toWebId = (100 + toId) * 10 + 1;
+    const url = new URL(`https://vexere.com/vi-VN/ve-xe-khach-tu-${fromSlug}-di-${toSlug}-${fromWebId}t${toWebId}.html`);
 
     const date = toVexereDate(params.travelDate);
     if (date) url.searchParams.set('date', date);
     if (params.type) url.searchParams.set('type', params.type);
+    url.searchParams.set('v', '10');
+    url.searchParams.set('nation', '84');
     return url.toString();
 }
 

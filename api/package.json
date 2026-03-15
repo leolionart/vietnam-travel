@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "DOTENV_CONFIG_PATH=../.env tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "mcp": "tsx src/mcp.ts"

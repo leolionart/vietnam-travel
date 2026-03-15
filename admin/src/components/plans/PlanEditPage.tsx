@@ -16,7 +16,13 @@ export function PlanEditPage() {
 
     useEffect(() => {
         if (!slug) return;
-        api.getPlan(slug).then(setPlan).finally(() => setLoading(false));
+        api.getPlan(slug).then(p => {
+            setPlan(p);
+            // Auto-select first location on load
+            if (p.locations && p.locations.length > 0) {
+                setEditingLocation(p.locations[0]);
+            }
+        }).finally(() => setLoading(false));
     }, [slug]);
 
     function showToast(message: string, type: 'success' | 'error' = 'success') {
@@ -41,11 +47,14 @@ export function PlanEditPage() {
                 await api.addLocation(slug, data);
                 const updated = await api.getPlan(slug);
                 setPlan(updated);
+                const newLoc = updated.locations?.[updated.locations.length - 1] ?? null;
+                setEditingLocation(newLoc);
                 setAddingNew(false);
             } else if (editingLocation) {
                 const updated = await api.updateLocation(slug, editingLocation.id, data);
                 setPlan(updated);
-                setEditingLocation(null);
+                const refreshed = updated.locations?.find(l => l.id === editingLocation.id) ?? null;
+                setEditingLocation(refreshed);
             }
             showToast('Đã lưu thành công');
         } catch (err: unknown) {
@@ -54,12 +63,12 @@ export function PlanEditPage() {
     }
 
     async function handleDeleteLocation(id: number) {
-        if (!slug || !confirm('Xóa địa điểm này?')) return;
+        if (!slug) return;
         try {
             await api.deleteLocation(slug, id);
             const updated = await api.getPlan(slug);
             setPlan(updated);
-            if (editingLocation?.id === id) setEditingLocation(null);
+            if (editingLocation?.id === id) setEditingLocation(updated.locations?.[0] ?? null);
             showToast('Đã xóa địa điểm');
         } catch {
             showToast('Lỗi khi xóa', 'error');
@@ -70,40 +79,45 @@ export function PlanEditPage() {
     if (!plan) return <div className="p-8 text-red-400">Không tìm thấy kế hoạch</div>;
 
     const locations = plan.locations ?? [];
+    const isEditing = editingLocation !== null || addingNew;
 
     return (
         <div className="flex h-full min-h-0 overflow-hidden">
-            {/* Left panel */}
-            <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Left panel — full width when idle, equal split when editing */}
+            <div className={`flex flex-col overflow-hidden ${
+                isEditing ? 'flex-1 min-w-[500px] border-r border-white/10' : 'flex-1'
+            }`}>
                 <div className="p-6 border-b border-white/10 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Link to="/" className="text-slate-400 hover:text-white text-sm">← Tất cả kế hoạch</Link>
-                        <div>
-                            <h1 className="text-xl font-bold text-white">{plan.name}</h1>
+                        <Link to="/" className="text-slate-400 hover:text-white text-sm whitespace-nowrap">← Tất cả kế hoạch</Link>
+                        <div className="min-w-0">
+                            <h1 className="text-xl font-bold text-white truncate">{plan.name}</h1>
                             <p className="text-slate-400 text-xs">{plan.dateRange || 'Chưa có ngày'}</p>
                         </div>
                     </div>
                     <button
                         onClick={() => { setAddingNew(true); setEditingLocation(null); }}
-                        className="px-4 py-2 bg-white/10 hover:bg-white/15 text-slate-300 text-sm rounded-xl transition-colors"
+                        className="flex-none ml-4 px-4 py-2 bg-white/10 hover:bg-white/15 text-slate-300 text-sm rounded-xl transition-colors whitespace-nowrap"
                     >
                         + Thêm địa điểm
                     </button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-6">
-                    <LocationList
-                        locations={locations}
-                        onReorder={handleReorder}
-                        onEdit={loc => { setEditingLocation(loc); setAddingNew(false); }}
-                        onDelete={handleDeleteLocation}
-                        activeId={editingLocation?.id}
-                    />
+                    <div className={isEditing ? '' : 'max-w-3xl mx-auto'}>
+                        <LocationList
+                            locations={locations}
+                            onReorder={handleReorder}
+                            onEdit={loc => { setEditingLocation(loc); setAddingNew(false); }}
+                            onDelete={handleDeleteLocation}
+                            activeId={editingLocation?.id}
+                        />
+                    </div>
                 </div>
             </div>
 
             {/* Right editor panel */}
-            {(editingLocation || addingNew) && (
+            {isEditing && (
                 <LocationEditor
                     location={editingLocation}
                     planSlug={slug!}

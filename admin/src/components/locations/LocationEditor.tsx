@@ -3,6 +3,8 @@ import type { Location, LocationInput, SubLocation } from '../../types/index.js'
 import { api } from '../../api/client.js';
 import { CurrencyInput } from '../ui/CurrencyInput.js';
 import { TagInput } from '../ui/TagInput.js';
+import { ConfirmDialog } from '../ui/ConfirmDialog.js';
+import { PopConfirm } from '../ui/PopConfirm.js';
 
 interface TripResult {
     tripCode: string;
@@ -57,6 +59,7 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
     const [subLocations, setSubLocations] = useState<SubLocation[]>([]);
     const [expandedSubId, setExpandedSubId] = useState<number | 'new' | null>(null);
     const [subForm, setSubForm] = useState<{ name: string; lat: string; lng: string; durationMinutes: string; description: string; adultPrice: string; childPrice: string }>({ name: '', lat: '', lng: '', durationMinutes: '60', description: '', adultPrice: '0', childPrice: '0' });
+    const [confirmClose, setConfirmClose] = useState(false);
 
     useEffect(() => {
         if (location) {
@@ -142,7 +145,7 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
     }
 
     async function handleDeleteSub(subId: number) {
-        if (!location || !confirm('Xóa điểm này?')) return;
+        if (!location) return;
         try {
             await api.deleteSubLocation(planSlug, location.id, subId);
             setSubLocations(prev => prev.filter(s => s.id !== subId));
@@ -150,6 +153,11 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
         } catch (err) {
             alert('Lỗi: ' + (err instanceof Error ? err.message : String(err)));
         }
+    }
+
+    function handleClose() {
+        if (dirty) { setConfirmClose(true); return; }
+        onClose();
     }
 
     function handleSave() {
@@ -162,13 +170,8 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
         setDirty(false);
     }
 
-    function handleClose() {
-        if (dirty && !confirm('Có thay đổi chưa lưu. Bạn có muốn thoát không?')) return;
-        onClose();
-    }
-
     return (
-        <div className="w-[420px] border-l border-white/10 bg-slate-900 flex flex-col overflow-hidden">
+        <div className="flex-1 min-w-[560px] border-l border-white/10 bg-slate-900 flex flex-col overflow-hidden">
             <div className="p-4 border-b border-white/10 flex items-center justify-between">
                 <h2 className="font-bold text-white text-sm">
                     {location ? `Sửa: ${location.name}` : 'Thêm địa điểm mới'}
@@ -179,169 +182,166 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-5">
-                {/* Basic info */}
-                <Section title="Thông tin cơ bản">
-                    <Field label="Tên địa điểm *">
-                        <input
-                            type="text"
-                            value={form.name ?? ''}
-                            onChange={e => set('name', e.target.value)}
-                            className="input-field"
-                            placeholder="Hà Nội"
-                        />
-                    </Field>
-                    <Field label="Tỉnh / Thành phố">
-                        <input
-                            type="text"
-                            value={form.province ?? ''}
-                            onChange={e => set('province', e.target.value)}
-                            className="input-field"
-                            placeholder="Hà Nội"
-                        />
-                    </Field>
-                    <GeoSearch onResult={r => {
-                        set('lat', r.lat);
-                        set('lng', r.lng);
-                    }} />
-                    <div className="grid grid-cols-2 gap-3">
-                        <Field label="Vĩ độ (lat)">
-                            <input type="number" step="0.000001" value={form.lat ?? ''} onChange={e => set('lat', Number(e.target.value))} className="input-field" placeholder="21.0285" />
-                        </Field>
-                        <Field label="Kinh độ (lng)">
-                            <input type="number" step="0.000001" value={form.lng ?? ''} onChange={e => set('lng', Number(e.target.value))} className="input-field" placeholder="105.8542" />
-                        </Field>
+            <div className="flex-1 overflow-y-auto p-5">
+                <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+                    {/* ── Cột trái: thông tin địa lý & mô tả ── */}
+                    <div className="space-y-5">
+                        <Section title="Thông tin cơ bản">
+                            <div className="grid grid-cols-2 gap-3">
+                                <Field label="Tên địa điểm *">
+                                    <input type="text" value={form.name ?? ''} onChange={e => set('name', e.target.value)} className="input-field" placeholder="Hà Nội" />
+                                </Field>
+                                <Field label="Tỉnh / Thành phố">
+                                    <input type="text" value={form.province ?? ''} onChange={e => set('province', e.target.value)} className="input-field" placeholder="Hà Nội" />
+                                </Field>
+                            </div>
+                            <GeoSearch onResult={r => { set('lat', r.lat); set('lng', r.lng); }} />
+                            <div className="grid grid-cols-2 gap-3">
+                                <Field label="Vĩ độ (lat)">
+                                    <input type="number" step="0.000001" value={form.lat ?? ''} onChange={e => set('lat', Number(e.target.value))} className="input-field" placeholder="21.0285" />
+                                </Field>
+                                <Field label="Kinh độ (lng)">
+                                    <input type="number" step="0.000001" value={form.lng ?? ''} onChange={e => set('lng', Number(e.target.value))} className="input-field" placeholder="105.8542" />
+                                </Field>
+                            </div>
+                            <Field label="Điểm nổi bật">
+                                <input type="text" value={form.highlight ?? ''} onChange={e => set('highlight', e.target.value)} className="input-field" placeholder="Tràng An - Tam Cốc" />
+                            </Field>
+                            <Field label="Mô tả">
+                                <textarea rows={3} value={form.description ?? ''} onChange={e => set('description', e.target.value)} className="input-field resize-none" placeholder="Chi tiết về địa điểm..." />
+                            </Field>
+                        </Section>
+
+                        <Section title="Hoạt động & Ẩm thực">
+                            <Field label="Hoạt động nổi bật">
+                                <TagInput tags={form.activities ?? []} onChange={tags => set('activities', tags)} placeholder="Tràng An..." />
+                            </Field>
+                            <Field label="Ẩm thực nên thử">
+                                <TagInput tags={form.food ?? []} onChange={tags => set('food', tags)} placeholder="Cơm cháy..." />
+                            </Field>
+                        </Section>
                     </div>
-                    <Field label="Điểm nổi bật">
-                        <input type="text" value={form.highlight ?? ''} onChange={e => set('highlight', e.target.value)} className="input-field" placeholder="Tràng An - Tam Cốc" />
-                    </Field>
-                    <Field label="Mô tả">
-                        <textarea rows={3} value={form.description ?? ''} onChange={e => set('description', e.target.value)} className="input-field resize-none" placeholder="Chi tiết về địa điểm..." />
-                    </Field>
-                </Section>
 
-                {/* Dates */}
-                <Section title="Thời gian">
-                    <div className="grid grid-cols-2 gap-3">
-                        <Field label="Đến lúc">
-                            <input type="datetime-local" value={arriveInput} onChange={e => { setArriveInput(e.target.value); setDirty(true); }} className="input-field" />
-                        </Field>
-                        <Field label="Rời lúc">
-                            <input type="datetime-local" value={departInput} onChange={e => { setDepartInput(e.target.value); setDirty(true); }} className="input-field" />
-                        </Field>
-                    </div>
-                    <Field label="Số ngày lưu trú">
-                        <input type="number" min="0" value={form.durationDays ?? 0} onChange={e => set('durationDays', Number(e.target.value))} className="input-field" />
-                    </Field>
-                </Section>
+                    {/* ── Cột phải: thời gian, di chuyển, lưu trú, chi phí ── */}
+                    <div className="space-y-5">
+                        <Section title="Thời gian">
+                            <div className="grid grid-cols-3 gap-3">
+                                <Field label="Đến lúc">
+                                    <input type="datetime-local" value={arriveInput} onChange={e => { setArriveInput(e.target.value); setDirty(true); }} className="input-field" />
+                                </Field>
+                                <Field label="Rời lúc">
+                                    <input type="datetime-local" value={departInput} onChange={e => { setDepartInput(e.target.value); setDirty(true); }} className="input-field" />
+                                </Field>
+                                <Field label="Số ngày">
+                                    <input type="number" min="0" value={form.durationDays ?? 0} onChange={e => set('durationDays', Number(e.target.value))} className="input-field" />
+                                </Field>
+                            </div>
+                        </Section>
 
-                {/* Transport */}
-                <Section title="Di chuyển">
-                    <Field label="Loại phương tiện">
-                        <select value={form.transportType ?? 'car'} onChange={e => set('transportType', e.target.value)} className="input-field">
-                            {TRANSPORT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                        </select>
-                    </Field>
-                    <Field label="Mô tả di chuyển">
-                        <input type="text" value={form.transportLabel ?? ''} onChange={e => set('transportLabel', e.target.value)} className="input-field" placeholder="Ô tô (Hà Nội → Nghệ An)" />
-                    </Field>
-                    <Field label="Vé xe / vé máy bay">
-                        <CurrencyInput value={form.transportFare ?? 0} onChange={v => set('transportFare', v)} />
-                    </Field>
-                    {previousProvince && form.province && form.province !== previousProvince && (
-                        <VexereButton from={previousProvince} to={form.province} arriveInput={arriveInput} />
-                    )}
-                </Section>
-
-                {/* Accommodation */}
-                <Section title="Lưu trú">
-                    <Field label="Tên chỗ ở">
-                        <input type="text" value={form.accommodationName ?? ''} onChange={e => set('accommodationName', e.target.value)} className="input-field" placeholder="Khách sạn ABC" />
-                    </Field>
-                    <Field label="Link đặt phòng">
-                        <input type="url" value={form.accommodationUrl ?? ''} onChange={e => set('accommodationUrl', e.target.value)} className="input-field" placeholder="https://..." />
-                    </Field>
-                    <Field label="Giá lưu trú / đêm">
-                        <CurrencyInput value={form.stayCostPerNight ?? 0} onChange={v => set('stayCostPerNight', v)} />
-                    </Field>
-                </Section>
-
-                {/* Budget */}
-                <Section title="Chi phí">
-                    <div className="grid grid-cols-2 gap-3">
-                        <Field label="Giá người lớn">
-                            <CurrencyInput value={form.adultPrice ?? 0} onChange={v => set('adultPrice', v)} />
-                        </Field>
-                        <Field label="Giá trẻ em">
-                            <CurrencyInput value={form.childPrice ?? 0} onChange={v => set('childPrice', v)} />
-                        </Field>
-                        <Field label="Số người lớn">
-                            <input type="number" min="1" value={form.adults ?? 2} onChange={e => set('adults', Number(e.target.value))} className="input-field" />
-                        </Field>
-                        <Field label="Số trẻ em">
-                            <input type="number" min="0" value={form.children ?? 0} onChange={e => set('children', Number(e.target.value))} className="input-field" />
-                        </Field>
-                    </div>
-                    <Field label="Ăn uống / ngày">
-                        <CurrencyInput value={form.foodBudgetPerDay ?? 0} onChange={v => set('foodBudgetPerDay', v)} />
-                    </Field>
-                </Section>
-
-                {/* Activities & Food */}
-                <Section title="Hoạt động & Ẩm thực">
-                    <Field label="Hoạt động nổi bật">
-                        <TagInput tags={form.activities ?? []} onChange={tags => set('activities', tags)} placeholder="Tràng An..." />
-                    </Field>
-                    <Field label="Ẩm thực nên thử">
-                        <TagInput tags={form.food ?? []} onChange={tags => set('food', tags)} placeholder="Cơm cháy..." />
-                    </Field>
-                </Section>
-
-                {/* Sub-locations — only for existing locations */}
-                {location && (
-                    <Section title="Lịch trình chi tiết">
-                        <div className="space-y-2">
-                            {subLocations.map((sub, idx) => (
-                                <div key={sub.id} className="bg-white/5 rounded-xl border border-white/10">
-                                    <div
-                                        className="flex items-center justify-between px-3 py-2 cursor-pointer"
-                                        onClick={() => expandedSubId === sub.id ? setExpandedSubId(null) : openEditSub(sub)}
-                                    >
-                                        <span className="text-xs text-slate-300 font-medium">
-                                            <span className="text-slate-500 mr-2">{idx + 1}.</span>{sub.name}
-                                            <span className="text-slate-500 ml-2 text-[10px]">· {sub.durationMinutes} phút</span>
-                                        </span>
-                                        <button
-                                            onClick={e => { e.stopPropagation(); void handleDeleteSub(sub.id); }}
-                                            className="text-slate-600 hover:text-red-400 text-sm leading-none ml-2"
-                                        >×</button>
-                                    </div>
-                                    {expandedSubId === sub.id && (
-                                        <div className="px-3 pb-3 space-y-2 border-t border-white/10 pt-2">
-                                            <SubForm form={subForm} setForm={setSubForm} />
-                                            <button onClick={() => void handleSaveSub()} className="w-full py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg">Lưu</button>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-
-                            {expandedSubId === 'new' && (
-                                <div className="bg-white/5 rounded-xl border border-white/10 px-3 py-3 space-y-2">
-                                    <p className="text-[10px] text-slate-500 font-bold uppercase">Thêm điểm mới</p>
-                                    <SubForm form={subForm} setForm={setSubForm} />
-                                    <div className="flex gap-2">
-                                        <button onClick={() => void handleSaveSub()} className="flex-1 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg">Lưu</button>
-                                        <button onClick={() => setExpandedSubId(null)} className="py-1.5 px-3 bg-white/5 hover:bg-white/10 text-slate-400 text-xs rounded-lg">Hủy</button>
-                                    </div>
-                                </div>
+                        <Section title="Di chuyển">
+                            <div className="grid grid-cols-2 gap-3">
+                                <Field label="Loại phương tiện">
+                                    <select value={form.transportType ?? 'car'} onChange={e => set('transportType', e.target.value)} className="input-field">
+                                        {TRANSPORT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                                    </select>
+                                </Field>
+                                <Field label="Vé xe / máy bay">
+                                    <CurrencyInput value={form.transportFare ?? 0} onChange={v => set('transportFare', v)} />
+                                </Field>
+                            </div>
+                            {previousProvince && form.province && form.province !== previousProvince && (
+                                <VexereButton from={previousProvince} to={form.province} arriveInput={arriveInput} />
                             )}
+                        </Section>
 
-                            <button
-                                onClick={openNewSub}
-                                className="w-full py-2 border border-dashed border-white/20 rounded-xl text-xs text-slate-500 hover:text-slate-300 hover:border-white/30 transition-colors"
-                            >+ Thêm điểm</button>
-                        </div>
-                    </Section>
+                        <Section title="Lưu trú">
+                            <div className="grid grid-cols-2 gap-3">
+                                <Field label="Tên chỗ ở">
+                                    <input type="text" value={form.accommodationName ?? ''} onChange={e => set('accommodationName', e.target.value)} className="input-field" placeholder="Khách sạn ABC" />
+                                </Field>
+                                <Field label="Giá / đêm">
+                                    <CurrencyInput value={form.stayCostPerNight ?? 0} onChange={v => set('stayCostPerNight', v)} />
+                                </Field>
+                            </div>
+                            <Field label="Link đặt phòng">
+                                <input type="url" value={form.accommodationUrl ?? ''} onChange={e => set('accommodationUrl', e.target.value)} className="input-field" placeholder="https://..." />
+                            </Field>
+                        </Section>
+
+                        <Section title="Chi phí">
+                            <div className="grid grid-cols-2 gap-3">
+                                <Field label="Giá người lớn">
+                                    <CurrencyInput value={form.adultPrice ?? 0} onChange={v => set('adultPrice', v)} />
+                                </Field>
+                                <Field label="Giá trẻ em">
+                                    <CurrencyInput value={form.childPrice ?? 0} onChange={v => set('childPrice', v)} />
+                                </Field>
+                                <Field label="Số người lớn">
+                                    <input type="number" min="1" value={form.adults ?? 2} onChange={e => set('adults', Number(e.target.value))} className="input-field" />
+                                </Field>
+                                <Field label="Số trẻ em">
+                                    <input type="number" min="0" value={form.children ?? 0} onChange={e => set('children', Number(e.target.value))} className="input-field" />
+                                </Field>
+                                <div className="col-span-2">
+                                    <Field label="Ăn uống / ngày">
+                                        <CurrencyInput value={form.foodBudgetPerDay ?? 0} onChange={v => set('foodBudgetPerDay', v)} />
+                                    </Field>
+                                </div>
+                            </div>
+                        </Section>
+                    </div>
+                </div>
+
+                {/* Sub-locations — full width, only for existing locations */}
+                {location && (
+                    <div className="mt-5">
+                        <Section title="Lịch trình chi tiết">
+                            <div className="space-y-2">
+                                {subLocations.map((sub, idx) => (
+                                    <div key={sub.id} className="bg-white/5 rounded-xl border border-white/10">
+                                        <div
+                                            className="flex items-center justify-between px-3 py-2 cursor-pointer"
+                                            onClick={() => expandedSubId === sub.id ? setExpandedSubId(null) : openEditSub(sub)}
+                                        >
+                                            <span className="text-xs text-slate-300 font-medium">
+                                                <span className="text-slate-500 mr-2">{idx + 1}.</span>{sub.name}
+                                                <span className="text-slate-500 ml-2 text-[10px]">· {sub.durationMinutes} phút</span>
+                                            </span>
+                                            <div onClick={e => e.stopPropagation()}>
+                                                <PopConfirm
+                                                    label="×"
+                                                    confirmLabel="Xóa"
+                                                    onConfirm={() => void handleDeleteSub(sub.id)}
+                                                />
+                                            </div>
+                                        </div>
+                                        {expandedSubId === sub.id && (
+                                            <div className="px-3 pb-3 space-y-2 border-t border-white/10 pt-2">
+                                                <SubForm form={subForm} setForm={setSubForm} />
+                                                <button onClick={() => void handleSaveSub()} className="w-full py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg">Lưu</button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+
+                                {expandedSubId === 'new' && (
+                                    <div className="bg-white/5 rounded-xl border border-white/10 px-3 py-3 space-y-2">
+                                        <p className="text-[10px] text-slate-500 font-bold uppercase">Thêm điểm mới</p>
+                                        <SubForm form={subForm} setForm={setSubForm} />
+                                        <div className="flex gap-2">
+                                            <button onClick={() => void handleSaveSub()} className="flex-1 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg">Lưu</button>
+                                            <button onClick={() => setExpandedSubId(null)} className="py-1.5 px-3 bg-white/5 hover:bg-white/10 text-slate-400 text-xs rounded-lg">Hủy</button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <button
+                                    onClick={openNewSub}
+                                    className="w-full py-2 border border-dashed border-white/20 rounded-xl text-xs text-slate-500 hover:text-slate-300 hover:border-white/30 transition-colors"
+                                >+ Thêm điểm</button>
+                            </div>
+                        </Section>
+                    </div>
                 )}
             </div>
 
@@ -354,6 +354,15 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
                     {location ? 'Lưu thay đổi' : 'Thêm địa điểm'}
                 </button>
             </div>
+
+            {confirmClose && (
+                <ConfirmDialog
+                    message="Có thay đổi chưa lưu. Thoát mà không lưu?"
+                    confirmLabel="Thoát"
+                    onConfirm={() => { setConfirmClose(false); onClose(); }}
+                    onCancel={() => setConfirmClose(false)}
+                />
+            )}
         </div>
     );
 }
@@ -376,38 +385,73 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     );
 }
 
+// Days until a given date (negative = past)
+function daysUntil(d: Date): number {
+    return Math.round((d.getTime() - Date.now()) / 86400000);
+}
+
 function VexereButton({ from, to, arriveInput }: { from: string; to: string; arriveInput: string }) {
     const [minPrice, setMinPrice] = useState<number | null>(null);
+    const [vexereUrl, setVexereUrl] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         setMinPrice(null);
-        if (!from || !to || !arriveInput) return;
-        const d = new Date(arriveInput);
-        if (Number.isNaN(d.getTime())) return;
+        setVexereUrl(null);
+        if (!from || !to) return;
 
-        const isoDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        setLoading(true);
-        fetch(`/api/vexere-link/trips?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&date=${isoDate}&sort=fare:asc&pagesize=1`)
-            .then(r => r.ok ? r.json() as Promise<{ trips: TripResult[] }> : Promise.reject())
-            .then(data => {
-                const trip = data.trips?.[0];
-                if (trip) setMinPrice(trip.priceDiscount || trip.priceOriginal);
-            })
-            .catch(() => {})
-            .finally(() => setLoading(false));
+        const d = arriveInput ? new Date(arriveInput) : null;
+        const refDate = (d && !Number.isNaN(d.getTime())) ? d : new Date();
+        const dateStr = `${refDate.getDate().toString().padStart(2, '0')}/${(refDate.getMonth() + 1).toString().padStart(2, '0')}/${refDate.getFullYear()}`;
+
+        // Always fetch deeplink
+        fetch(`/api/vexere-link?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&date=${encodeURIComponent(dateStr)}`)
+            .then(r => r.ok ? r.json() as Promise<{ url: string }> : Promise.reject())
+            .then(data => { if (data.url) setVexereUrl(data.url); })
+            .catch(() => {});
+
+        // Fetch price for any future date (Vexere sells tickets well in advance)
+        if (d && !Number.isNaN(d.getTime()) && daysUntil(d) >= 0) {
+            const isoDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            setLoading(true);
+            fetch(`/api/vexere-link/trips?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&date=${isoDate}&sort=fare:asc&pagesize=1`)
+                .then(r => r.ok ? r.json() as Promise<{ trips: TripResult[] }> : Promise.reject())
+                .then(data => {
+                    const trip = data.trips?.[0];
+                    if (trip) setMinPrice(trip.priceDiscount || trip.priceOriginal);
+                })
+                .catch(() => {})
+                .finally(() => setLoading(false));
+        }
     }, [from, to, arriveInput]);
 
     if (!from || !to) return null;
 
+    const priceNode = loading
+        ? <span className="text-slate-500">Đang tải giá...</span>
+        : minPrice != null
+            ? <span className="text-emerald-400 font-semibold">từ {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(minPrice)}</span>
+            : <span className="text-slate-600">Chưa tìm thấy vé cho ngày này</span>;
+
     return (
-        <p className="text-xs text-slate-500 mt-1">
-            Vexere {from} → {to}:{' '}
-            {loading ? 'đang tải...' : minPrice != null
-                ? <span className="text-slate-400">từ {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(minPrice)}</span>
-                : <span>—</span>
-            }
-        </p>
+        <div className="flex items-center gap-3 mt-1 p-2.5 bg-amber-500/5 border border-amber-500/20 rounded-xl">
+            <div className="flex-1 min-w-0">
+                <p className="text-[11px] text-slate-400 font-medium">{from} → {to}</p>
+                <p className="text-[11px] mt-0.5">{priceNode}</p>
+            </div>
+            {vexereUrl ? (
+                <a
+                    href={vexereUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-none px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap"
+                >
+                    Xem vé →
+                </a>
+            ) : (
+                <span className="flex-none px-3 py-1.5 bg-white/5 text-slate-600 text-xs rounded-lg whitespace-nowrap">Vexere</span>
+            )}
+        </div>
     );
 }
 
@@ -595,12 +639,12 @@ function SubForm({ form, setForm }: { form: SubFormState; setForm: React.Dispatc
             </div>
             <div className="grid grid-cols-2 gap-2">
                 <div>
-                    <label className="block text-[10px] text-slate-500 mb-1">Giá người lớn (VND)</label>
-                    <input type="number" min="0" value={form.adultPrice} onChange={e => setForm(f => ({ ...f, adultPrice: e.target.value }))} className="input-field" placeholder="50000" />
+                    <label className="block text-[10px] text-slate-500 mb-1">Giá người lớn</label>
+                    <CurrencyInput value={Number(form.adultPrice) || 0} onChange={v => setForm(f => ({ ...f, adultPrice: String(v) }))} />
                 </div>
                 <div>
-                    <label className="block text-[10px] text-slate-500 mb-1">Giá trẻ em (VND)</label>
-                    <input type="number" min="0" value={form.childPrice} onChange={e => setForm(f => ({ ...f, childPrice: e.target.value }))} className="input-field" placeholder="30000" />
+                    <label className="block text-[10px] text-slate-500 mb-1">Giá trẻ em</label>
+                    <CurrencyInput value={Number(form.childPrice) || 0} onChange={v => setForm(f => ({ ...f, childPrice: String(v) }))} />
                 </div>
             </div>
             <div>

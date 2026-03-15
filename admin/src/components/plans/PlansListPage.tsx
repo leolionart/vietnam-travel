@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../../api/client.js';
 import type { Plan } from '../../types/index.js';
 import { PlanCreateModal } from './PlanCreateModal.js';
+import { PopConfirm } from '../ui/PopConfirm.js';
 
 export function PlansListPage() {
     const [plans, setPlans] = useState<Plan[]>([]);
@@ -14,8 +15,7 @@ export function PlansListPage() {
         api.listPlans().then(setPlans).finally(() => setLoading(false));
     }, []);
 
-    async function handleDelete(slug: string, name: string) {
-        if (!confirm(`Xóa kế hoạch "${name}"?`)) return;
+    async function handleDelete(slug: string) {
         await api.deletePlan(slug);
         setPlans(prev => prev.filter(p => p.slug !== slug));
     }
@@ -55,12 +55,7 @@ export function PlansListPage() {
                                 >
                                     Chỉnh sửa
                                 </Link>
-                                <button
-                                    onClick={() => handleDelete(plan.slug, plan.name)}
-                                    className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-xl text-sm font-medium transition-colors"
-                                >
-                                    Xóa
-                                </button>
+                                <PopConfirm onConfirm={() => void handleDelete(plan.slug)} />
                             </div>
                         </div>
                     ))}

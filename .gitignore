@@ -1,4 +1,7 @@
 .mcp.json
+.playwright-mcp/
+playwright-*.png
+playwright-*.jpeg
 node_modules/
 build/
 dist/
@@ -11,3 +14,4 @@ data/
 travel.db
 travel.db-shm
 travel.db-wal
+.vite/
