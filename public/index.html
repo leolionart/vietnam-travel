@@ -168,7 +168,7 @@
     </div>
 
     <!-- Right Detail Panel -->
-    <main class="fixed right-6 top-28 bottom-28 max-h-[800px] w-[450px] z-40 pointer-events-none detail-panel" :class="activeId ? 'block' : 'hidden'">
+    <main class="fixed right-6 top-28 bottom-28 w-[450px] z-40 pointer-events-none detail-panel" :class="activeId ? 'block' : 'hidden'">
         <div class="glass rounded-[2rem] lg:rounded-[2.5rem] h-full flex flex-col overflow-hidden pointer-events-auto shadow-2xl border-white/5 slide-up relative">
             
             <!-- Close Button (Mobile Only) -->
@@ -207,7 +207,10 @@
             <!-- Content -->
             <div class="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6 lg:space-y-8"
                  x-ref="scrollContainer"
-                 @scroll="detailScrolled = $el.scrollTop > 30">
+                 @scroll="
+                     if (!detailScrolled && $el.scrollTop > 30) detailScrolled = true;
+                     else if (detailScrolled && $el.scrollTop === 0) detailScrolled = false;
+                 ">
 
                 <!-- Detail mode: numbered sub-location list -->
                 <template x-if="detailMode === 'detail' && activeLocation.subLocations?.length > 0">
