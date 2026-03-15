@@ -22,7 +22,7 @@ export function AppShell({ children, onLogout }: Props) {
             <header className="border-b border-white/10 bg-slate-900">
                 <div className="h-16 px-4 sm:px-6 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4 sm:gap-6 min-w-0">
-                        <Link to="/admin" className="flex items-center gap-3 shrink-0">
+                        <Link to="/" className="flex items-center gap-3 shrink-0">
                             <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
                                 <span className="text-slate-900 font-bold text-sm">R</span>
                             </div>
@@ -33,7 +33,7 @@ export function AppShell({ children, onLogout }: Props) {
                         </Link>
 
                         <nav className="flex items-center">
-                            <NavItem to="/admin" label="Kế hoạch" icon={<Compass className="w-4 h-4" />} active={location.pathname === '/admin'} />
+                            <NavItem to="/" label="Kế hoạch" icon={<Compass className="w-4 h-4" />} active={location.pathname === '/'} />
                         </nav>
                     </div>
 

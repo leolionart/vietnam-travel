@@ -30,16 +30,32 @@ if (process.env.NODE_ENV === 'production') {
     const adminDir = join(staticRoot, 'admin');
     const publicDir = join(staticRoot, 'public');
 
+    // Assets có hash trong tên file (JS/CSS từ Vite) → cache vĩnh viễn
+    // HTML entry points → no-cache (phải revalidate sau mỗi deploy)
+    const staticOptions = {
+        etag: true,
+        lastModified: true,
+        setHeaders: (res: express.Response, filePath: string) => {
+            if (filePath.endsWith('.html')) {
+                res.setHeader('Cache-Control', 'no-cache');
+            } else {
+                res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+            }
+        },
+    };
+
     if (existsSync(adminDir)) {
-        app.use('/admin', express.static(adminDir));
+        app.use('/admin', express.static(adminDir, staticOptions));
         app.get('/admin/*', (_req, res) => {
+            res.setHeader('Cache-Control', 'no-cache');
             res.sendFile(join(adminDir, 'index.html'));
         });
     }
 
     if (existsSync(publicDir)) {
-        app.use(express.static(publicDir));
+        app.use(express.static(publicDir, staticOptions));
         app.get('*', (_req, res) => {
+            res.setHeader('Cache-Control', 'no-cache');
             res.sendFile(join(publicDir, 'index.html'));
         });
     }

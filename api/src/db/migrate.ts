@@ -186,6 +186,16 @@ function seedSubLocations(): void {
 export function runMigration(): void {
     const db = getDb();
 
+    // Schema upgrades — idempotent: SQLite throws on duplicate column, so we catch silently
+    const addColumns = [
+        'ALTER TABLE locations ADD COLUMN transport_fare_adult INTEGER NOT NULL DEFAULT 0',
+        'ALTER TABLE locations ADD COLUMN transport_fare_child INTEGER NOT NULL DEFAULT 0',
+        'ALTER TABLE locations ADD COLUMN accommodation_address TEXT NOT NULL DEFAULT \'\'',
+    ];
+    for (const sql of addColumns) {
+        try { db.prepare(sql).run(); } catch { /* column already exists */ }
+    }
+
     if (process.env.FORCE_MIGRATE === 'true') {
         console.log('[migrate] FORCE_MIGRATE=true: clearing all existing data…');
         db.prepare('DELETE FROM sub_locations').run();
@@ -231,7 +241,8 @@ export function runMigration(): void {
             plan_id, sort_order, name, province, lat, lng,
             arrive_at, depart_at, duration_days,
             transport_type, transport_label, transport_fare,
-            accommodation_name, accommodation_url,
+            transport_fare_adult, transport_fare_child,
+            accommodation_name, accommodation_url, accommodation_address,
             adult_price, child_price, stay_cost_per_night, food_budget_per_day,
             adults, children, highlight, description, activities, food
         ) VALUES (
@@ -239,6 +250,7 @@ export function runMigration(): void {
             ?, ?, ?,
             ?, ?, ?,
             ?, ?,
+            ?, ?, ?,
             ?, ?, ?, ?,
             ?, ?, ?, ?, ?, ?
         )
@@ -272,8 +284,11 @@ export function runMigration(): void {
                     transportType,
                     transportLabel,
                     loc.transportFare ?? 0,
+                    0, // transport_fare_adult — default 0 on seed
+                    0, // transport_fare_child — default 0 on seed
                     loc.accommodationName ?? '',
                     loc.accommodationUrl ?? '',
+                    '', // accommodation_address — default empty on seed
                     loc.adultPrice ?? 0,
                     loc.childPrice ?? 0,
                     loc.stayCostPerNight ?? 0,

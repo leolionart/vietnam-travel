@@ -45,8 +45,11 @@ export interface CreateLocationInput {
     transportType?: string;
     transportLabel?: string;
     transportFare?: number;
+    transportFareAdult?: number;
+    transportFareChild?: number;
     accommodationName?: string;
     accommodationUrl?: string;
+    accommodationAddress?: string;
     adultPrice?: number;
     childPrice?: number;
     stayCostPerNight?: number;
@@ -71,10 +74,11 @@ export function addLocation(planId: number, input: CreateLocationInput): number 
             plan_id, sort_order, name, province, lat, lng,
             arrive_at, depart_at, duration_days,
             transport_type, transport_label, transport_fare,
-            accommodation_name, accommodation_url,
+            transport_fare_adult, transport_fare_child,
+            accommodation_name, accommodation_url, accommodation_address,
             adult_price, child_price, stay_cost_per_night, food_budget_per_day,
             adults, children, highlight, description, activities, food
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
         planId,
         maxOrder + 1,
@@ -88,8 +92,11 @@ export function addLocation(planId: number, input: CreateLocationInput): number 
         input.transportType ?? 'car',
         input.transportLabel ?? '',
         input.transportFare ?? 0,
+        input.transportFareAdult ?? 0,
+        input.transportFareChild ?? 0,
         input.accommodationName ?? '',
         input.accommodationUrl ?? '',
+        input.accommodationAddress ?? '',
         input.adultPrice ?? 0,
         input.childPrice ?? 0,
         input.stayCostPerNight ?? 0,
@@ -134,8 +141,11 @@ export function updateLocation(
         transport_type: input.transportType,
         transport_label: input.transportLabel,
         transport_fare: input.transportFare,
+        transport_fare_adult: input.transportFareAdult,
+        transport_fare_child: input.transportFareChild,
         accommodation_name: input.accommodationName,
         accommodation_url: input.accommodationUrl,
+        accommodation_address: input.accommodationAddress,
         adult_price: input.adultPrice,
         child_price: input.childPrice,
         stay_cost_per_night: input.stayCostPerNight,

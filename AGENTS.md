@@ -6,12 +6,29 @@ This document is written for AI coding assistants (Claude, Copilot, etc.) to und
 
 ## Project Overview
 
-**Vietnam Travel Planner** is a full-stack web app for planning and sharing Vietnam travel itineraries.
+**Vietnam Travel Planner** — full-stack web app, du lịch Việt Nam.
 
-- Public visitors browse plans, see cost calculators, maps, and print itineraries.
-- An admin dashboard manages plans, locations, and sub-locations (tourist spots).
-- The backend is a single Express + SQLite server that also serves static builds.
-- Docker image is published to GHCR on every push to `main`.
+- Public visitors browse plans, see cost calculators, maps, print itineraries.
+- Admin dashboard manages plans, locations, sub-locations.
+- Express + SQLite backend serves the API and static builds in production.
+- Docker image published to GHCR on every push to `main`.
+
+**Single source of truth: SQLite DB.** Frontend fetches all data from `/api/plans`. No static JSON fallback.
+
+---
+
+## ⚠️ File nào để sửa
+
+| Mục đích | File cần sửa |
+|----------|-------------|
+| **Public frontend** (UI, logic, CSS) | `public/index.html` |
+| **Admin dashboard** | `admin/src/` |
+| **Backend API** | `api/src/` |
+| **DB seed data** | `plans.json` + `api/src/db/migrate.ts` |
+| **Vite config cho public** | `public/vite.config.ts` |
+| **Dev server config** | `public/vite.config.ts` (proxy) |
+
+> **Không sửa root `index.html`** — đây là file cũ của GitHub Pages (deprecated), không được build vào Docker image.
 
 ---
 
@@ -19,47 +36,47 @@ This document is written for AI coding assistants (Claude, Copilot, etc.) to und
 
 ```
 .
+├── public/                 # ✅ Alpine.js public frontend — FILE NÀY ĐI VÀO PRODUCTION
+│   ├── index.html          # Single file: toàn bộ UI/logic inline (Alpine.js + Tailwind + Leaflet)
+│   ├── favicon.svg
+│   ├── vite.config.ts      # Build → ../dist/public; dev proxy /api → :7321
+│   └── package.json        # "dev": vite --port 3000, "build": vite build
+│
+├── admin/                  # React + Vite admin dashboard
+│   ├── src/
+│   │   ├── api/client.ts       # All fetch() calls to /api/*
+│   │   ├── types/index.ts      # TypeScript interfaces
+│   │   └── components/locations/LocationEditor.tsx
+│   ├── vite.config.ts      # Build → ../dist/admin; port 3002
+│   └── package.json
+│
 ├── api/                    # Express + SQLite backend (port 7321)
 │   ├── src/
-│   │   ├── index.ts        # Entry point: runs migration, mounts routes, serves static
+│   │   ├── index.ts            # Entry: runMigration(), mount routes, serve static (prod)
 │   │   ├── db/
-│   │   │   ├── connection.ts   # better-sqlite3 singleton (DB_PATH env or ./travel.db)
-│   │   │   ├── schema.sql      # CREATE TABLE statements (run on first connect)
-│   │   │   └── migrate.ts      # Seeds plans.json → DB; seeds sub_locations on empty table
+│   │   │   ├── connection.ts   # better-sqlite3 singleton
+│   │   │   ├── schema.sql      # CREATE TABLE (auto-run on first connect)
+│   │   │   └── migrate.ts      # Seed plans.json → DB + SUB_LOCATION_SEEDS
 │   │   ├── routes/
 │   │   │   ├── auth.ts         # POST /api/auth/login → JWT
-│   │   │   ├── plans.ts        # CRUD for plans, locations, sub_locations
-│   │   │   ├── vexere.ts       # GET /api/vexere-link (optional bus booking integration)
+│   │   │   ├── plans.ts        # CRUD plans, locations, sub_locations
+│   │   │   ├── vexere.ts       # GET /api/vexere-link (optional)
 │   │   │   └── health.ts       # GET /api/health
-│   │   ├── services/
-│   │   │   └── planService.ts  # DB queries + shape transformation (snake_case → camelCase)
-│   │   ├── middleware/
-│   │   │   ├── auth.ts         # JWT verification middleware
-│   │   │   └── errorHandler.ts
-│   │   └── lib/
-│   │       └── vexere.ts       # Vexere API client (inferTransportType, token fetch)
-│   ├── package.json        # Scripts: dev (tsx watch), build (tsc), start (node dist/)
-│   └── travel.db           # SQLite database (gitignored, dev only)
+│   │   ├── services/planService.ts   # DB queries, snake_case → camelCase
+│   │   └── middleware/auth.ts        # JWT verification
+│   ├── travel.db           # Dev DB (gitignored)
+│   └── package.json        # "dev": tsx watch, "build": tsc, port 7321
 │
-├── admin/                  # React + Vite admin dashboard (port 3002 in dev)
-│   ├── src/
-│   │   ├── api/client.ts   # All fetch() calls to /api/*
-│   │   ├── types/index.ts  # TypeScript interfaces (Plan, Location, SubLocation…)
-│   │   └── components/
-│   │       └── locations/
-│   │           └── LocationEditor.tsx  # Main location + sub-location editor UI
-│   └── package.json        # build: tsc && vite build → dist/admin/
+├── plans.json              # Seed data — dùng khi fresh deploy, KHÔNG phục vụ frontend
+├── Dockerfile              # Multi-stage: build-admin → build-public → build-api → final
+├── docker-compose.yml      # VPS: bind mount ./data:/data, DB at /data/travel.db
+├── .env.example
+├── .github/workflows/docker-image.yml   # Push to GHCR on push to main
+├── DEPLOY.md               # Deploy runbook
 │
-├── public/                 # Alpine.js public frontend (port 3000 in dev, Vite SPA)
-│   └── index.html          # Single file: Alpine.js + Tailwind + Leaflet + all logic inline
-│
-├── plans.json              # Canonical seed data for both dev and prod fresh DBs
-├── Dockerfile              # Multi-stage: build-admin → build-api → final image
-├── docker-compose.yml      # Binds ./data:/data; DB lives at /data/travel.db in container
-├── .env.example            # All supported env vars with defaults
-├── .github/workflows/
-│   └── docker-image.yml    # Push to GHCR on push to main / tags
-└── DEPLOY.md               # Deployment runbook (data changes, VPS update steps)
+├── index.html              # ❌ DEPRECATED — GitHub Pages static build cũ, bỏ qua
+├── vite.config.ts          # ❌ DEPRECATED — config của root index.html cũ, bỏ qua
+└── dev-server.ts           # ❌ DEPRECATED — monolithic dev server cũ, bỏ qua
 ```
 
 ---
@@ -68,17 +85,17 @@ This document is written for AI coding assistants (Claude, Copilot, etc.) to und
 
 | Layer | Tech |
 |-------|------|
-| Backend | Node.js 20, Express, better-sqlite3, jose (JWT), dotenv |
+| Backend | Node.js 20, Express, better-sqlite3, jose (JWT) |
 | Public frontend | Alpine.js 3, Tailwind CSS (CDN), Leaflet.js, OSRM routing |
-| Admin dashboard | React 18, React Router 6, @dnd-kit, Leaflet, Tailwind CSS |
-| Database | SQLite (single file) |
-| Build | Vite (admin + public), tsc (api) |
+| Admin dashboard | React 18, React Router 6, @dnd-kit, Tailwind CSS |
+| Database | SQLite — `api/travel.db` (dev), `/data/travel.db` (prod) |
+| Build | Vite (public + admin), tsc (api) |
 | Container | Docker multi-stage, Compose bind mount |
-| CI/CD | GitHub Actions → GHCR (ghcr.io) |
+| CI/CD | GitHub Actions → GHCR |
 
 ---
 
-## Database Schema (key tables)
+## Database Schema
 
 ```sql
 plans          (id, slug, name, date_range)
@@ -86,76 +103,77 @@ locations      (id, plan_id, sort_order, name, province, lat, lng,
                 arrive_at, depart_at, duration_days,
                 transport_type, transport_label, transport_fare,
                 accommodation_name, accommodation_url,
-                adult_price, child_price,        -- location entry ticket
+                adult_price, child_price,
                 stay_cost_per_night, food_budget_per_day,
                 adults, children, highlight, description, activities, food)
 sub_locations  (id, location_id, sort_order, name, lat, lng,
                 duration_minutes, description,
-                adult_price, child_price)         -- tourist spot ticket price
+                adult_price, child_price)
 ```
 
-- `activities` and `food` columns are JSON arrays stored as TEXT.
-- All monetary values are integers in VND.
-- `arrive_at` / `depart_at` are Unix milliseconds (nullable).
+- `activities`, `food` — JSON arrays stored as TEXT
+- Monetary values — integers in VND
+- `arrive_at`, `depart_at` — Unix milliseconds (nullable)
 
 ---
 
 ## Data Flow
 
+### Frontend
+1. `GET /api/plans` → list plans
+2. `GET /api/plans/:slug` → full plan + locations + sub_locations
+3. Không có fallback tĩnh — nếu API không chạy thì không có dữ liệu.
+
 ### Fresh deployment (empty DB)
-1. `api/src/index.ts` calls `runMigration()` on startup.
-2. `runMigration()` reads `plans.json` → inserts plans + locations.
-3. `runMigration()` then calls `seedSubLocations()`.
-4. `seedSubLocations()` checks `sub_locations` row count; if zero, inserts all entries from `SUB_LOCATION_SEEDS` using slug+name subqueries (no hardcoded IDs).
+1. `api/src/index.ts` → `runMigration()`
+2. `runMigration()` đọc `plans.json` → insert plans + locations
+3. `seedSubLocations()` — insert `SUB_LOCATION_SEEDS` nếu bảng rỗng
 
-### Existing DB (subsequent starts)
-- Migration skips plan/location insert (row count > 0).
-- `seedSubLocations()` still runs but short-circuits if rows already exist.
-
-### Adding new seed data
-- Add entries to `SUB_LOCATION_SEEDS` array in `api/src/db/migrate.ts`.
-- For live dev DB: run inserts directly with `node` + `better-sqlite3` (see DEPLOY.md).
-- For prod: the seed only auto-applies on a **fresh** DB. For existing prod DBs, run the SQL manually or reset the DB.
+### Existing DB
+- Migration skip nếu đã có data
+- `seedSubLocations()` skip nếu đã có rows
 
 ---
 
-## Cost Calculation (public frontend)
+## Dev Workflow
 
-`calculateLocationCost(loc, adults, children)` in `public/index.html`:
+```bash
+# Terminal 1 — API (BẮT BUỘC chạy trước)
+cd api && npm run dev          # tsx watch, port 7321
 
+# Terminal 2 — Admin dashboard
+cd admin && npm run dev        # Vite, port 3002
+
+# Terminal 3 — Public frontend
+cd public && npm run dev       # Vite, port 3000 (proxy /api → :7321)
 ```
-total = (loc.adultPrice × adults + loc.childPrice × children)  // location entry
-      + loc.stayCostPerNight × loc.duration
-      + loc.foodBudgetPerDay × loc.duration × (adults + children)
-      + loc.transportFare
-      + sum(loc.attractions[].adultPrice × adults + childPrice × children)  // static JSON
-      + sum(loc.subLocations[].adultPrice × adults + childPrice × children) // from API/DB
-```
 
-- `loc.attractions` — static array in `plans.json` (used as fallback on GitHub Pages where there is no API).
-- `loc.subLocations` — fetched from `/api/plans/:slug` (DB-managed, shown in admin).
-- Both sources add to the same total; don't double-populate the same spots in both.
+Truy cập:
+- **Public**: http://localhost:3000
+- **Admin**: http://localhost:3000/admin
+
+**Không dùng** `npm run dev` ở root (đó là `dev-server.ts` cũ — deprecated).
 
 ---
 
 ## API Endpoints
 
 ```
-POST   /api/auth/login                    { password } → { token }
+POST   /api/auth/login                       { password } → { token }
 
-GET    /api/plans                         → [{ slug, name, dateRange, locations[] }]
-GET    /api/plans/:slug                   → { slug, name, dateRange, locations[] }
-POST   /api/plans                   🔒   create plan
-PUT    /api/plans/:slug             🔒   update plan metadata
+GET    /api/plans                            → [{ slug, name, dateRange }]
+GET    /api/plans/:slug                      → { slug, name, dateRange, locations[] }
+POST   /api/plans                      🔒   create plan
+PUT    /api/plans/:slug                🔒   update plan metadata
 
-GET    /api/plans/:slug/locations         → locations[]
-POST   /api/plans/:slug/locations   🔒   create location
-PUT    /api/plans/:slug/locations/:id 🔒 update location
-DELETE /api/plans/:slug/locations/:id 🔒 delete location
+GET    /api/plans/:slug/locations            → locations[]
+POST   /api/plans/:slug/locations      🔒   create location
+PUT    /api/plans/:slug/locations/:id  🔒   update location
+DELETE /api/plans/:slug/locations/:id  🔒   delete location
 PATCH  /api/plans/:slug/locations/reorder 🔒
 
 GET    /api/plans/:slug/locations/:id/sub-locations
-POST   /api/plans/:slug/locations/:id/sub-locations 🔒
+POST   /api/plans/:slug/locations/:id/sub-locations   🔒
 PUT    /api/plans/:slug/locations/:id/sub-locations/:sid 🔒
 DELETE /api/plans/:slug/locations/:id/sub-locations/:sid 🔒
 
@@ -163,26 +181,7 @@ GET    /api/vexere-link?from=X&to=Y&date=YYYY-MM-DD
 GET    /api/health
 ```
 
-🔒 = requires `Authorization: Bearer <JWT>` header.
-
----
-
-## Dev Workflow
-
-```bash
-# Terminal 1 – API
-cd api && npm run dev          # tsx watch, hot-reload, port 7321
-
-# Terminal 2 – Admin
-cd admin && npm run dev        # Vite dev server, port 3002
-
-# Terminal 3 – Public
-cd public && npm run dev       # Vite dev server, port 3000 (proxies /api → :7321)
-```
-
-Vite proxy config (`public/vite.config.ts`): `/api` → `http://localhost:7321`.
-
-The API uses `api/travel.db` (relative to `api/` working directory). Root `travel.db` is a stale artifact—ignore it.
+🔒 = `Authorization: Bearer <JWT>`
 
 ---
 
@@ -190,80 +189,82 @@ The API uses `api/travel.db` (relative to `api/` working directory). Root `trave
 
 | Variable | Required | Default | Notes |
 |----------|----------|---------|-------|
-| `JWT_SECRET` | ✅ prod | `change-me-in-production` | Sign/verify admin JWT |
-| `ADMIN_PASSWORD` | ✅ prod | `admin123` | Admin login password |
+| `JWT_SECRET` | ✅ prod | `change-me-in-production` | Sign/verify JWT |
+| `ADMIN_PASSWORD` | ✅ prod | `admin123` | Admin login |
 | `DB_PATH` | | `./travel.db` | Absolute path preferred in Docker |
-| `PORT` | | `7321` | API listen port |
-| `VEXERE_USERNAME` | | — | Optional bus booking |
-| `VEXERE_PASSWORD` | | — | Optional bus booking |
-| `VEXERE_USE_UAT` | | `false` | Vexere test environment |
+| `PORT` | | `7321` | API port |
+| `VEXERE_USERNAME` | | — | Optional |
+| `VEXERE_PASSWORD` | | — | Optional |
+| `VEXERE_USE_UAT` | | `false` | Vexere test env |
 
 ---
 
 ## Docker & Deployment
 
-### Image
-- Built by GitHub Actions on every push to `main`.
-- Published to `ghcr.io/<owner>/vietnam-travel` with tags: `main`, `sha-<hash>`, `latest`.
-- Platform: `linux/amd64`.
+### Docker build stages
+```
+build-admin   → cd admin   && npm run build → dist/admin/
+build-public  → cd public  && npm run build → dist/public/
+build-api     → cd api     && npm run build → dist/
+final image   → api runtime + static/admin + static/public + plans.json
+```
 
 ### Compose (VPS)
 ```yaml
 volumes:
-  - ./data:/data        # bind mount — DB lives at ./data/travel.db on host
+  - ./data:/data        # DB ở ./data/travel.db trên host
 environment:
   - DB_PATH=/data/travel.db
 ```
 
-### VPS update (code change only)
+### Deploy
 ```bash
+# Code only
 docker compose pull && docker compose up -d
-```
 
-### VPS update (with DB data change)
-See `DEPLOY.md` for the full runbook.
+# Có đổi data → xem DEPLOY.md
+```
 
 ---
 
 ## Common Maintenance Tasks
 
-### Add a new tourist spot (sub-location) to existing prod DB
+### Thêm tourist spot (sub-location) vào prod DB
 
-1. Add entry to `SUB_LOCATION_SEEDS` in `api/src/db/migrate.ts` (for future fresh deploys).
-2. SSH to VPS and run the INSERT directly:
+1. Thêm vào `SUB_LOCATION_SEEDS` trong `api/src/db/migrate.ts`
+2. Insert thẳng vào prod DB:
    ```bash
    sqlite3 ./data/travel.db \
      "INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, description, adult_price, child_price)
       SELECT l.id, <sort>, '<name>', <lat>, <lng>, <min>, '<desc>', <adult>, <child>
       FROM locations l JOIN plans p ON l.plan_id = p.id
-      WHERE p.slug = '<plan-slug>' AND l.name = '<location-name>' LIMIT 1;"
+      WHERE p.slug = '<slug>' AND l.name = '<location>' LIMIT 1;"
    ```
-3. Commit the migrate.ts change and push → CI builds new image.
-4. VPS: `docker compose pull && docker compose up -d`.
+3. Push code → CI build → `docker compose pull && docker compose up -d`
 
-### Add a new plan
+### Thêm plan mới
 
-1. Add the plan object to `plans.json` with a unique `slug`.
-2. Add seed sub-locations to `SUB_LOCATION_SEEDS` in `migrate.ts`.
-3. Push to `main` → CI builds image.
-4. On VPS with existing DB: use admin dashboard to add the plan via UI, OR reset the DB.
+1. Thêm vào `plans.json` (unique `slug`)
+2. Thêm seeds vào `SUB_LOCATION_SEEDS` trong `migrate.ts`
+3. Push → CI build
+4. VPS: dùng admin UI thêm, hoặc reset DB (xem DEPLOY.md)
 
-### Reset DB (wipe and re-seed from plans.json + seeds)
+### Reset DB
 
 ```bash
-# VPS
 docker compose down
 rm ./data/travel.db
-docker compose up -d   # fresh migration runs on startup
+docker compose up -d   # seed lại từ đầu
 ```
 
 ---
 
 ## Known Gotchas
 
-- **Two DB files**: `./travel.db` (project root, stale/unused) and `./api/travel.db` (active dev DB). Always work with `api/travel.db` in dev.
-- **Hà Nội appears twice in plan-1**: sort_order=0 (departure, no sub-locs) and sort_order=5 (return, 3 sub-locs). The seed uses `ORDER BY l.id ASC LIMIT 1` so it always targets the first match by ID — verify which Hà Nội you intend.
-- **`seedSubLocations()` skips if any rows exist**: it's all-or-nothing. If you need to add seeds to an existing DB, insert rows directly.
-- **Static `attractions` in plans.json vs DB `sub_locations`**: `attractions` exists for the GitHub Pages static build (no API). Don't duplicate entries between `attractions` and `SUB_LOCATION_SEEDS`.
-- **Admin dashboard** is served at `/admin` in production by the Express server (not a separate service).
-- **Docker bind mount**: `./data/` must exist on the host before first `docker compose up`. CI/deploy step creates it.
+- **Dev DB**: `api/travel.db`. Prod DB: `/data/travel.db` trong container. Root `travel.db` là artifact cũ — bỏ qua.
+- **Hà Nội xuất hiện 2 lần** trong plan-1: sort_order=0 (xuất phát) và sort_order=5 (về). Seed dùng `ORDER BY l.id ASC LIMIT 1` — luôn trỏ vào entry đầu tiên.
+- **`seedSubLocations()` all-or-nothing**: skip nếu đã có bất kỳ row nào. Thêm seed vào DB có sẵn phải INSERT thủ công.
+- **`plans.json` chỉ là seed**: không phục vụ frontend. Frontend chỉ đọc từ API.
+- **Admin dashboard** chạy tại `/admin` trong production, do Express server serve (không phải service riêng).
+- **`./data/` phải tồn tại** trên host trước `docker compose up` lần đầu.
+- **Root `index.html` / `dev-server.ts` / root `vite.config.ts`**: deprecated, không dùng, không sửa.

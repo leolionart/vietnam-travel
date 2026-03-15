@@ -29,8 +29,11 @@ interface DbLocation {
     transport_type: string;
     transport_label: string;
     transport_fare: number;
+    transport_fare_adult: number;
+    transport_fare_child: number;
     accommodation_name: string;
     accommodation_url: string;
+    accommodation_address: string;
     adult_price: number;
     child_price: number;
     stay_cost_per_night: number;
@@ -93,8 +96,11 @@ function locationToPublic(loc: DbLocation, prevProvince?: string) {
         transport: loc.transport_label,
         transportType: loc.transport_type,
         transportFare: loc.transport_fare,
+        transportFareAdult: loc.transport_fare_adult,
+        transportFareChild: loc.transport_fare_child,
         accommodationName: loc.accommodation_name,
         accommodationUrl: loc.accommodation_url,
+        accommodationAddress: loc.accommodation_address,
         adultPrice: loc.adult_price,
         childPrice: loc.child_price,
         stayCostPerNight: loc.stay_cost_per_night,

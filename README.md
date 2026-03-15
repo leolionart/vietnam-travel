@@ -1,74 +1,59 @@
 # 🇻🇳 Vietnam Journey Planner
 
-Ứng dụng lập kế hoạch và chia sẻ hành trình du lịch Việt Nam, với admin dashboard để quản lý dữ liệu và public frontend cho người xem.
+Ứng dụng lập kế hoạch du lịch Việt Nam — admin dashboard quản lý dữ liệu, public frontend cho người xem.
 
 ## 🛠 Công nghệ
 
-- **Public frontend**: Alpine.js, Tailwind CSS, Leaflet.js, OSRM routing
-- **Admin dashboard**: React + Vite, dnd-kit drag-and-drop
-- **Backend**: Express + SQLite (better-sqlite3), JWT auth
-- **Deploy**: Docker, Caddy reverse proxy
+- **Public frontend**: `public/index.html` — Alpine.js, Tailwind CSS, Leaflet.js
+- **Admin dashboard**: `admin/` — React + Vite
+- **Backend**: `api/` — Express + SQLite (better-sqlite3), JWT auth
+- **Deploy**: Docker multi-stage, Caddy reverse proxy
 
-## 🚀 Cài đặt & Chạy
+## 🚀 Chạy local (dev)
 
-### Development
-
-```bash
-# 1. Cài dependencies
-cd api && npm install
-cd ../admin && npm install
-cd ../public && npm install
-
-# 2. Tạo file .env từ mẫu
-cp .env.example .env
-# Điền JWT_SECRET, ADMIN_PASSWORD theo ý muốn
-
-# 3. Chạy 3 server song song
-cd api   && npm run dev          # API :7321
-cd admin && npx vite --port 3002 # Admin :3002
-cd public && npx vite --port 3000 # Public :3000 (proxy /api và /admin)
-```
-
-Truy cập:
-- Public: http://localhost:3000
-- Admin: http://localhost:3000/admin
-
-### Docker (Production)
+Cần **3 terminal song song**:
 
 ```bash
-cp .env.example .env
-# Chỉnh sửa .env với giá trị production (bắt buộc đổi JWT_SECRET + ADMIN_PASSWORD)
+# Terminal 1 — API (BẮT BUỘC chạy trước)
+cd api && npm install && npm run dev       # port 7321
 
-docker compose up -d
+# Terminal 2 — Admin
+cd admin && npm install && npm run dev     # port 3002
+
+# Terminal 3 — Public frontend
+cd public && npm install && npm run dev    # port 3000, proxy /api → :7321
 ```
 
-Container production chỉ chạy trên Linux Docker host (image build bởi CI là linux/amd64).
+- **Public**: http://localhost:3000
+- **Admin**: http://localhost:3000/admin
 
-Sau đó cấu hình Caddy/nginx trỏ domain về port 7321.
+> Không dùng `npm run dev` ở root — đó là file cũ, deprecated.
 
 ## ⚙️ Biến môi trường
 
-Tạo file `.env` từ `.env.example`:
+```bash
+cp .env.example .env
+# Điền JWT_SECRET và ADMIN_PASSWORD
+```
 
 | Biến | Bắt buộc | Mô tả |
 |------|----------|-------|
-| `JWT_SECRET` | ✅ | Secret key để ký JWT (đặt chuỗi ngẫu nhiên dài) |
-| `ADMIN_PASSWORD` | ✅ | Mật khẩu đăng nhập admin dashboard |
-| `DB_PATH` | | Đường dẫn SQLite DB (mặc định `./travel.db`) |
-| `PORT` | | Port API server (mặc định `7321`) |
-| `VEXERE_USERNAME` | | Username tài khoản Vexere agent |
-| `VEXERE_PASSWORD` | | Password tài khoản Vexere agent |
-| `VEXERE_USE_UAT` | | `true` để dùng môi trường test của Vexere |
+| `JWT_SECRET` | ✅ | Secret key JWT |
+| `ADMIN_PASSWORD` | ✅ | Mật khẩu admin |
+| `DB_PATH` | | Đường dẫn SQLite (mặc định `./travel.db`) |
+| `PORT` | | Port API (mặc định `7321`) |
+| `VEXERE_USERNAME` | | Tích hợp Vexere (tùy chọn) |
+| `VEXERE_PASSWORD` | | Tích hợp Vexere (tùy chọn) |
 
-## 🎫 Tích hợp Vexere (tùy chọn)
+## 🐳 Docker (Production)
 
-Nếu cấu hình `VEXERE_USERNAME` và `VEXERE_PASSWORD`, API có thể gọi Vexere để lấy dữ liệu chuyến/giá.
+```bash
+cp .env.example .env   # chỉnh JWT_SECRET + ADMIN_PASSWORD
+mkdir -p data          # thư mục chứa DB
+docker compose up -d
+```
 
-**Cách cấu hình:**
-1. Điền username và password tài khoản Vexere agent vào `.env`
-2. API sử dụng `grant_type=password` để lấy token từ `account-service.vexere.com`
-
-Nếu không cấu hình, phần tích hợp Vexere sẽ tự động tắt (mọi tính năng khác vẫn hoạt động bình thường).
+Caddy/nginx trỏ domain về port 7321. Xem `DEPLOY.md` để biết quy trình deploy đầy đủ.
 
 ---
 *Phát triển bởi [leolionart](https://github.com/leolionart)*
