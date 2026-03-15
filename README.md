@@ -1,3 +1,4 @@
+
 # Vietnam Roadtrips — Visual travel planner powered by AI
 
 > Chat with your AI. Get a shareable link. No login. No friction.
@@ -12,7 +13,9 @@ Western travel culture loves roadtrips — hopping between towns, experiencing l
 
 Most AIs can plan a great multi-stop Vietnam itinerary — but the output is a wall of text. **Vietnam Roadtrips** gives that plan a visual home: an interactive timeline with a live map, estimated time at each attraction, transport between stops, food recommendations, and cost estimates. All rendered beautifully from a single shareable link.
 
-![Visually](https://7b50d2de0634f64.cmccloud.com.vn/pasterly/Image%20(1628x1335))
+![](https://7b50d2de0634f64.cmccloud.com.vn/pasterly/Image%20(1628x1335))
+
+![](https://7b50d2de0634f64.cmccloud.com.vn/pasterly/Image%20(2534x994))
 
 ---
 
