@@ -186,6 +186,13 @@ function seedSubLocations(): void {
 export function runMigration(): void {
     const db = getDb();
 
+    if (process.env.FORCE_MIGRATE === 'true') {
+        console.log('[migrate] FORCE_MIGRATE=true: clearing all existing data…');
+        db.prepare('DELETE FROM sub_locations').run();
+        db.prepare('DELETE FROM locations').run();
+        db.prepare('DELETE FROM plans').run();
+    }
+
     const existing = db.prepare('SELECT COUNT(*) as count FROM plans').get() as { count: number };
     if (existing.count > 0) {
         console.log('[migrate] Plans table already has data, skipping migration.');
