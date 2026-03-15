@@ -11,6 +11,7 @@ import publicRouter from './routes/public.js';
 import sessionsRouter from './routes/sessions.js';
 import vexereRouter from './routes/vexere.js';
 import healthRouter from './routes/health.js';
+import mcpRouter from './routes/mcp.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -26,6 +27,7 @@ app.use('/api/public', publicRouter);
 app.use('/api/sessions', sessionsRouter);
 app.use('/api/vexere-link', vexereRouter);
 app.use('/api/health', healthRouter);
+app.use('/mcp', mcpRouter);
 
 // Serve static build outputs in production
 // In dev, Vite dev servers handle the frontends separately
