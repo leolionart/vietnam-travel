@@ -463,7 +463,8 @@
 
                     this.$watch('activeId', () => {
                         this.detailScrolled = false;
-                        this.detailMode = 'overview';
+                        const loc = this.currentPlan?.locations?.find(l => l.id === this.activeId);
+                        this.detailMode = loc?.subLocations?.length > 0 ? 'detail' : 'overview';
                         this.$nextTick(() => lucide.createIcons());
                         this.updateMap();
                     });
