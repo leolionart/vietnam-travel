@@ -42,6 +42,7 @@
                 "transportFare": 880000,
                 "highlight": "Lưu trú dài ngày",
                 "description": "Lưu trú chính tại Nghệ An. Dự kiến rời đi sáng 02/07 để di chuyển tới Ninh Bình.",
+                "accommodationName": "Nhà bố Mỹ",
                 "activities": [
                     "Nghỉ dưỡng",
                     "Thăm gia đình",
@@ -52,15 +53,10 @@
                     "Cháo lươn",
                     "Nhút Thanh Chương"
                 ],
-                "adultPrice": 0,
-                "childPrice": 0,
+                "adultPrice": 30000,
+                "childPrice": 20000,
                 "stayCostPerNight": 0,
-                "foodBudgetPerDay": 200000,
-                "attractions": [
-                    { "name": "Bãi biển Cửa Lò", "adultPrice": 100000, "childPrice": 60000 },
-                    { "name": "Kim Liên - Làng Sen", "adultPrice": 30000, "childPrice": 15000 },
-                    { "name": "Núi Quyết - Thành cổ Vinh", "adultPrice": 20000, "childPrice": 10000 }
-                ],
+                "foodBudgetPerDay": 350000,
                 "adults": 2,
                 "children": 0
             },
@@ -76,6 +72,8 @@
                 "transportFare": 650000,
                 "highlight": "Tràng An - Tam Cốc",
                 "description": "Đến Ninh Bình trưa 02/07, lưu trú 6 ngày trước khi tiếp tục đi Hạ Long.",
+                "accommodationName": "Trang An River View Homestay",
+                "accommodationUrl": "https://www.booking.com/hotel/vn/trang-an-river-view-homestay.vi.html",
                 "activities": [
                     "Tràng An",
                     "Tam Cốc",
@@ -85,15 +83,10 @@
                     "Cơm cháy",
                     "Thịt dê"
                 ],
-                "adultPrice": 250000,
-                "childPrice": 120000,
+                "adultPrice": 107000,
+                "childPrice": 55000,
                 "stayCostPerNight": 850000,
-                "foodBudgetPerDay": 600000,
-                "attractions": [
-                    { "name": "Tràng An (thuyền)", "adultPrice": 250000, "childPrice": 120000 },
-                    { "name": "Tam Cốc (thuyền)", "adultPrice": 250000, "childPrice": 120000 },
-                    { "name": "Hang Múa", "adultPrice": 100000, "childPrice": 0 }
-                ],
+                "foodBudgetPerDay": 450000,
                 "adults": 2,
                 "children": 0
             },
@@ -109,6 +102,7 @@
                 "transportFare": 700000,
                 "highlight": "Vịnh Hạ Long",
                 "description": "Lưu trú 3 ngày tại Hạ Long, sau đó quay về Hà Nội.",
+                "accommodationName": "Khách sạn khu Bãi Cháy",
                 "activities": [
                     "Tham quan Vịnh Hạ Long",
                     "Tắm biển Bãi Cháy",
@@ -118,14 +112,10 @@
                     "Chả mực",
                     "Hải sản"
                 ],
-                "adultPrice": 370000,
-                "childPrice": 260000,
+                "adultPrice": 230000,
+                "childPrice": 143000,
                 "stayCostPerNight": 900000,
-                "foodBudgetPerDay": 900000,
-                "attractions": [
-                    { "name": "Vịnh Hạ Long (thuyền ngày + phí bến)", "adultPrice": 370000, "childPrice": 260000 },
-                    { "name": "Sun World Hạ Long (trọn gói)", "adultPrice": 700000, "childPrice": 600000 }
-                ],
+                "foodBudgetPerDay": 700000,
                 "adults": 2,
                 "children": 0
             },
@@ -141,6 +131,7 @@
                 "transportFare": 500000,
                 "highlight": "Kết thúc trước 15/07",
                 "description": "Quay lại Hà Nội chiều 11/07 và kết thúc hành trình tối 14/07, trước mốc 15/07.",
+                "accommodationName": "Khách sạn khu phố cổ Hà Nội",
                 "activities": [
                     "Nghỉ ngơi",
                     "Mua sắm nhẹ",
@@ -150,10 +141,10 @@
                     "Bún chả",
                     "Phở"
                 ],
-                "adultPrice": 0,
+                "adultPrice": 40000,
                 "childPrice": 0,
                 "stayCostPerNight": 900000,
-                "foodBudgetPerDay": 600000,
+                "foodBudgetPerDay": 500000,
                 "adults": 2,
                 "children": 0
             }
