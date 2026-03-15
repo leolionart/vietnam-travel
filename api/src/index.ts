@@ -26,7 +26,7 @@ app.use('/api/health', healthRouter);
 // Serve static build outputs in production
 // In dev, Vite dev servers handle the frontends separately
 if (process.env.NODE_ENV === 'production') {
-    const staticRoot = join(__dirname, '../../static');
+    const staticRoot = join(__dirname, '../static');
     const adminDir = join(staticRoot, 'admin');
     const publicDir = join(staticRoot, 'public');
 
