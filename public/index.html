@@ -242,7 +242,7 @@
             <!-- Hero Image -->
             <div class="relative flex-none overflow-hidden transition-[height] duration-300 ease-in-out"
                  :style="detailScrolled ? 'height: 3rem' : 'height: 14rem'">
-                <img :src="`https://loremflickr.com/800/600/${activeLocation.name.replace(/\s+/g, ',')},vietnam,travel`"
+                <img :src="locationImg(activeLocation.name)"
                      class="w-full h-full object-cover transition-transform duration-1000 hover:scale-110"
                      referrerPolicy="no-referrer"
                      :alt="activeLocation.name">
@@ -774,6 +774,14 @@
                 get activeLocation() {
                     if (!this.currentPlan.locations.length) return {};
                     return this.currentPlan.locations.find(l => l.id === this.activeId) || this.currentPlan.locations[0];
+                },
+
+                locationImg(name) {
+                    // Hash tên → lock number để mỗi tỉnh luôn ra ảnh riêng biệt
+                    // Keywords cố định "vietnam,travel" để ảnh luôn phù hợp chủ đề
+                    let h = 0;
+                    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0x7fff;
+                    return `https://loremflickr.com/800/600/vietnam,travel/all?lock=${h}`;
                 },
 
                 // Getter có explicit dependency vào activeLocation.adults/children, excludedSubs và excludedLocations
