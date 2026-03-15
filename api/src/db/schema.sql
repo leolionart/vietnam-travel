@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS plans (
     slug       TEXT    NOT NULL UNIQUE,
     name       TEXT    NOT NULL,
     date_range TEXT    NOT NULL DEFAULT '',
+    session_id TEXT    UNIQUE,
     created_at INTEGER NOT NULL DEFAULT (unixepoch('now') * 1000),
     updated_at INTEGER NOT NULL DEFAULT (unixepoch('now') * 1000)
 );
@@ -55,4 +56,12 @@ CREATE TABLE IF NOT EXISTS sub_locations (
     adult_price      INTEGER NOT NULL DEFAULT 0,
     child_price      INTEGER NOT NULL DEFAULT 0,
     created_at       INTEGER NOT NULL DEFAULT (unixepoch('now') * 1000)
+);
+
+CREATE TABLE IF NOT EXISTS user_sessions (
+    id         TEXT    PRIMARY KEY,
+    plan_slug  TEXT    NOT NULL,
+    custom     TEXT    NOT NULL DEFAULT '{}',
+    created_at INTEGER NOT NULL DEFAULT (unixepoch('now') * 1000),
+    updated_at INTEGER NOT NULL DEFAULT (unixepoch('now') * 1000)
 );

@@ -191,6 +191,7 @@ export function runMigration(): void {
         'ALTER TABLE locations ADD COLUMN transport_fare_adult INTEGER NOT NULL DEFAULT 0',
         'ALTER TABLE locations ADD COLUMN transport_fare_child INTEGER NOT NULL DEFAULT 0',
         'ALTER TABLE locations ADD COLUMN accommodation_address TEXT NOT NULL DEFAULT \'\'',
+        'ALTER TABLE plans ADD COLUMN session_id TEXT',
     ];
     for (const sql of addColumns) {
         try { db.prepare(sql).run(); } catch { /* column already exists */ }

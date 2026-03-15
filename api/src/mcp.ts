@@ -10,7 +10,7 @@ class RemoteClient {
 
     constructor(
         private readonly baseUrl: string,
-        private readonly password: string,
+        private readonly password: string | null,
     ) {}
 
     private async login(): Promise<void> {
@@ -30,7 +30,19 @@ class RemoteClient {
         return res.json();
     }
 
+    // Public request — no auth, uses /api/public namespace
+    async publicRequest(method: string, path: string, body?: unknown): Promise<unknown> {
+        const res = await fetch(`${this.baseUrl}${path}`, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: body !== undefined ? JSON.stringify(body) : undefined,
+        });
+        if (!res.ok) throw new Error(`${method} ${path} → ${res.status} ${await res.text()}`);
+        return res.json();
+    }
+
     async request(method: string, path: string, body?: unknown): Promise<unknown> {
+        if (!this.password) return this.publicRequest(method, path.replace('/api/plans', '/api/public/plans'), body);
         if (!this.token) await this.login();
 
         const res = await fetch(`${this.baseUrl}${path}`, {
@@ -75,7 +87,7 @@ let localMode: {
 } | null = null;
 
 const REMOTE_API_URL = process.env.REMOTE_API_URL?.replace(/\/$/, '');
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? null;
 
 let remote: RemoteClient | null = null;
 
@@ -329,8 +341,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 case 'get_plan':
                     return ok(await remote.get(`/api/plans/${slug}`));
 
-                case 'create_plan':
-                    return ok(await remote.post('/api/plans', { slug: args.slug, name: args.name, dateRange: args.dateRange }));
+                case 'create_plan': {
+                    const result = await remote.post('/api/plans', { slug: args.slug, name: args.name, dateRange: args.dateRange }) as { slug: string; sessionId?: string };
+                    const shareUrl = result.sessionId
+                        ? `${REMOTE_API_URL}/?session=${result.sessionId}`
+                        : `${REMOTE_API_URL}/?slug=${result.slug}`;
+                    return ok({ ...result, shareUrl });
+                }
 
                 case 'update_plan':
                     return ok(await remote.put(`/api/plans/${slug}`, { name: args.name, slug: args.newSlug }));

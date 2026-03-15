@@ -7,6 +7,8 @@ import { runMigration } from './db/migrate.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import authRouter from './routes/auth.js';
 import plansRouter from './routes/plans.js';
+import publicRouter from './routes/public.js';
+import sessionsRouter from './routes/sessions.js';
 import vexereRouter from './routes/vexere.js';
 import healthRouter from './routes/health.js';
 
@@ -20,6 +22,8 @@ app.use(express.json({ limit: '2mb' }));
 // API routes
 app.use('/api/auth', authRouter);
 app.use('/api/plans', plansRouter);
+app.use('/api/public', publicRouter);
+app.use('/api/sessions', sessionsRouter);
 app.use('/api/vexere-link', vexereRouter);
 app.use('/api/health', healthRouter);
 

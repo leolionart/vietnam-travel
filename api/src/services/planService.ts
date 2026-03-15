@@ -51,6 +51,7 @@ interface DbPlan {
     slug: string;
     name: string;
     date_range: string;
+    session_id: string | null;
     created_at: number;
     updated_at: number;
 }
@@ -118,7 +119,7 @@ function locationToPublic(loc: DbLocation, prevProvince?: string) {
 
 export function listPlans() {
     const db = getDb();
-    const plans = db.prepare('SELECT * FROM plans ORDER BY id ASC').all() as DbPlan[];
+    const plans = db.prepare('SELECT * FROM plans WHERE session_id IS NULL ORDER BY id ASC').all() as DbPlan[];
     return plans.map(p => ({
         id: p.id,
         slug: p.slug,
@@ -129,7 +130,7 @@ export function listPlans() {
 
 export function getPlanBySlug(slug: string) {
     const db = getDb();
-    const plan = db.prepare('SELECT * FROM plans WHERE slug = ?').get(slug) as DbPlan | undefined;
+    const plan = db.prepare('SELECT * FROM plans WHERE slug = ? AND session_id IS NULL').get(slug) as DbPlan | undefined;
     if (!plan) return null;
 
     const locs = db.prepare(
@@ -156,6 +157,37 @@ export function createPlan(data: { slug: string; name: string; dateRange?: strin
         'INSERT INTO plans (slug, name, date_range) VALUES (?, ?, ?)'
     ).run(data.slug, data.name, data.dateRange || '');
     return getPlanBySlug(data.slug)!;
+}
+
+export function createSessionPlan(data: { slug: string; name: string; dateRange?: string; sessionId: string }) {
+    const db = getDb();
+    db.prepare(
+        'INSERT INTO plans (slug, name, date_range, session_id) VALUES (?, ?, ?, ?)'
+    ).run(data.slug, data.name, data.dateRange || '', data.sessionId);
+    return getPlanBySessionId(data.sessionId)!;
+}
+
+export function getPlanBySessionId(sessionId: string) {
+    const db = getDb();
+    const plan = db.prepare('SELECT * FROM plans WHERE session_id = ?').get(sessionId) as DbPlan | undefined;
+    if (!plan) return null;
+
+    const locs = db.prepare(
+        'SELECT * FROM locations WHERE plan_id = ? ORDER BY sort_order ASC, id ASC'
+    ).all(plan.id) as DbLocation[];
+
+    const locations = locs.map((loc, idx) => {
+        const prev = idx > 0 ? locs[idx - 1] : null;
+        return locationToPublic(loc, prev?.province);
+    });
+
+    return {
+        id: plan.id,
+        slug: plan.slug,
+        name: plan.name,
+        dateRange: plan.date_range,
+        locations,
+    };
 }
 
 export function updatePlan(slug: string, data: { name?: string; slug?: string }) {
