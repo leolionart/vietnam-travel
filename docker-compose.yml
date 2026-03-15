@@ -13,6 +13,7 @@ services:
       - VEXERE_USERNAME=${VEXERE_USERNAME:-}
       - VEXERE_PASSWORD=${VEXERE_PASSWORD:-}
       - VEXERE_USE_UAT=${VEXERE_USE_UAT:-false}
+      - FORCE_MIGRATE=${FORCE_MIGRATE:-false}
     volumes:
       - ./data:/data
     restart: unless-stopped

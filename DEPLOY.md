@@ -195,12 +195,41 @@ yourdomain.com {
 
 ---
 
+## 7. Deploy từ local lên (luôn sync dữ liệu)
+
+Workflow được khuyến nghị khi bạn muốn VPS luôn phản ánh đúng `plans.json` trên local:
+
+```bash
+# 1. Commit & push lên GitHub
+git add plans.json api/src/db/migrate.ts
+git commit -m "data: ..."
+git push origin main
+
+# 2. GitHub Actions tự build image mới → push lên GHCR
+# Theo dõi tại: https://github.com/<owner>/vietnam-travel/actions
+
+# 3. Sau khi CI xanh, SSH vào VPS và chạy:
+./scripts/redeploy.sh
+# Script sẽ: pull image mới → down → FORCE_MIGRATE=true up -d
+# → container xóa sạch DB cũ, seed lại từ plans.json mới nhất
+```
+
+**Cơ chế hoạt động:**
+- `FORCE_MIGRATE=true` env var khiến `migrate.ts` xóa toàn bộ data cũ trước khi seed lại
+- Script `redeploy.sh` đặt biến này tự động → không cần xóa file `travel.db` thủ công
+
+```bash
+# Nếu chỉ deploy code mới, KHÔNG reset DB:
+./scripts/redeploy.sh --keep-db
+```
+
+---
+
 ## Tóm tắt nhanh
 
 | Thay đổi | Cần làm gì trên VPS? |
 |----------|----------------------|
-| Chỉ code | `docker compose pull && docker compose up -d` |
-| Thêm sub-location | INSERT vào DB + pull + up |
-| Thêm plan/location | Reset DB hoặc manual SQL + pull + up |
-| Sửa plans.json | pull + up (DB không đổi) |
-| Reset toàn bộ | `down` + `rm travel.db` + pull + `up` |
+| Chỉ code (không đổi data) | `./scripts/redeploy.sh --keep-db` |
+| Sửa `plans.json` / data | `./scripts/redeploy.sh` (reset DB + seed lại) |
+| Thêm sub-location | `./scripts/redeploy.sh` |
+| Rollback | `docker compose down` + sửa image tag + `./scripts/redeploy.sh` |
