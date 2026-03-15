@@ -16,8 +16,13 @@
                 "transportFare": 0,
                 "highlight": "Đi thẳng Nghệ An",
                 "description": "Có mặt tại Hà Nội sáng 18/06 để chuẩn bị hành lý và khởi hành ngay đi Nghệ An.",
-                "activities": ["Chuẩn bị hành lý", "Xuất phát đi Nghệ An"],
-                "food": ["Bữa sáng nhanh"],
+                "activities": [
+                    "Chuẩn bị hành lý",
+                    "Xuất phát đi Nghệ An"
+                ],
+                "food": [
+                    "Bữa sáng nhanh"
+                ],
                 "adultPrice": 0,
                 "childPrice": 0,
                 "stayCostPerNight": 0,
@@ -34,15 +39,28 @@
                 "dateRange": "18/06/2026 12:30 - 02/07/2026 08:00",
                 "duration": 14,
                 "transport": "Ô tô (HN -> Nghệ An)",
-                "transportFare": 800000,
+                "transportFare": 880000,
                 "highlight": "Lưu trú dài ngày",
                 "description": "Lưu trú chính tại Nghệ An. Dự kiến rời đi sáng 02/07 để di chuyển tới Ninh Bình.",
-                "activities": ["Nghỉ dưỡng", "Thăm gia đình", "Khám phá ẩm thực địa phương"],
-                "food": ["Súp lươn", "Cháo lươn", "Nhút Thanh Chương"],
-                "adultPrice": 250000,
-                "childPrice": 200000,
-                "stayCostPerNight": 650000,
-                "foodBudgetPerDay": 800000,
+                "activities": [
+                    "Nghỉ dưỡng",
+                    "Thăm gia đình",
+                    "Khám phá ẩm thực địa phương"
+                ],
+                "food": [
+                    "Súp lươn",
+                    "Cháo lươn",
+                    "Nhút Thanh Chương"
+                ],
+                "adultPrice": 0,
+                "childPrice": 0,
+                "stayCostPerNight": 0,
+                "foodBudgetPerDay": 200000,
+                "attractions": [
+                    { "name": "Bãi biển Cửa Lò", "adultPrice": 100000, "childPrice": 60000 },
+                    { "name": "Kim Liên - Làng Sen", "adultPrice": 30000, "childPrice": 15000 },
+                    { "name": "Núi Quyết - Thành cổ Vinh", "adultPrice": 20000, "childPrice": 10000 }
+                ],
                 "adults": 2,
                 "children": 0
             },
@@ -58,12 +76,24 @@
                 "transportFare": 650000,
                 "highlight": "Tràng An - Tam Cốc",
                 "description": "Đến Ninh Bình trưa 02/07, lưu trú 6 ngày trước khi tiếp tục đi Hạ Long.",
-                "activities": ["Tràng An", "Tam Cốc", "Hang Múa"],
-                "food": ["Cơm cháy", "Thịt dê"],
-                "adultPrice": 200000,
-                "childPrice": 150000,
+                "activities": [
+                    "Tràng An",
+                    "Tam Cốc",
+                    "Hang Múa"
+                ],
+                "food": [
+                    "Cơm cháy",
+                    "Thịt dê"
+                ],
+                "adultPrice": 250000,
+                "childPrice": 120000,
                 "stayCostPerNight": 850000,
-                "foodBudgetPerDay": 700000,
+                "foodBudgetPerDay": 600000,
+                "attractions": [
+                    { "name": "Tràng An (thuyền)", "adultPrice": 250000, "childPrice": 120000 },
+                    { "name": "Tam Cốc (thuyền)", "adultPrice": 250000, "childPrice": 120000 },
+                    { "name": "Hang Múa", "adultPrice": 100000, "childPrice": 0 }
+                ],
                 "adults": 2,
                 "children": 0
             },
@@ -79,12 +109,23 @@
                 "transportFare": 700000,
                 "highlight": "Vịnh Hạ Long",
                 "description": "Lưu trú 3 ngày tại Hạ Long, sau đó quay về Hà Nội.",
-                "activities": ["Tham quan Vịnh Hạ Long", "Tắm biển Bãi Cháy", "Sun World"],
-                "food": ["Chả mực", "Hải sản"],
-                "adultPrice": 350000,
-                "childPrice": 250000,
-                "stayCostPerNight": 1100000,
-                "foodBudgetPerDay": 1000000,
+                "activities": [
+                    "Tham quan Vịnh Hạ Long",
+                    "Tắm biển Bãi Cháy",
+                    "Sun World"
+                ],
+                "food": [
+                    "Chả mực",
+                    "Hải sản"
+                ],
+                "adultPrice": 370000,
+                "childPrice": 260000,
+                "stayCostPerNight": 900000,
+                "foodBudgetPerDay": 900000,
+                "attractions": [
+                    { "name": "Vịnh Hạ Long (thuyền ngày + phí bến)", "adultPrice": 370000, "childPrice": 260000 },
+                    { "name": "Sun World Hạ Long (trọn gói)", "adultPrice": 700000, "childPrice": 600000 }
+                ],
                 "adults": 2,
                 "children": 0
             },
@@ -100,8 +141,15 @@
                 "transportFare": 500000,
                 "highlight": "Kết thúc trước 15/07",
                 "description": "Quay lại Hà Nội chiều 11/07 và kết thúc hành trình tối 14/07, trước mốc 15/07.",
-                "activities": ["Nghỉ ngơi", "Mua sắm nhẹ", "Chuẩn bị kết thúc chuyến đi"],
-                "food": ["Bún chả", "Phở"],
+                "activities": [
+                    "Nghỉ ngơi",
+                    "Mua sắm nhẹ",
+                    "Chuẩn bị kết thúc chuyến đi"
+                ],
+                "food": [
+                    "Bún chả",
+                    "Phở"
+                ],
                 "adultPrice": 0,
                 "childPrice": 0,
                 "stayCostPerNight": 900000,
@@ -124,12 +172,22 @@
                 "lng": 108.2022,
                 "duration": 4,
                 "transport": "Máy bay/Taxi",
+                "transportFare": 150000,
                 "highlight": "Nalod Da Nang",
                 "description": "Lưu trú tại Nalod Da Nang (92 Võ Nguyên Giáp). Tận hưởng biển Mỹ Khê.",
-                "activities": ["Tắm biển Mỹ Khê", "Cầu Rồng", "Sơn Trà"],
-                "food": ["Mì Quảng", "Bánh tráng cuốn thịt heo"],
+                "activities": [
+                    "Tắm biển Mỹ Khê",
+                    "Cầu Rồng",
+                    "Sơn Trà"
+                ],
+                "food": [
+                    "Mì Quảng",
+                    "Bánh tráng cuốn thịt heo"
+                ],
                 "adultPrice": 5000000,
                 "childPrice": 3000000,
+                "stayCostPerNight": 1200000,
+                "foodBudgetPerDay": 700000,
                 "adults": 2,
                 "children": 0
             },
@@ -137,16 +195,25 @@
                 "id": 6,
                 "name": "Bà Nà Hills",
                 "province": "Đà Nẵng",
-                "lat": 15.9950,
+                "lat": 15.995,
                 "lng": 107.9969,
                 "duration": 1,
                 "transport": "Cáp treo",
+                "transportFare": 380000,
                 "highlight": "Mercure Danang",
                 "description": "Lưu trú tại Mercure Danang French Village Bana Hills. Trải nghiệm làng Pháp trên đỉnh núi.",
-                "activities": ["Cầu Vàng", "Làng Pháp", "Hầm rượu Debay"],
-                "food": ["Buffet Bà Nà"],
+                "activities": [
+                    "Cầu Vàng",
+                    "Làng Pháp",
+                    "Hầm rượu Debay"
+                ],
+                "food": [
+                    "Buffet Bà Nà"
+                ],
                 "adultPrice": 3000000,
                 "childPrice": 2000000,
+                "stayCostPerNight": 2500000,
+                "foodBudgetPerDay": 500000,
                 "adults": 2,
                 "children": 0
             },
@@ -155,15 +222,24 @@
                 "name": "Hội An",
                 "province": "Quảng Nam",
                 "lat": 15.8801,
-                "lng": 108.3380,
+                "lng": 108.338,
                 "duration": 1,
                 "transport": "Taxi",
+                "transportFare": 350000,
                 "highlight": "Ký ức Hội An Villa",
                 "description": "Lưu trú tại Ký ức Hội An Villa (3 phòng ngủ). Khám phá phố cổ về đêm.",
-                "activities": ["Thả đèn hoa đăng", "Show Ký ức Hội An"],
-                "food": ["Cao lầu", "Cơm gà"],
+                "activities": [
+                    "Thả đèn hoa đăng",
+                    "Show Ký ức Hội An"
+                ],
+                "food": [
+                    "Cao lầu",
+                    "Cơm gà"
+                ],
                 "adultPrice": 2000000,
                 "childPrice": 1500000,
+                "stayCostPerNight": 3500000,
+                "foodBudgetPerDay": 600000,
                 "adults": 2,
                 "children": 0
             },
@@ -175,12 +251,26 @@
                 "lng": 105.6813,
                 "duration": 14,
                 "transport": "Xe khách/Tàu hỏa",
+                "transportFare": 1400000,
                 "highlight": "Nhà bố Mỹ Country House",
                 "description": "Kỳ nghỉ dài tại quê hương. Lưu trú tại Nhà bố Mỹ Country House.",
-                "activities": ["Thăm gia đình", "Nghỉ dưỡng đồng quê"],
-                "food": ["Súp lươn", "Nhút Thanh Chương"],
+                "activities": [
+                    "Thăm gia đình",
+                    "Nghỉ dưỡng đồng quê"
+                ],
+                "food": [
+                    "Súp lươn",
+                    "Nhút Thanh Chương"
+                ],
                 "adultPrice": 0,
                 "childPrice": 0,
+                "stayCostPerNight": 0,
+                "foodBudgetPerDay": 150000,
+                "attractions": [
+                    { "name": "Bãi biển Cửa Lò", "adultPrice": 100000, "childPrice": 60000 },
+                    { "name": "Kim Liên - Làng Sen", "adultPrice": 30000, "childPrice": 15000 },
+                    { "name": "Núi Quyết - Thành cổ Vinh", "adultPrice": 20000, "childPrice": 10000 }
+                ],
                 "adults": 2,
                 "children": 0
             },
@@ -192,12 +282,22 @@
                 "lng": 105.8914,
                 "duration": 3,
                 "transport": "Xe khách",
+                "transportFare": 500000,
                 "highlight": "Trang An River View",
                 "description": "Lưu trú tại Trang An River View Homestay (479 B Tràng An).",
-                "activities": ["Tràng An", "Hang Múa", "Bái Đính"],
-                "food": ["Cơm cháy", "Dê núi"],
+                "activities": [
+                    "Tràng An",
+                    "Hang Múa",
+                    "Bái Đính"
+                ],
+                "food": [
+                    "Cơm cháy",
+                    "Dê núi"
+                ],
                 "adultPrice": 1500000,
                 "childPrice": 1000000,
+                "stayCostPerNight": 600000,
+                "foodBudgetPerDay": 600000,
                 "adults": 2,
                 "children": 0
             },
@@ -209,12 +309,22 @@
                 "lng": 105.8542,
                 "duration": 2,
                 "transport": "Xe khách",
+                "transportFare": 400000,
                 "highlight": "Salute Premium Hotel",
                 "description": "Lưu trú tại Salute Premium Hotel & Spa (5-7 Cửa Đông). Kết thúc hành trình.",
-                "activities": ["Phố cổ", "Hồ Gươm", "Mua sắm"],
-                "food": ["Phở", "Bún chả"],
+                "activities": [
+                    "Phố cổ",
+                    "Hồ Gươm",
+                    "Mua sắm"
+                ],
+                "food": [
+                    "Phở",
+                    "Bún chả"
+                ],
                 "adultPrice": 2000000,
                 "childPrice": 1500000,
+                "stayCostPerNight": 1650000,
+                "foodBudgetPerDay": 600000,
                 "adults": 2,
                 "children": 0
             }

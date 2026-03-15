@@ -1,7 +1,25 @@
 services:
-  travel-app:
-    image: ghcr.io/leolionart/cliproxy-collector:latest
+  app:
+    build: .
     ports:
-      - "3000:80"
-    restart: always
-    container_name: travel_itinerary_app
+      - "7321:7321"
+    environment:
+      - JWT_SECRET=${JWT_SECRET?JWT_SECRET is required}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD?ADMIN_PASSWORD is required}
+      - DB_PATH=/data/travel.db
+      - PORT=7321
+      - NODE_ENV=production
+      - VEXERE_USERNAME=${VEXERE_USERNAME:-}
+      - VEXERE_PASSWORD=${VEXERE_PASSWORD:-}
+      - VEXERE_USE_UAT=${VEXERE_USE_UAT:-false}
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:7321/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes: {}

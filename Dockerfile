@@ -1,29 +1,45 @@
-# Build stage
-FROM node:20-slim AS build
+# ── Stage 1: Build admin React app ──────────────────────
+FROM node:20-alpine AS build-admin
+WORKDIR /build/admin
+COPY admin/package*.json ./
+RUN npm ci
+COPY admin/ ./
+RUN npm run build
+
+# ── Stage 2: Build API TypeScript ────────────────────────
+FROM node:20-alpine AS build-api
+WORKDIR /build/api
+COPY api/package*.json ./
+RUN npm ci
+COPY api/ ./
+RUN npm run build
+
+# ── Final image ───────────────────────────────────────────
+FROM node:20-alpine
+RUN apk add --no-cache wget
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# API runtime dependencies
+COPY api/package*.json ./
+RUN npm ci --omit=dev
 
-# Install dependencies
-RUN npm install
+# API compiled code
+COPY --from=build-api /build/api/dist ./dist
 
-# Copy source files
-COPY . .
+# Static files: public SPA + admin dashboard
+COPY public/index.html  ./static/public/index.html
+COPY public/plans.json  ./static/public/plans.json
+COPY public/favicon.svg ./static/public/favicon.svg
+COPY public/plans.json  ./plans.json
+COPY --from=build-admin /build/dist/admin ./static/admin
 
-# Build the application
-RUN npm run build
+ENV PORT=7321
+ENV NODE_ENV=production
 
-# Production stage
-FROM nginx:stable-alpine
+EXPOSE 7321
 
-# Copy built assets from build stage
-COPY --from=build /app/dist /usr/share/nginx/html
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s \
+  CMD wget -qO- http://localhost:7321/api/health || exit 1
 
-# Copy custom nginx config if needed (optional, using default for now)
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["node", "dist/index.js"]
