@@ -169,7 +169,7 @@ function seedSubLocations(): void {
         FROM locations l
         JOIN plans p ON l.plan_id = p.id
         WHERE p.slug = ? AND l.name = ?
-        ORDER BY l.id ASC
+        ORDER BY l.sort_order DESC
         LIMIT 1
     `);
 
