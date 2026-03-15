@@ -168,7 +168,7 @@
     </div>
 
     <!-- Right Detail Panel -->
-    <main class="fixed right-6 top-28 bottom-28 w-[450px] z-40 pointer-events-none detail-panel" :class="activeId ? 'block' : 'hidden'">
+    <main class="fixed right-6 top-28 bottom-28 max-h-[800px] w-[450px] z-40 pointer-events-none detail-panel" :class="activeId ? 'block' : 'hidden'">
         <div class="glass rounded-[2rem] lg:rounded-[2.5rem] h-full flex flex-col overflow-hidden pointer-events-auto shadow-2xl border-white/5 slide-up relative">
             
             <!-- Close Button (Mobile Only) -->
@@ -177,7 +177,7 @@
             </button>
             
             <!-- Hero Image -->
-            <div class="relative flex-none overflow-hidden transition-all duration-300 ease-in-out"
+            <div class="relative flex-none overflow-hidden transition-[height] duration-300 ease-in-out"
                  :style="detailScrolled ? 'height: 3rem' : 'height: 14rem'">
                 <img :src="`https://loremflickr.com/800/600/${activeLocation.name.replace(/\s+/g, ',')},vietnam,travel`"
                      class="w-full h-full object-cover transition-transform duration-1000 hover:scale-110"
@@ -206,6 +206,7 @@
 
             <!-- Content -->
             <div class="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6 lg:space-y-8"
+                 x-ref="scrollContainer"
                  @scroll="detailScrolled = $el.scrollTop > 30">
 
                 <!-- Detail mode: numbered sub-location list -->
@@ -474,6 +475,7 @@
 
                     this.$watch('activeId', () => {
                         this.detailScrolled = false;
+                        if (this.$refs.scrollContainer) this.$refs.scrollContainer.scrollTop = 0;
                         const loc = this.currentPlan?.locations?.find(l => l.id === this.activeId);
                         this.detailMode = loc?.subLocations?.length > 0 ? 'detail' : 'overview';
                         this.$nextTick(() => lucide.createIcons());

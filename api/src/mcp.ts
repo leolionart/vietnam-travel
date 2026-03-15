@@ -98,8 +98,8 @@ if (REMOTE_API_URL) {
         createPlan: planSvc.createPlan,
         updatePlan: planSvc.updatePlan,
         deletePlan: planSvc.deletePlan,
-        addLocation: locSvc.addLocation as (planId: number, input: Record<string, unknown>) => number,
-        updateLocation: locSvc.updateLocation as (planId: number, id: number, input: Record<string, unknown>) => boolean,
+        addLocation: locSvc.addLocation as unknown as (planId: number, input: Record<string, unknown>) => number,
+        updateLocation: locSvc.updateLocation as unknown as (planId: number, id: number, input: Record<string, unknown>) => boolean,
         deleteLocation: locSvc.deleteLocation,
         getPlanId(slug) {
             const row = conn.getDb().prepare('SELECT id FROM plans WHERE slug = ?').get(slug) as { id: number } | undefined;
