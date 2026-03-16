@@ -16,3 +16,4 @@ travel.db-shm
 travel.db-wal
 .vite/
 plans.json
+api/docs/VEXERE_API.md
