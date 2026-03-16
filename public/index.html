@@ -439,7 +439,7 @@
                         <div class="bg-white/5 rounded-xl p-2.5 flex items-center justify-between">
                             <div>
                                 <p class="text-[9px] font-bold text-slate-400 uppercase">Người lớn</p>
-                                <p class="text-[9px] text-slate-500 mt-0.5" x-text="activeLocation.adultPrice > 0 ? formatCurrency(activeLocation.adultPrice) + '/ng' : 'Miễn phí'"></p>
+                                <p class="text-[9px] text-slate-500 mt-0.5" x-text="ticketAdultTotal(activeLocation) > 0 ? formatCurrency(ticketAdultTotal(activeLocation)) + '/ng' : 'Miễn phí'"></p>
                             </div>
                             <div class="flex items-center gap-1 bg-white/5 rounded-lg p-0.5">
                                 <button @click="adjustAdults(-1)" class="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded-md transition-all text-sm">-</button>
@@ -450,7 +450,7 @@
                         <div class="bg-white/5 rounded-xl p-2.5 flex items-center justify-between">
                             <div>
                                 <p class="text-[9px] font-bold text-slate-400 uppercase">Trẻ em</p>
-                                <p class="text-[9px] text-slate-500 mt-0.5" x-text="activeLocation.childPrice > 0 ? formatCurrency(activeLocation.childPrice) + '/ng' : 'Miễn phí'"></p>
+                                <p class="text-[9px] text-slate-500 mt-0.5" x-text="ticketChildTotal(activeLocation) > 0 ? formatCurrency(ticketChildTotal(activeLocation)) + '/ng' : 'Miễn phí'"></p>
                             </div>
                             <div class="flex items-center gap-1 bg-white/5 rounded-lg p-0.5">
                                 <button @click="adjustChildren(-1)" class="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded-md transition-all text-sm">-</button>
@@ -464,20 +464,20 @@
                     <div class="space-y-2 text-[10px]">
 
                         <!-- Vé tham quan người lớn -->
-                        <template x-if="activeLocation.adultPrice > 0">
+                        <template x-if="ticketAdultTotal(activeLocation) > 0">
                             <div class="flex items-center gap-2 text-slate-300">
                                 <span class="text-slate-400 flex-1 min-w-0 truncate">Vé tham quan NL</span>
-                                <span class="flex-none whitespace-nowrap" x-text="activeLocation.adults + ' ng × ' + formatCurrency(activeLocation.adultPrice)"></span>
-                                <span class="flex-none whitespace-nowrap font-bold text-white" x-text="formatCurrency(activeLocation.adults * activeLocation.adultPrice)"></span>
+                                <span class="flex-none whitespace-nowrap" x-text="activeLocation.adults + ' ng × ' + formatCurrency(ticketAdultTotal(activeLocation))"></span>
+                                <span class="flex-none whitespace-nowrap font-bold text-white" x-text="formatCurrency(activeLocation.adults * ticketAdultTotal(activeLocation))"></span>
                             </div>
                         </template>
 
                         <!-- Vé tham quan trẻ em -->
-                        <template x-if="activeLocation.childPrice > 0 && activeLocation.children > 0">
+                        <template x-if="ticketChildTotal(activeLocation) > 0 && activeLocation.children > 0">
                             <div class="flex items-center gap-2 text-slate-300">
                                 <span class="text-slate-400 flex-1 min-w-0 truncate">Vé tham quan TE</span>
-                                <span class="flex-none whitespace-nowrap" x-text="activeLocation.children + ' ng × ' + formatCurrency(activeLocation.childPrice)"></span>
-                                <span class="flex-none whitespace-nowrap font-bold text-white" x-text="formatCurrency(activeLocation.children * activeLocation.childPrice)"></span>
+                                <span class="flex-none whitespace-nowrap" x-text="activeLocation.children + ' ng × ' + formatCurrency(ticketChildTotal(activeLocation))"></span>
+                                <span class="flex-none whitespace-nowrap font-bold text-white" x-text="formatCurrency(activeLocation.children * ticketChildTotal(activeLocation))"></span>
                             </div>
                         </template>
 
@@ -1388,6 +1388,18 @@
                     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
                 },
 
+                ticketAdultTotal(loc) {
+                    const subs = (loc.subLocations || []).filter(s => !this.excludedSubs[s.id]);
+                    const subSum = subs.reduce((sum, s) => sum + (s.adultPrice || 0), 0);
+                    return subSum > 0 ? subSum : (loc.adultPrice || 0);
+                },
+
+                ticketChildTotal(loc) {
+                    const subs = (loc.subLocations || []).filter(s => !this.excludedSubs[s.id]);
+                    const subSum = subs.reduce((sum, s) => sum + (s.childPrice || 0), 0);
+                    return subSum > 0 ? subSum : (loc.childPrice || 0);
+                },
+
                 getTransportIcon(type) {
                     const icons = { car: '🚗', bus: '🚌', train: '🚂', flight: '✈️', motorbike: '🏍️', other: '🚐' };
                     return icons[(type || '').toLowerCase()] || '🚐';
@@ -1516,12 +1528,12 @@
                     const adults = loc.adults || 0;
                     const children = loc.children || 0;
 
-                    // Cộng giá vé từ sub-locations (nếu có) + giá vé tổng của location
-                    const subTicketCost = (loc.subLocations || []).reduce((sum, sub) => {
-                        if (this.excludedSubs[sub.id]) return sum; // bỏ qua địa điểm user đã deselect
-                        return sum + ((sub.adultPrice || 0) * adults) + ((sub.childPrice || 0) * children);
-                    }, 0);
-                    const ticketCost = ((loc.adultPrice || 0) * adults) + ((loc.childPrice || 0) * children) + subTicketCost;
+                    // Vé tham quan: dùng tổng sub-locations nếu có, ngược lại dùng giá parent
+                    const subTicketAdult = (loc.subLocations || []).filter(s => !this.excludedSubs[s.id]).reduce((sum, s) => sum + (s.adultPrice || 0), 0);
+                    const subTicketChild = (loc.subLocations || []).filter(s => !this.excludedSubs[s.id]).reduce((sum, s) => sum + (s.childPrice || 0), 0);
+                    const adultTicket = subTicketAdult > 0 ? subTicketAdult : (loc.adultPrice || 0);
+                    const childTicket = subTicketChild > 0 ? subTicketChild : (loc.childPrice || 0);
+                    const ticketCost = adultTicket * adults + childTicket * children;
                     const stayCost = (loc.stayCostPerNight || 0) * Math.max(rawDays - 1, 0);
                     const foodCost = (loc.foodBudgetPerDay || 0) * days;
                     const adultFare = loc.transportFareAdult || loc.transportFare || 0;
