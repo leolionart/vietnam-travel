@@ -83,17 +83,18 @@
 
         @media (max-width: 1024px) {
             body { overflow-y: auto; height: auto; }
-            #map { height: 250px; position: sticky; top: 0; z-index: 10; }
+            #map { height: 250px; position: sticky; top: 0; z-index: 10; transition: height 0.4s ease-in-out; }
+            #map.map-full { height: 100vh; height: 100dvh; }
             .fixed:not(header) { position: relative !important; top: auto !important; left: auto !important; right: auto !important; bottom: auto !important; width: 100% !important; }
             header.fixed { position: sticky !important; top: 0; z-index: 60; background: #0f172a; padding: 0.75rem !important; }
             .timeline-rail { display: none !important; }
-            .mobile-timeline { 
-                display: flex !important; 
-                position: sticky; 
-                top: 250px; 
-                z-index: 20; 
-                background: #0f172a; 
-                padding: 0.75rem; 
+            .mobile-timeline {
+                display: flex;
+                position: sticky;
+                top: 250px;
+                z-index: 20;
+                background: #0f172a;
+                padding: 0.75rem;
                 border-bottom: 1px solid rgba(255,255,255,0.1);
                 box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
             }
@@ -126,7 +127,7 @@
     </div>
 
     <!-- Background Map -->
-    <div id="map"></div>
+    <div id="map" :class="{'map-full': !activeId}"></div>
 
     <!-- Map Loading Screen -->
     <div x-show="!mapReady"
@@ -219,7 +220,7 @@
     </aside>
 
     <!-- Mobile Timeline (Horizontal) -->
-    <div class="lg:hidden mobile-timeline hidden overflow-x-auto gap-3 no-scrollbar">
+    <div x-show="activeId" class="lg:hidden mobile-timeline overflow-x-auto gap-3 no-scrollbar">
         <template x-for="(loc, index) in currentPlan.locations" :key="loc.id">
             <button @click="setActive(loc.id)"
                     class="glass px-4 py-2 rounded-xl flex items-center gap-2 whitespace-nowrap transition-all flex-none"
@@ -847,6 +848,18 @@
                         this.detailMode = loc?.subLocations?.length > 0 ? 'detail' : 'overview';
                         this.$nextTick(() => lucide.createIcons());
                         this.updateMap();
+                        if (window.innerWidth < 1024) {
+                            if (this.activeId) {
+                                setTimeout(() => {
+                                    if (this.map) this.map.invalidateSize();
+                                    const panel = document.querySelector('.detail-panel');
+                                    if (panel) window.scrollTo({ top: panel.offsetTop - 20, behavior: 'smooth' });
+                                }, 420);
+                            } else {
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                setTimeout(() => { if (this.map) this.map.invalidateSize(); }, 420);
+                            }
+                        }
                     });
                     this.$watch('detailMode', () => {
                         this.updateMap();
