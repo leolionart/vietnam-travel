@@ -1900,6 +1900,14 @@
                     return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
                 },
 
+                calendarTransportOrder(date) {
+                    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return 0;
+                    const hour = date.getHours() + date.getMinutes() / 60;
+                    if (hour < 12) return 0.2;
+                    if (hour < 17) return 3.5;
+                    return 4.5;
+                },
+
                 locationStayDays(loc) {
                     const { start, end } = this.parseDateRange(loc?.dateRange || '');
                     if (!start && !end) return [];
@@ -1912,6 +1920,30 @@
                         cursor.setDate(cursor.getDate() + 1);
                     }
                     return days;
+                },
+
+                locationVisitSlots(loc) {
+                    const { start, end } = this.parseDateRange(loc?.dateRange || '');
+                    const stayDays = this.locationStayDays(loc);
+                    const startKey = start ? this.localDateKey(start) : '';
+                    const endKey = end ? this.localDateKey(end) : '';
+                    const slots = [];
+
+                    stayDays.forEach((day) => {
+                        const key = this.localDateKey(day);
+                        if (key === startKey) return;
+                        if (key === endKey && end && end.getHours() < 15) return;
+                        slots.push({ day, label: 'Sáng', order: 2 });
+                        slots.push({ day, label: 'Chiều', order: 3 });
+                    });
+
+                    if (!slots.length && stayDays.length > 1) {
+                        stayDays.slice(1).forEach((day) => {
+                            slots.push({ day, label: 'Sáng', order: 2 });
+                            slots.push({ day, label: 'Chiều', order: 3 });
+                        });
+                    }
+                    return slots;
                 },
 
                 calendarEventsByDay() {
@@ -1927,37 +1959,42 @@
                         const { start } = this.parseDateRange(loc.dateRange);
                         const stayDays = this.locationStayDays(loc);
                         if (start) {
+                            const transportOrder = this.calendarTransportOrder(start);
                             add(start, {
                                 id: `transport-${loc.id}`,
                                 type: 'transport',
                                 title: loc.transport || (index === 0 ? `Bắt đầu tại ${loc.name}` : `Di chuyển đến ${loc.name}`),
                                 meta: index === 0 ? loc.name : `${this.currentPlan.locations[index - 1]?.name || 'Điểm trước'} -> ${loc.name}`,
                                 time: this.calendarTime(start),
+                                order: transportOrder,
                                 locationId: loc.id,
                             });
                         }
 
                         stayDays.forEach((day, dayIndex) => {
+                            const checkinOrder = start ? this.calendarTransportOrder(start) + 0.1 : 1;
                             add(day, {
                                 id: `stay-${loc.id}-${this.localDateKey(day)}`,
                                 type: 'stay',
                                 title: loc.name,
-                                meta: dayIndex === 0 ? 'Nhận điểm đến / ổn định lịch' : 'Ngày ở lại',
+                                meta: dayIndex === 0 ? 'Check-in / nghỉ ngơi' : 'Ngày ở lại',
                                 time: '',
+                                order: dayIndex === 0 ? checkinOrder : 1,
                                 locationId: loc.id,
                             });
                         });
 
-                        const visitDays = stayDays.length ? stayDays : (start ? [this.normalizeDay(start)] : []);
+                        const visitSlots = this.locationVisitSlots(loc);
                         (loc.subLocations || []).forEach((sub, subIndex) => {
-                            const day = visitDays[subIndex % visitDays.length];
-                            if (!day) return;
-                            add(day, {
+                            if (!visitSlots.length) return;
+                            const slot = visitSlots[subIndex % visitSlots.length];
+                            add(slot.day, {
                                 id: `visit-${sub.id}`,
                                 type: 'visit',
                                 title: sub.name,
                                 meta: `${loc.name} · ${sub.durationMinutes || 60} phút`,
-                                time: '',
+                                time: slot.label,
+                                order: slot.order + Math.floor(subIndex / visitSlots.length) * 0.01,
                                 locationId: loc.id,
                                 subLocationId: sub.id,
                             });
@@ -1967,7 +2004,7 @@
                     for (const events of Object.values(byDay)) {
                         events.sort((a, b) => {
                             const order = { transport: 0, stay: 1, visit: 2 };
-                            return (order[a.type] ?? 9) - (order[b.type] ?? 9);
+                            return (a.order ?? order[a.type] ?? 9) - (b.order ?? order[b.type] ?? 9);
                         });
                     }
                     return byDay;
