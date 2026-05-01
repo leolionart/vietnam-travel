@@ -317,11 +317,9 @@
                                     <h3 class="text-sm font-bold text-white leading-tight" x-text="day.label"></h3>
                                 </div>
                                 <div class="flex flex-col items-end gap-1">
-                                    <span x-show="day.hasCheckin && day.hasCheckout"
-                                          class="text-[8px] font-bold rounded bg-violet-300 text-slate-950 px-1.5 py-0.5">Đổi điểm</span>
-                                    <span x-show="day.hasCheckin && !day.hasCheckout"
+                                    <span x-show="day.hasCheckin"
                                           class="text-[8px] font-bold rounded bg-cyan-300 text-slate-950 px-1.5 py-0.5">In</span>
-                                    <span x-show="day.hasCheckout && !day.hasCheckin"
+                                    <span x-show="day.hasCheckout"
                                           class="text-[8px] font-bold rounded bg-rose-300 text-slate-950 px-1.5 py-0.5">Out</span>
                                     <span x-show="day.isWeekend && !day.hasCheckin && !day.hasCheckout"
                                           class="text-[8px] font-bold rounded bg-amber-300 text-slate-950 px-1.5 py-0.5">T7/CN</span>
