@@ -97,9 +97,9 @@ const SUB_LOCATION_SEEDS: SubLocationSeed[] = [
     { planSlug: 'ha-noi-nghe-an-ninh-binh-ha-long-ha-noi', locationName: 'Ninh Bình', sortOrder: 5, name: 'Cố đô Hoa Lư',              lat: 20.2833, lng: 105.9167, durationMinutes: 90,  description: 'Kinh đô đầu tiên Việt Nam thế kỷ 10, triều Đinh – Tiền Lê. Đền Đinh Tiên Hoàng và đền Lê Đại Hành.', adultPrice: 20000, childPrice: 10000 },
     { planSlug: 'ha-noi-nghe-an-ninh-binh-ha-long-ha-noi', locationName: 'Ninh Bình', sortOrder: 6, name: 'Đầm Vân Long',              lat: 20.3667, lng: 105.8500, durationMinutes: 120, description: 'Khu bảo tồn đất ngập nước lớn nhất miền Bắc, nơi quay Kong: Skull Island. Đi thuyền ngắm núi đá, tìm voọc quần đùi trắng.', adultPrice: 100000, childPrice: 60000 },
     // ── Hạ Long – plan-1 ─────────────────────────────────────────────────────
-    { planSlug: 'ha-noi-nghe-an-ninh-binh-ha-long-ha-noi', locationName: 'Hạ Long', sortOrder: 1, name: 'Vịnh Hạ Long – Tour tàu tham quan',       lat: 20.9100, lng: 107.1839, durationMinutes: 360, description: 'Di sản Thiên nhiên Thế giới UNESCO. Tuyến VHL5: Thiên Cung, Đầu Gỗ, Hòn Trống Mái. 6 giờ trên vịnh với hướng dẫn viên.', adultPrice: 310000, childPrice: 150000 },
-    { planSlug: 'ha-noi-nghe-an-ninh-binh-ha-long-ha-noi', locationName: 'Hạ Long', sortOrder: 2, name: 'Sun World Hạ Long – Cáp treo Nữ Hoàng',  lat: 20.9472, lng: 107.0844, durationMinutes: 240, description: 'Cáp treo vượt biển dài nhất VN nối Bãi Cháy – đỉnh Ba Deo. Công viên Rồng, trò chơi cảm giác mạnh, biểu diễn.', adultPrice: 380000, childPrice: 280000 },
-    { planSlug: 'ha-noi-nghe-an-ninh-binh-ha-long-ha-noi', locationName: 'Hạ Long', sortOrder: 3, name: 'Bãi tắm Bãi Cháy',                        lat: 20.9500, lng: 107.0667, durationMinutes: 180, description: 'Bãi biển nhân tạo đẹp nhất Hạ Long, cát trắng mịn ngay trung tâm Bãi Cháy. Tắm biển, thể thao nước, ngắm cầu Bãi Cháy.', adultPrice: 0, childPrice: 0 },
+    { planSlug: 'ha-noi-nghe-an-ninh-binh-ha-long-ha-noi', locationName: 'Hạ Long', sortOrder: 1, name: 'Bãi tắm Bãi Cháy – nghỉ nhẹ ven biển',     lat: 20.9500, lng: 107.0667, durationMinutes: 180,  description: 'Bãi biển nhân tạo trung tâm Bãi Cháy, phù hợp đi dạo, tắm biển nhẹ và nghỉ sau khi đến Hạ Long. Nên xếp trước ngày lên du thuyền.', adultPrice: 0, childPrice: 0 },
+    { planSlug: 'ha-noi-nghe-an-ninh-binh-ha-long-ha-noi', locationName: 'Hạ Long', sortOrder: 2, name: 'Du thuyền ngủ đêm trên Vịnh Hạ Long',      lat: 20.9100, lng: 107.1839, durationMinutes: 1080, description: 'Lên du thuyền tham quan Vịnh Hạ Long và ngủ 1 đêm trên vịnh. Lịch phù hợp: lên tàu trưa/chiều 07/07, tham quan hang/đảo theo tuyến, ăn tối và nghỉ đêm trên du thuyền, trả tàu sáng 08/07.', adultPrice: 2500000, childPrice: 1800000 },
+    { planSlug: 'ha-noi-nghe-an-ninh-binh-ha-long-ha-noi', locationName: 'Hạ Long', sortOrder: 3, name: 'Sun World Hạ Long – Cáp treo Nữ Hoàng',    lat: 20.9472, lng: 107.0844, durationMinutes: 240,  description: 'Cáp treo Nữ Hoàng, khu vui chơi Bãi Cháy và các hoạt động nhẹ trước khi di chuyển đêm về Hà Nội. Có thể rút gọn nếu trả tàu muộn.', adultPrice: 380000, childPrice: 280000 },
     // ── Hà Nội cuối – plan-1 ─────────────────────────────────────────────────
     { planSlug: 'ha-noi-nghe-an-ninh-binh-ha-long-ha-noi', locationName: 'Hà Nội', sortOrder: 1, name: 'Hồ Gươm – Đền Ngọc Sơn',        lat: 21.0285, lng: 105.8522, durationMinutes: 90, description: 'Trái tim Hà Nội – hồ Hoàn Kiếm huyền thoại và đền Ngọc Sơn trên đảo Ngọc. Cầu Thê Húc đỏ son, tháp Bút, tháp Rùa.', adultPrice: 50000, childPrice: 0 },
     { planSlug: 'ha-noi-nghe-an-ninh-binh-ha-long-ha-noi', locationName: 'Hà Nội', sortOrder: 2, name: 'Văn Miếu – Quốc Tử Giám',       lat: 21.0267, lng: 105.8358, durationMinutes: 90, description: 'Di tích hơn 1.000 năm – trường đại học đầu tiên VN (1076). 5 sân vườn, Khuê Văn Các, 82 bia tiến sĩ.', adultPrice: 70000, childPrice: 0 },
@@ -183,6 +183,90 @@ function seedSubLocations(): void {
     console.log(`[migrate] Seeded ${SUB_LOCATION_SEEDS.length} sub-locations.`);
 }
 
+function patchHalongCruiseItinerary(): void {
+    const db = getDb();
+    const planSlug = 'ha-noi-nghe-an-ninh-binh-ha-long-ha-noi';
+    const halongDepartAt = new Date('2026-07-08T21:00:00+07:00').getTime();
+    const hanoiArriveAt = new Date('2026-07-09T06:00:00+07:00').getTime();
+    const hanoiDepartAt = new Date('2026-07-16T18:00:00+07:00').getTime();
+    const now = Date.now();
+
+    db.prepare(`
+        UPDATE locations
+        SET depart_at = ?,
+            duration_days = 2,
+            accommodation_name = ?,
+            stay_cost_per_night = 900000,
+            description = ?,
+            activities = ?,
+            updated_at = ?
+        WHERE name = 'Hạ Long'
+          AND plan_id = (SELECT id FROM plans WHERE slug = ?)
+    `).run(
+        halongDepartAt,
+        '06/07: Khách sạn Bãi Cháy · 07/07: Du thuyền ngủ đêm trên vịnh · 08/07: di chuyển đêm về Hà Nội',
+        'Đến Hạ Long tối 06/07 và nghỉ 1 đêm khách sạn khu Bãi Cháy. Ngày 07/07 lên du thuyền ngủ đêm trên Vịnh Hạ Long để tham quan vịnh. Ngày 08/07 trả tàu, nghỉ nhẹ ở Bãi Cháy/Sun World rồi di chuyển đêm về Hà Nội.',
+        JSON.stringify(['Nghỉ 1 đêm khách sạn Bãi Cháy', 'Ngủ 1 đêm trên du thuyền Vịnh Hạ Long', 'Di chuyển đêm về Hà Nội']),
+        now,
+        planSlug
+    );
+
+    db.prepare(`
+        UPDATE locations
+        SET arrive_at = ?,
+            depart_at = ?,
+            duration_days = 7,
+            transport_label = 'Ô tô đêm (Hạ Long -> Hà Nội)',
+            description = ?,
+            updated_at = ?
+        WHERE name = 'Hà Nội'
+          AND sort_order > 0
+          AND plan_id = (SELECT id FROM plans WHERE slug = ?)
+    `).run(
+        hanoiArriveAt,
+        hanoiDepartAt,
+        'Di chuyển đêm từ Hạ Long tối 08/07, đến Hà Nội sáng 09/07. Có thêm thời gian nghỉ ngơi, mua sắm nhẹ và khám phá phố cổ trước khi kết thúc hành trình tối 16/07.',
+        now,
+        planSlug
+    );
+
+    db.prepare(`
+        UPDATE sub_locations
+        SET sort_order = 1,
+            name = 'Bãi tắm Bãi Cháy – nghỉ nhẹ ven biển',
+            duration_minutes = 180,
+            description = 'Bãi biển nhân tạo trung tâm Bãi Cháy, phù hợp đi dạo, tắm biển nhẹ và nghỉ sau khi đến Hạ Long. Nên xếp trước ngày lên du thuyền.',
+            adult_price = 0,
+            child_price = 0
+        WHERE location_id = (SELECT id FROM locations WHERE name = 'Hạ Long' AND plan_id = (SELECT id FROM plans WHERE slug = ?))
+          AND (name = 'Bãi tắm Bãi Cháy' OR name = 'Bãi tắm Bãi Cháy – nghỉ nhẹ ven biển')
+    `).run(planSlug);
+
+    db.prepare(`
+        UPDATE sub_locations
+        SET sort_order = 2,
+            name = 'Du thuyền ngủ đêm trên Vịnh Hạ Long',
+            duration_minutes = 1080,
+            description = 'Lên du thuyền tham quan Vịnh Hạ Long và ngủ 1 đêm trên vịnh. Lịch phù hợp: lên tàu trưa/chiều 07/07, tham quan hang/đảo theo tuyến, ăn tối và nghỉ đêm trên du thuyền, trả tàu sáng 08/07.',
+            adult_price = 2500000,
+            child_price = 1800000
+        WHERE location_id = (SELECT id FROM locations WHERE name = 'Hạ Long' AND plan_id = (SELECT id FROM plans WHERE slug = ?))
+          AND (name = 'Vịnh Hạ Long – Tour tàu tham quan' OR name = 'Du thuyền ngủ đêm trên Vịnh Hạ Long')
+    `).run(planSlug);
+
+    db.prepare(`
+        UPDATE sub_locations
+        SET sort_order = 3,
+            name = 'Sun World Hạ Long – Cáp treo Nữ Hoàng',
+            duration_minutes = 240,
+            description = 'Cáp treo Nữ Hoàng, khu vui chơi Bãi Cháy và các hoạt động nhẹ trước khi di chuyển đêm về Hà Nội. Có thể rút gọn nếu trả tàu muộn.',
+            adult_price = 380000,
+            child_price = 280000
+        WHERE location_id = (SELECT id FROM locations WHERE name = 'Hạ Long' AND plan_id = (SELECT id FROM plans WHERE slug = ?))
+          AND name = 'Sun World Hạ Long – Cáp treo Nữ Hoàng'
+    `).run(planSlug);
+}
+
 export function runMigration(): void {
     const db = getDb();
 
@@ -208,6 +292,7 @@ export function runMigration(): void {
     if (existing.count > 0) {
         console.log('[migrate] Plans table already has data, skipping migration.');
         seedSubLocations();
+        patchHalongCruiseItinerary();
         return;
     }
 
@@ -310,4 +395,5 @@ export function runMigration(): void {
     migrate();
     console.log(`[migrate] Migrated ${Object.keys(plansJson).length} plans from plans.json`);
     seedSubLocations();
+    patchHalongCruiseItinerary();
 }
