@@ -52,6 +52,8 @@ CREATE TABLE IF NOT EXISTS sub_locations (
     lat              REAL    NOT NULL DEFAULT 0,
     lng              REAL    NOT NULL DEFAULT 0,
     duration_minutes INTEGER NOT NULL DEFAULT 60,
+    scheduled_date   TEXT    NOT NULL DEFAULT '',
+    scheduled_period TEXT    NOT NULL DEFAULT '',
     description      TEXT    NOT NULL DEFAULT '',
     adult_price      INTEGER NOT NULL DEFAULT 0,
     child_price      INTEGER NOT NULL DEFAULT 0,

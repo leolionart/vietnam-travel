@@ -2042,20 +2042,11 @@
                 },
 
                 locationVisitSlots(loc) {
-                    const { start, end } = this.parseDateRange(loc?.dateRange || '');
                     const stayDays = this.locationStayDays(loc);
-                    const startKey = start ? this.localDateKey(start) : '';
-                    const endKey = end ? this.localDateKey(end) : '';
-                    const visitStart = this.calendarVisitStartDate(loc, start);
                     const slots = [];
 
                     stayDays.forEach((day) => {
-                        const key = this.localDateKey(day);
-                        if (key === startKey) return;
-                        if (visitStart && day < visitStart) return;
-                        if (key === endKey && end && end.getHours() < 12) return;
                         slots.push({ day, label: 'Sáng', order: 2 });
-                        if (key === endKey && end && end.getHours() >= 12) return;
                         slots.push({ day, label: 'Chiều', order: 3 });
                     });
 
@@ -2066,15 +2057,6 @@
                         });
                     }
                     return slots;
-                },
-
-                calendarVisitStartDate(loc, start) {
-                    if (!loc?.name || !(start instanceof Date) || Number.isNaN(start.getTime())) return null;
-                    const normalizedName = loc.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase();
-                    if (normalizedName === 'nghe an') {
-                        return new Date(start.getFullYear(), 5, 27);
-                    }
-                    return null;
                 },
 
                 calendarEventsByDay() {
@@ -2118,7 +2100,13 @@
                         const visitSlots = this.locationVisitSlots(loc);
                         (loc.subLocations || []).forEach((sub, subIndex) => {
                             if (!visitSlots.length) return;
-                            const slot = visitSlots[subIndex % visitSlots.length];
+                            const savedSlot = sub.scheduledDate && sub.scheduledPeriod
+                                ? visitSlots.find(candidate => this.localDateKey(candidate.day) === sub.scheduledDate && (
+                                    (sub.scheduledPeriod === 'morning' && candidate.label === 'Sáng') ||
+                                    (sub.scheduledPeriod === 'afternoon' && candidate.label === 'Chiều')
+                                ))
+                                : null;
+                            const slot = savedSlot || visitSlots[subIndex % visitSlots.length];
                             add(slot.day, {
                                 id: `visit-${sub.id}`,
                                 type: 'visit',

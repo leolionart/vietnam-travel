@@ -13,7 +13,13 @@ import type { Location, SubLocation } from '../../types/index.js';
 interface Props {
     location: Location;
     subLocations: SubLocation[];
-    onOrderChange: (orderedIds: number[]) => void;
+    onScheduleChange: (orderedIds: number[], schedules: SubLocationSchedule[]) => void;
+}
+
+export interface SubLocationSchedule {
+    id: number;
+    scheduledDate: string;
+    scheduledPeriod: 'morning' | 'afternoon';
 }
 
 interface VisitSlot {
@@ -65,16 +71,6 @@ function formatDay(date: Date): string {
     return `${weekdays[date.getDay()]} ${pad(date.getDate())}/${pad(date.getMonth() + 1)}`;
 }
 
-function normalizedName(name: string): string {
-    return name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase();
-}
-
-function calendarVisitStartDate(location: Location, start: Date | null): Date | null {
-    if (!start) return null;
-    if (normalizedName(location.name) === 'nghe an') return new Date(start.getFullYear(), 5, 27);
-    return null;
-}
-
 function buildCalendarDays(location: Location): CalendarDay[] {
     const { start, end } = parseDateRange(location.dateRange);
     if (!start && !end) return [];
@@ -83,7 +79,6 @@ function buildCalendarDays(location: Location): CalendarDay[] {
     const last = normalizeDay(end || start!);
     const startKey = start ? localDateKey(start) : '';
     const endKey = end ? localDateKey(end) : '';
-    const visitStart = calendarVisitStartDate(location, start);
     const days: CalendarDay[] = [];
     const cursor = new Date(first);
 
@@ -94,8 +89,8 @@ function buildCalendarDays(location: Location): CalendarDay[] {
             key,
             date: day,
             slots: [
-                buildSlot(day, 'Sáng', startKey, endKey, visitStart, end),
-                buildSlot(day, 'Chiều', startKey, endKey, visitStart, end),
+                buildSlot(day, 'Sáng', startKey, endKey, end),
+                buildSlot(day, 'Chiều', startKey, endKey, end),
             ],
         });
         cursor.setDate(cursor.getDate() + 1);
@@ -103,12 +98,11 @@ function buildCalendarDays(location: Location): CalendarDay[] {
     return days;
 }
 
-function buildSlot(day: Date, label: 'Sáng' | 'Chiều', startKey: string, endKey: string, visitStart: Date | null, end: Date | null): VisitSlot {
+function buildSlot(day: Date, label: 'Sáng' | 'Chiều', startKey: string, endKey: string, end: Date | null): VisitSlot {
     const key = localDateKey(day);
     let reason = '';
 
     if (key === startKey) reason = 'Check-in / nghỉ';
-    else if (visitStart && day < visitStart) reason = 'Chưa xếp tham quan';
     else if (key === endKey && end && end.getHours() < 12) reason = 'Checkout sáng';
     else if (key === endKey && end && end.getHours() >= 12 && label === 'Chiều') reason = 'Di chuyển / checkout';
 
@@ -129,21 +123,41 @@ function buildVisitSlots(days: CalendarDay[]): VisitSlot[] {
 function buildInitialAssignments(slots: VisitSlot[], subLocations: SubLocation[]): Assignments {
     const assignments: Assignments = Object.fromEntries(slots.map(slot => [slot.id, []]));
     if (!slots.length) return assignments;
-    subLocations.forEach((sub, index) => {
+
+    const slotIds = new Set(slots.map(slot => slot.id));
+    const unassigned: SubLocation[] = [];
+    subLocations.forEach(sub => {
+        const scheduledSlot = scheduleToSlotId(sub.scheduledDate, sub.scheduledPeriod);
+        if (scheduledSlot && slotIds.has(scheduledSlot)) assignments[scheduledSlot].push(sub.id);
+        else unassigned.push(sub);
+    });
+
+    unassigned.forEach((sub, index) => {
         const slot = slots[index % slots.length];
         assignments[slot.id].push(sub.id);
     });
     return assignments;
 }
 
+function scheduleToSlotId(date: string, period: string): string {
+    if (!date || (period !== 'morning' && period !== 'afternoon')) return '';
+    return `${date}-${period}`;
+}
+
 function findContainer(assignments: Assignments, subId: number): string | null {
     return Object.entries(assignments).find(([, ids]) => ids.includes(subId))?.[0] ?? null;
 }
 
-function buildOrderedIds(assignments: Assignments, slots: VisitSlot[], subLocations: SubLocation[]): number[] {
+function buildOrderedSchedule(assignments: Assignments, slots: VisitSlot[], subLocations: SubLocation[]): { orderedIds: number[]; schedules: SubLocationSchedule[] } {
     const orderedIds = slots.flatMap(slot => assignments[slot.id] || []);
     const missingIds = subLocations.map(sub => sub.id).filter(id => !orderedIds.includes(id));
-    return [...orderedIds, ...missingIds];
+    const schedules = slots.flatMap(slot => {
+        const [date, period] = slot.id.endsWith('-morning')
+            ? [slot.id.slice(0, -8), 'morning' as const]
+            : [slot.id.slice(0, -10), 'afternoon' as const];
+        return (assignments[slot.id] || []).map(id => ({ id, scheduledDate: date, scheduledPeriod: period }));
+    });
+    return { orderedIds: [...orderedIds, ...missingIds], schedules };
 }
 
 function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
@@ -171,7 +185,7 @@ function buildProximity(subLocations: SubLocation[]): Map<number, string> {
     }));
 }
 
-export function SubLocationCalendarPlanner({ location, subLocations, onOrderChange }: Props) {
+export function SubLocationCalendarPlanner({ location, subLocations, onScheduleChange }: Props) {
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
     const calendarDays = useMemo(() => buildCalendarDays(location), [location]);
     const slots = useMemo(() => buildVisitSlots(calendarDays), [calendarDays]);
@@ -201,7 +215,8 @@ export function SubLocationCalendarPlanner({ location, subLocations, onOrderChan
         next[toSlot] = target;
 
         setAssignments(next);
-        onOrderChange(buildOrderedIds(next, slots, subLocations));
+        const { orderedIds, schedules } = buildOrderedSchedule(next, slots, subLocations);
+        onScheduleChange(orderedIds, schedules);
     }
 
     if (!subLocations.length) return null;
@@ -213,7 +228,7 @@ export function SubLocationCalendarPlanner({ location, subLocations, onOrderChan
     return (
         <div className="space-y-3">
             <div className="flex items-center justify-between gap-3">
-                <p className="text-[11px] text-slate-500">Hiển thị toàn bộ ngày lưu trú. Kéo điểm tham quan vào ô sáng/chiều; thay đổi sẽ lưu bằng nút Lưu thay đổi bên dưới.</p>
+                <p className="text-[11px] text-slate-500">Hiển thị toàn bộ ngày lưu trú theo dữ liệu đã lưu. Kéo điểm tham quan vào ô sáng/chiều; thay đổi sẽ lưu bằng nút Lưu thay đổi bên dưới.</p>
             </div>
             <ProximityPanel subLocations={subLocations} proximity={proximity} />
             <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
@@ -276,7 +291,7 @@ function CalendarSlot({ slot, items, proximity }: { slot: VisitSlot; items: SubL
             <div className="flex items-center justify-between mb-2">
                 <span className={`text-[10px] font-bold ${isMorning ? 'text-sky-200' : 'text-orange-200'}`}>{slot.label}</span>
                 {slot.disabled && <span className="text-[9px] font-semibold text-slate-500">{slot.reason}</span>}
-                {!slot.disabled && slot.hint && <span className="text-[9px] font-semibold text-slate-500">{slot.hint}</span>}
+                {!slot.disabled && !items.length && slot.hint && <span className="text-[9px] font-semibold text-slate-500">{slot.hint}</span>}
             </div>
             <div className="space-y-1.5">
                 {items.map(item => <DraggableSub key={item.id} sub={item} proximity={proximity.get(item.id) || ''} />)}

@@ -5,7 +5,7 @@ import { CurrencyInput } from '../ui/CurrencyInput.js';
 import { TagInput } from '../ui/TagInput.js';
 import { ConfirmDialog } from '../ui/ConfirmDialog.js';
 import { PopConfirm } from '../ui/PopConfirm.js';
-import { SubLocationCalendarPlanner } from './SubLocationCalendarPlanner.js';
+import { SubLocationCalendarPlanner, type SubLocationSchedule } from './SubLocationCalendarPlanner.js';
 
 interface TripResult {
     tripCode: string;
@@ -83,6 +83,7 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
     const [dirty, setDirty] = useState(false);
     const [subLocations, setSubLocations] = useState<SubLocation[]>([]);
     const [pendingCalendarOrder, setPendingCalendarOrder] = useState<number[] | null>(null);
+    const [pendingCalendarSchedules, setPendingCalendarSchedules] = useState<SubLocationSchedule[] | null>(null);
     const [expandedSubId, setExpandedSubId] = useState<number | 'new' | null>(null);
     const [subForm, setSubForm] = useState<{ name: string; lat: string; lng: string; durationMinutes: string; description: string; adultPrice: string; childPrice: string }>({ name: '', lat: '', lng: '', durationMinutes: '60', description: '', adultPrice: '0', childPrice: '0' });
     const [confirmClose, setConfirmClose] = useState(false);
@@ -123,6 +124,7 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
         }
         setDirty(false);
         setPendingCalendarOrder(null);
+        setPendingCalendarSchedules(null);
         setSubLocations(location?.subLocations ?? []);
         setExpandedSubId(null);
     }, [location]);
@@ -193,7 +195,7 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
         try {
             if (expandedSubId === 'new') {
                 const { id } = await api.addSubLocation(planSlug, location.id, payload);
-                setSubLocations(prev => [...prev, { id, ...payload }]);
+                setSubLocations(prev => [...prev, { id, scheduledDate: '', scheduledPeriod: '', ...payload }]);
             } else if (typeof expandedSubId === 'number') {
                 await api.updateSubLocation(planSlug, location.id, expandedSubId, payload);
                 setSubLocations(prev => prev.map(s => s.id === expandedSubId ? { ...s, ...payload } : s));
@@ -226,20 +228,26 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
             arriveAt: inputToMs(arriveInput),
             departAt: inputToMs(departInput),
         };
-        const saved = await onSave(payload);
-        if (!saved) return;
 
         if (location && pendingCalendarOrder) {
             try {
-                await api.reorderSubLocations(planSlug, location.id, pendingCalendarOrder);
+                await api.reorderSubLocations(planSlug, location.id, pendingCalendarOrder, pendingCalendarSchedules ?? undefined);
                 const order = new Map(pendingCalendarOrder.map((id, index) => [id, index]));
-                setSubLocations(prev => [...prev].sort((a, b) => (order.get(a.id) ?? 9999) - (order.get(b.id) ?? 9999)));
+                const scheduleById = new Map((pendingCalendarSchedules ?? []).map(item => [item.id, item]));
+                setSubLocations(prev => [...prev].map(sub => {
+                    const schedule = scheduleById.get(sub.id);
+                    return schedule ? { ...sub, scheduledDate: schedule.scheduledDate, scheduledPeriod: schedule.scheduledPeriod } : sub;
+                }).sort((a, b) => (order.get(a.id) ?? 9999) - (order.get(b.id) ?? 9999)));
                 setPendingCalendarOrder(null);
+                setPendingCalendarSchedules(null);
             } catch (err) {
                 alert('Lỗi khi lưu calendar: ' + (err instanceof Error ? err.message : String(err)));
                 return;
             }
         }
+
+        const saved = await onSave(payload);
+        if (!saved) return;
 
         setDirty(false);
     }
@@ -373,8 +381,9 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
                             <SubLocationCalendarPlanner
                                 location={location}
                                 subLocations={subLocations}
-                                onOrderChange={orderedIds => {
+                                onScheduleChange={(orderedIds, schedules) => {
                                     setPendingCalendarOrder(orderedIds);
+                                    setPendingCalendarSchedules(schedules);
                                     setDirty(true);
                                 }}
                             />

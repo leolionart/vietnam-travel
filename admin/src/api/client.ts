@@ -1,5 +1,11 @@
 import type { Plan, LocationInput } from '../types/index.js';
 
+export interface SubLocationScheduleInput {
+    id: number;
+    scheduledDate: string;
+    scheduledPeriod: 'morning' | 'afternoon';
+}
+
 const BASE = '/api';
 
 function getToken(): string | null {
@@ -85,13 +91,13 @@ export const api = {
         return request<{ url: string }>(`/vexere-link?${params}`);
     },
 
-    addSubLocation: (slug: string, locationId: number, data: { name: string; lat: number; lng: number; durationMinutes: number; description: string; adultPrice: number; childPrice: number }) =>
+    addSubLocation: (slug: string, locationId: number, data: { name: string; lat: number; lng: number; durationMinutes: number; scheduledDate?: string; scheduledPeriod?: string; description: string; adultPrice: number; childPrice: number }) =>
         request<{ id: number }>(`/plans/${slug}/locations/${locationId}/sub-locations`, {
             method: 'POST',
             body: JSON.stringify(data),
         }),
 
-    updateSubLocation: (slug: string, locationId: number, subId: number, data: Partial<{ name: string; lat: number; lng: number; durationMinutes: number; description: string; sortOrder: number; adultPrice: number; childPrice: number }>) =>
+    updateSubLocation: (slug: string, locationId: number, subId: number, data: Partial<{ name: string; lat: number; lng: number; durationMinutes: number; scheduledDate: string; scheduledPeriod: string; description: string; sortOrder: number; adultPrice: number; childPrice: number }>) =>
         request<{ ok: boolean }>(`/plans/${slug}/locations/${locationId}/sub-locations/${subId}`, {
             method: 'PUT',
             body: JSON.stringify(data),
@@ -100,10 +106,10 @@ export const api = {
     deleteSubLocation: (slug: string, locationId: number, subId: number) =>
         request<{ ok: boolean }>(`/plans/${slug}/locations/${locationId}/sub-locations/${subId}`, { method: 'DELETE' }),
 
-    reorderSubLocations: (slug: string, locationId: number, orderedIds: number[]) =>
+    reorderSubLocations: (slug: string, locationId: number, orderedIds: number[], schedules?: SubLocationScheduleInput[]) =>
         request<{ ok: boolean }>(`/plans/${slug}/locations/${locationId}/sub-locations/reorder`, {
             method: 'PATCH',
-            body: JSON.stringify({ orderedIds }),
+            body: JSON.stringify({ orderedIds, schedules }),
         }),
 };
 

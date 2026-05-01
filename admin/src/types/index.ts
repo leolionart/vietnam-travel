@@ -4,6 +4,8 @@ export interface SubLocation {
     lat: number;
     lng: number;
     durationMinutes: number;
+    scheduledDate: string;
+    scheduledPeriod: 'morning' | 'afternoon' | '';
     description: string;
     adultPrice: number;
     childPrice: number;

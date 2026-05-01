@@ -296,6 +296,8 @@ const TOOL_DEFINITIONS = [
                 lat: { type: 'number' },
                 lng: { type: 'number' },
                 durationMinutes: { type: 'number', description: 'Thời gian tham quan (phút)' },
+                scheduledDate: { type: 'string', description: 'Ngày tham quan dạng YYYY-MM-DD' },
+                scheduledPeriod: { type: 'string', enum: ['morning', 'afternoon'], description: 'Buổi tham quan' },
                 description: { type: 'string' },
                 adultPrice: { type: 'number', description: 'Giá vé người lớn (VND)' },
                 childPrice: { type: 'number' },
@@ -317,6 +319,8 @@ const TOOL_DEFINITIONS = [
                 lat: { type: 'number' },
                 lng: { type: 'number' },
                 durationMinutes: { type: 'number' },
+                scheduledDate: { type: 'string' },
+                scheduledPeriod: { type: 'string', enum: ['morning', 'afternoon', ''] },
                 description: { type: 'string' },
                 adultPrice: { type: 'number' },
                 childPrice: { type: 'number' },
@@ -333,6 +337,18 @@ const TOOL_DEFINITIONS = [
                 planSlug: { type: 'string' },
                 locationId: { type: 'number' },
                 orderedIds: { type: 'array', items: { type: 'number' } },
+                schedules: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        required: ['id', 'scheduledDate', 'scheduledPeriod'],
+                        properties: {
+                            id: { type: 'number' },
+                            scheduledDate: { type: 'string', description: 'YYYY-MM-DD' },
+                            scheduledPeriod: { type: 'string', enum: ['morning', 'afternoon'] },
+                        },
+                    },
+                },
             },
         },
     },
@@ -418,7 +434,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                     return ok(await remote.del(`/api/plans/${planSlug}/locations/${locationId}/sub-locations/${subLocationId}`));
 
                 case 'reorder_sub_locations':
-                    return ok(await remote.patch(`/api/plans/${planSlug}/locations/${locationId}/sub-locations/reorder`, { orderedIds: args.orderedIds }));
+                    return ok(await remote.patch(`/api/plans/${planSlug}/locations/${locationId}/sub-locations/reorder`, { orderedIds: args.orderedIds, schedules: args.schedules }));
 
                 default:
                     return err(`Unknown tool: ${name}`);
@@ -488,8 +504,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 const db = L.getDb();
                 const maxOrder = (db.prepare('SELECT MAX(sort_order) as m FROM sub_locations WHERE location_id = ?').get(args.locationId) as { m: number | null }).m ?? 0;
                 const result = db.prepare(
-                    'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, description, adult_price, child_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-                ).run(args.locationId, args.sortOrder ?? maxOrder + 1, args.name, args.lat ?? 0, args.lng ?? 0, args.durationMinutes ?? 60, args.description ?? '', args.adultPrice ?? 0, args.childPrice ?? 0);
+                    'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, scheduled_date, scheduled_period, description, adult_price, child_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                ).run(args.locationId, args.sortOrder ?? maxOrder + 1, args.name, args.lat ?? 0, args.lng ?? 0, args.durationMinutes ?? 60, args.scheduledDate ?? '', args.scheduledPeriod ?? '', args.description ?? '', args.adultPrice ?? 0, args.childPrice ?? 0);
                 return ok({ id: result.lastInsertRowid });
             }
 
@@ -501,7 +517,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 if (!db.prepare('SELECT id FROM sub_locations WHERE id = ? AND location_id = ?').get(args.subLocationId, args.locationId)) return err('Sub-location not found');
                 const fields: string[] = [];
                 const values: unknown[] = [];
-                const map: Record<string, unknown> = { name: args.name, lat: args.lat, lng: args.lng, sort_order: args.sortOrder, duration_minutes: args.durationMinutes, description: args.description, adult_price: args.adultPrice, child_price: args.childPrice };
+                const map: Record<string, unknown> = { name: args.name, lat: args.lat, lng: args.lng, sort_order: args.sortOrder, duration_minutes: args.durationMinutes, scheduled_date: args.scheduledDate, scheduled_period: args.scheduledPeriod, description: args.description, adult_price: args.adultPrice, child_price: args.childPrice };
                 for (const [k, v] of Object.entries(map)) {
                     if (v !== undefined) { fields.push(`${k} = ?`); values.push(v); }
                 }
@@ -516,8 +532,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 if (!Array.isArray(args.orderedIds)) return err('orderedIds must be an array');
                 const db = L.getDb();
                 const update = db.prepare('UPDATE sub_locations SET sort_order = ? WHERE id = ? AND location_id = ?');
+                const updateSchedule = db.prepare('UPDATE sub_locations SET scheduled_date = ?, scheduled_period = ? WHERE id = ? AND location_id = ?');
                 const tx = db.transaction(() => {
                     (args.orderedIds as number[]).forEach((id, idx) => update.run(idx, id, args.locationId));
+                    if (Array.isArray(args.schedules)) {
+                        (args.schedules as Array<{ id: number; scheduledDate: string; scheduledPeriod: string }>).forEach(item => updateSchedule.run(item.scheduledDate || '', item.scheduledPeriod || '', item.id, args.locationId));
+                    }
                 });
                 tx();
                 return ok({ ok: true });

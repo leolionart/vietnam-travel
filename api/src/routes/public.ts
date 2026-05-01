@@ -86,16 +86,16 @@ router.post('/plans/:slug/locations/:id/sub-locations', (req, res) => {
     const locationId = Number(req.params.id);
     if (!getLocationForPlan(planId, locationId)) { res.status(404).json({ error: 'Location not found' }); return; }
 
-    const { name, lat, lng, durationMinutes, description, sortOrder, adultPrice, childPrice } = req.body as {
-        name?: string; lat?: number; lng?: number; durationMinutes?: number; description?: string; sortOrder?: number; adultPrice?: number; childPrice?: number;
+    const { name, lat, lng, durationMinutes, scheduledDate, scheduledPeriod, description, sortOrder, adultPrice, childPrice } = req.body as {
+        name?: string; lat?: number; lng?: number; durationMinutes?: number; scheduledDate?: string; scheduledPeriod?: string; description?: string; sortOrder?: number; adultPrice?: number; childPrice?: number;
     };
     if (!name?.trim()) { res.status(400).json({ error: 'name is required' }); return; }
 
     const db = getDb();
     const maxOrder = (db.prepare('SELECT MAX(sort_order) as m FROM sub_locations WHERE location_id = ?').get(locationId) as { m: number | null }).m ?? 0;
     const result = db.prepare(
-        'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, description, adult_price, child_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(locationId, sortOrder ?? maxOrder + 1, name, lat ?? 0, lng ?? 0, durationMinutes ?? 60, description ?? '', adultPrice ?? 0, childPrice ?? 0);
+        'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, scheduled_date, scheduled_period, description, adult_price, child_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(locationId, sortOrder ?? maxOrder + 1, name, lat ?? 0, lng ?? 0, durationMinutes ?? 60, scheduledDate ?? '', scheduledPeriod ?? '', description ?? '', adultPrice ?? 0, childPrice ?? 0);
     res.status(201).json({ id: result.lastInsertRowid });
 });
 
@@ -112,8 +112,8 @@ router.put('/plans/:slug/locations/:id/sub-locations/:subId', (req, res) => {
         res.status(404).json({ error: 'Sub-location not found' }); return;
     }
 
-    const { name, lat, lng, durationMinutes, description, sortOrder, adultPrice, childPrice } = req.body as {
-        name?: string; lat?: number; lng?: number; durationMinutes?: number; description?: string; sortOrder?: number; adultPrice?: number; childPrice?: number;
+    const { name, lat, lng, durationMinutes, scheduledDate, scheduledPeriod, description, sortOrder, adultPrice, childPrice } = req.body as {
+        name?: string; lat?: number; lng?: number; durationMinutes?: number; scheduledDate?: string; scheduledPeriod?: string; description?: string; sortOrder?: number; adultPrice?: number; childPrice?: number;
     };
     const fields: string[] = [];
     const values: unknown[] = [];
@@ -122,6 +122,8 @@ router.put('/plans/:slug/locations/:id/sub-locations/:subId', (req, res) => {
     if (lng !== undefined) { fields.push('lng = ?'); values.push(lng); }
     if (sortOrder !== undefined) { fields.push('sort_order = ?'); values.push(sortOrder); }
     if (durationMinutes !== undefined) { fields.push('duration_minutes = ?'); values.push(durationMinutes); }
+    if (scheduledDate !== undefined) { fields.push('scheduled_date = ?'); values.push(scheduledDate); }
+    if (scheduledPeriod !== undefined) { fields.push('scheduled_period = ?'); values.push(scheduledPeriod); }
     if (description !== undefined) { fields.push('description = ?'); values.push(description); }
     if (adultPrice !== undefined) { fields.push('adult_price = ?'); values.push(adultPrice); }
     if (childPrice !== undefined) { fields.push('child_price = ?'); values.push(childPrice); }
@@ -151,13 +153,17 @@ router.patch('/plans/:slug/locations/:id/sub-locations/reorder', (req, res) => {
     const locationId = Number(req.params.id);
     if (!getLocationForPlan(planId, locationId)) { res.status(404).json({ error: 'Location not found' }); return; }
 
-    const { orderedIds } = req.body as { orderedIds?: number[] };
+    const { orderedIds, schedules } = req.body as { orderedIds?: number[]; schedules?: Array<{ id: number; scheduledDate: string; scheduledPeriod: string }> };
     if (!Array.isArray(orderedIds)) { res.status(400).json({ error: 'orderedIds must be an array' }); return; }
 
     const db = getDb();
     const update = db.prepare('UPDATE sub_locations SET sort_order = ? WHERE id = ? AND location_id = ?');
+    const updateSchedule = db.prepare('UPDATE sub_locations SET scheduled_date = ?, scheduled_period = ? WHERE id = ? AND location_id = ?');
     const tx = db.transaction(() => {
         orderedIds.forEach((id, idx) => update.run(idx, id, locationId));
+        if (Array.isArray(schedules)) {
+            schedules.forEach(item => updateSchedule.run(item.scheduledDate || '', item.scheduledPeriod || '', item.id, locationId));
+        }
     });
     tx();
     res.json({ ok: true });
