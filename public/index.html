@@ -160,7 +160,7 @@
 
     <!-- Top Navigation -->
     <header class="fixed top-0 left-0 w-full z-50 p-4 lg:p-6 flex flex-col lg:flex-row justify-between items-center gap-4 pointer-events-none">
-        <div class="flex items-center gap-4 pointer-events-auto w-full lg:w-auto cursor-pointer" @click="activeId = null">
+        <div class="flex items-center gap-4 pointer-events-auto w-full lg:w-auto cursor-pointer" @click="closeDetailPanel()">
             <div class="w-10 h-10 lg:w-12 lg:h-12 bg-white rounded-2xl flex items-center justify-center text-slate-900 shadow-2xl">
                 <i data-lucide="compass" class="w-5 h-5 lg:w-6 lg:h-6"></i>
             </div>
@@ -382,8 +382,8 @@
     <main x-show="viewMode === 'map'" class="fixed right-6 top-28 bottom-28 w-[450px] z-40 pointer-events-none detail-panel" :class="activeId ? 'block' : 'hidden'">
         <div class="glass rounded-[2rem] lg:rounded-[2.5rem] h-full flex flex-col overflow-hidden pointer-events-auto shadow-2xl border-white/5 slide-up relative">
             
-            <!-- Close Button (Mobile Only) -->
-            <button @click="activeId = null" class="lg:hidden absolute top-4 right-4 z-50 w-10 h-10 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10">
+            <!-- Close Button -->
+            <button @click="closeDetailPanel()" class="absolute top-4 right-4 z-50 w-10 h-10 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10 hover:bg-white/10 transition-colors">
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
             
@@ -1355,6 +1355,14 @@
                 setActive(id) {
                     this.activeId = id;
                     this.updateMap(false);
+                },
+
+                closeDetailPanel() {
+                    this.activeId = null;
+                    this.detailMode = 'overview';
+                    this.detailScrolled = false;
+                    this.markerPopup = null;
+                    this.$nextTick(() => this.updateMap(true, true));
                 },
 
                 adjustAdults(delta) {
