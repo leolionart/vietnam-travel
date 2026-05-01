@@ -186,15 +186,15 @@ function seedSubLocations(): void {
 function patchHalongCruiseItinerary(): void {
     const db = getDb();
     const planSlug = 'ha-noi-nghe-an-ninh-binh-ha-long-ha-noi';
-    const halongDepartAt = new Date('2026-07-08T21:00:00+07:00').getTime();
-    const hanoiArriveAt = new Date('2026-07-09T06:00:00+07:00').getTime();
+    const halongDepartAt = new Date('2026-07-10T18:00:00+07:00').getTime();
+    const hanoiArriveAt = new Date('2026-07-10T22:00:00+07:00').getTime();
     const hanoiDepartAt = new Date('2026-07-16T18:00:00+07:00').getTime();
     const now = Date.now();
 
     db.prepare(`
         UPDATE locations
         SET depart_at = ?,
-            duration_days = 2,
+            duration_days = 4,
             accommodation_name = ?,
             stay_cost_per_night = 900000,
             description = ?,
@@ -204,9 +204,9 @@ function patchHalongCruiseItinerary(): void {
           AND plan_id = (SELECT id FROM plans WHERE slug = ?)
     `).run(
         halongDepartAt,
-        '06/07: Khách sạn Bãi Cháy · 07/07: Du thuyền ngủ đêm trên vịnh · 08/07: di chuyển đêm về Hà Nội',
-        'Đến Hạ Long tối 06/07 và nghỉ 1 đêm khách sạn khu Bãi Cháy. Ngày 07/07 lên du thuyền ngủ đêm trên Vịnh Hạ Long để tham quan vịnh. Ngày 08/07 trả tàu, nghỉ nhẹ ở Bãi Cháy/Sun World rồi di chuyển đêm về Hà Nội.',
-        JSON.stringify(['Nghỉ 1 đêm khách sạn Bãi Cháy', 'Ngủ 1 đêm trên du thuyền Vịnh Hạ Long', 'Di chuyển đêm về Hà Nội']),
+        '06/07: Khách sạn Bãi Cháy · 07/07: Du thuyền ngủ đêm trên vịnh · 08-09/07: Hạ Long/Bãi Cháy · 10/07 tối: đi Hà Nội',
+        'Đến Hạ Long tối 06/07 và nghỉ 1 đêm khách sạn khu Bãi Cháy. Ngày 07/07 lên du thuyền ngủ đêm trên Vịnh Hạ Long để tham quan vịnh. Ngày 08/07 trả tàu, tiếp tục ở Hạ Long/Bãi Cháy thêm thời gian nghỉ và vui chơi nhẹ. Chiều/tối thứ Sáu 10/07 di chuyển về Hà Nội.',
+        JSON.stringify(['Nghỉ 1 đêm khách sạn Bãi Cháy', 'Ngủ 1 đêm trên du thuyền Vịnh Hạ Long', 'Ở thêm Hạ Long tới chiều/tối thứ Sáu', 'Di chuyển tối thứ Sáu về Hà Nội']),
         now,
         planSlug
     );
@@ -215,8 +215,8 @@ function patchHalongCruiseItinerary(): void {
         UPDATE locations
         SET arrive_at = ?,
             depart_at = ?,
-            duration_days = 7,
-            transport_label = 'Ô tô đêm (Hạ Long -> Hà Nội)',
+            duration_days = 6,
+            transport_label = 'Ô tô tối thứ Sáu (Hạ Long -> Hà Nội)',
             description = ?,
             updated_at = ?
         WHERE name = 'Hà Nội'
@@ -225,7 +225,7 @@ function patchHalongCruiseItinerary(): void {
     `).run(
         hanoiArriveAt,
         hanoiDepartAt,
-        'Di chuyển đêm từ Hạ Long tối 08/07, đến Hà Nội sáng 09/07. Có thêm thời gian nghỉ ngơi, mua sắm nhẹ và khám phá phố cổ trước khi kết thúc hành trình tối 16/07.',
+        'Di chuyển từ Hạ Long chiều/tối thứ Sáu 10/07, đến Hà Nội khoảng 22:00 cùng ngày. Có thời gian nghỉ ngơi, mua sắm nhẹ và khám phá phố cổ trước khi kết thúc hành trình tối 16/07.',
         now,
         planSlug
     );
