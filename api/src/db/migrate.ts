@@ -267,6 +267,24 @@ function patchHalongCruiseItinerary(): void {
     `).run(planSlug);
 }
 
+function patchNoiBaiStartPoint(): void {
+    const db = getDb();
+    const planSlug = 'ha-noi-nghe-an-ninh-binh-ha-long-ha-noi';
+
+    db.prepare(`
+        UPDATE locations
+        SET name = 'Sân bay Nội Bài',
+            province = 'Hà Nội',
+            lat = 21.2187,
+            lng = 105.8042,
+            highlight = 'Điểm đến sân bay',
+            description = 'Đến sân bay Nội Bài sáng 18/06, lấy hành lý/chuẩn bị rồi khởi hành đi Nghệ An.',
+            updated_at = ?
+        WHERE plan_id = (SELECT id FROM plans WHERE slug = ?)
+          AND sort_order = 0
+    `).run(Date.now(), planSlug);
+}
+
 export function runMigration(): void {
     const db = getDb();
 
@@ -292,6 +310,7 @@ export function runMigration(): void {
     if (existing.count > 0) {
         console.log('[migrate] Plans table already has data, skipping migration.');
         seedSubLocations();
+        patchNoiBaiStartPoint();
         patchHalongCruiseItinerary();
         return;
     }
@@ -395,5 +414,6 @@ export function runMigration(): void {
     migrate();
     console.log(`[migrate] Migrated ${Object.keys(plansJson).length} plans from plans.json`);
     seedSubLocations();
+    patchNoiBaiStartPoint();
     patchHalongCruiseItinerary();
 }
