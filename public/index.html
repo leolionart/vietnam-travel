@@ -1980,8 +1980,9 @@
                     stayDays.forEach((day) => {
                         const key = this.localDateKey(day);
                         if (key === startKey) return;
-                        if (key === endKey && end && end.getHours() < 15) return;
+                        if (key === endKey && end && end.getHours() < 12) return;
                         slots.push({ day, label: 'Sáng', order: 2 });
+                        if (key === endKey && end && end.getHours() >= 12) return;
                         slots.push({ day, label: 'Chiều', order: 3 });
                     });
 
