@@ -112,14 +112,13 @@ function buildSlot(day: Date, label: 'Sáng' | 'Chiều', startKey: string, endK
     else if (key === endKey && end && end.getHours() < 12) reason = 'Checkout sáng';
     else if (key === endKey && end && end.getHours() >= 12 && label === 'Chiều') reason = 'Di chuyển / checkout';
 
-    const isTravelBoundary = key === startKey || reason === 'Checkout sáng' || reason === 'Di chuyển / checkout';
     return {
         id: `${key}-${label === 'Sáng' ? 'morning' : 'afternoon'}`,
         date: day,
         label,
-        disabled: isTravelBoundary,
-        reason: isTravelBoundary ? reason : '',
-        hint: !isTravelBoundary ? reason : '',
+        disabled: false,
+        reason: '',
+        hint: reason,
     };
 }
 
