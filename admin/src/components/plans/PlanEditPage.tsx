@@ -40,8 +40,8 @@ export function PlanEditPage() {
         }
     }
 
-    async function handleSaveLocation(data: LocationInput) {
-        if (!slug) return;
+    async function handleSaveLocation(data: LocationInput): Promise<boolean> {
+        if (!slug) return false;
         try {
             if (addingNew) {
                 await api.addLocation(slug, data);
@@ -57,8 +57,10 @@ export function PlanEditPage() {
                 setEditingLocation(refreshed);
             }
             showToast('Đã lưu thành công');
+            return true;
         } catch (err: unknown) {
             showToast(err instanceof Error ? err.message : 'Có lỗi xảy ra', 'error');
+            return false;
         }
     }
 

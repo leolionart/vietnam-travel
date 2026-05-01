@@ -22,7 +22,7 @@ interface TripResult {
 interface Props {
     location: Location | null;
     planSlug: string;
-    onSave: (data: LocationInput) => void;
+    onSave: (data: LocationInput) => Promise<boolean>;
     onClose: () => void;
     previousProvince?: string;
 }
@@ -43,6 +43,30 @@ function inputToMs(str: string): number | null {
     return Number.isNaN(d.getTime()) ? null : d.getTime();
 }
 
+const MS_PER_DAY = 86400000;
+
+function inputToDate(str: string): Date | null {
+    if (!str) return null;
+    const d = new Date(str);
+    return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function dateToInput(date: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function addDays(date: Date, days: number): Date {
+    return new Date(date.getTime() + Math.max(0, days) * MS_PER_DAY);
+}
+
+function durationBetweenInputs(arrive: string, depart: string): number | null {
+    const arriveDate = inputToDate(arrive);
+    const departDate = inputToDate(depart);
+    if (!arriveDate || !departDate || departDate < arriveDate) return null;
+    return Math.max(0, Math.round((departDate.getTime() - arriveDate.getTime()) / MS_PER_DAY));
+}
+
 const TRANSPORT_TYPES = [
     { value: 'car', label: 'Ô tô / Taxi' },
     { value: 'bus', label: 'Xe khách' },
@@ -58,6 +82,7 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
     const [departInput, setDepartInput] = useState('');
     const [dirty, setDirty] = useState(false);
     const [subLocations, setSubLocations] = useState<SubLocation[]>([]);
+    const [pendingCalendarOrder, setPendingCalendarOrder] = useState<number[] | null>(null);
     const [expandedSubId, setExpandedSubId] = useState<number | 'new' | null>(null);
     const [subForm, setSubForm] = useState<{ name: string; lat: string; lng: string; durationMinutes: string; description: string; adultPrice: string; childPrice: string }>({ name: '', lat: '', lng: '', durationMinutes: '60', description: '', adultPrice: '0', childPrice: '0' });
     const [confirmClose, setConfirmClose] = useState(false);
@@ -97,6 +122,7 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
             setDepartInput('');
         }
         setDirty(false);
+        setPendingCalendarOrder(null);
         setSubLocations(location?.subLocations ?? []);
         setExpandedSubId(null);
     }, [location]);
@@ -118,6 +144,39 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
     function openEditSub(sub: SubLocation) {
         setSubForm({ name: sub.name, lat: String(sub.lat), lng: String(sub.lng), durationMinutes: String(sub.durationMinutes), description: sub.description, adultPrice: String(sub.adultPrice ?? 0), childPrice: String(sub.childPrice ?? 0) });
         setExpandedSubId(sub.id);
+    }
+
+    function handleArriveChange(value: string) {
+        setArriveInput(value);
+        setDirty(true);
+
+        const arriveDate = inputToDate(value);
+        const duration = Number(form.durationDays ?? 0);
+        if (arriveDate && Number.isFinite(duration) && duration >= 0) {
+            setDepartInput(dateToInput(addDays(arriveDate, duration)));
+            return;
+        }
+
+        const nextDuration = durationBetweenInputs(value, departInput);
+        if (nextDuration != null) set('durationDays', nextDuration);
+    }
+
+    function handleDepartChange(value: string) {
+        setDepartInput(value);
+        setDirty(true);
+        const nextDuration = durationBetweenInputs(arriveInput, value);
+        if (nextDuration != null) {
+            setForm(prev => ({ ...prev, durationDays: nextDuration }));
+        }
+    }
+
+    function handleDurationChange(value: string) {
+        const nextDuration = Math.max(0, Number(value) || 0);
+        set('durationDays', nextDuration);
+        const arriveDate = inputToDate(arriveInput);
+        if (arriveDate) {
+            setDepartInput(dateToInput(addDays(arriveDate, nextDuration)));
+        }
     }
 
     async function handleSaveSub() {
@@ -161,13 +220,27 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
         onClose();
     }
 
-    function handleSave() {
+    async function handleSave() {
         const payload: LocationInput = {
             ...form,
             arriveAt: inputToMs(arriveInput),
             departAt: inputToMs(departInput),
         };
-        onSave(payload);
+        const saved = await onSave(payload);
+        if (!saved) return;
+
+        if (location && pendingCalendarOrder) {
+            try {
+                await api.reorderSubLocations(planSlug, location.id, pendingCalendarOrder);
+                const order = new Map(pendingCalendarOrder.map((id, index) => [id, index]));
+                setSubLocations(prev => [...prev].sort((a, b) => (order.get(a.id) ?? 9999) - (order.get(b.id) ?? 9999)));
+                setPendingCalendarOrder(null);
+            } catch (err) {
+                alert('Lỗi khi lưu calendar: ' + (err instanceof Error ? err.message : String(err)));
+                return;
+            }
+        }
+
         setDirty(false);
     }
 
@@ -228,13 +301,13 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
                         <Section title="Thời gian">
                             <div className="grid grid-cols-3 gap-3">
                                 <Field label="Đến lúc">
-                                    <input type="datetime-local" value={arriveInput} onChange={e => { setArriveInput(e.target.value); setDirty(true); }} className="input-field" />
+                                    <input type="datetime-local" value={arriveInput} onChange={e => handleArriveChange(e.target.value)} className="input-field" />
                                 </Field>
                                 <Field label="Rời lúc">
-                                    <input type="datetime-local" value={departInput} onChange={e => { setDepartInput(e.target.value); setDirty(true); }} className="input-field" />
+                                    <input type="datetime-local" value={departInput} onChange={e => handleDepartChange(e.target.value)} className="input-field" />
                                 </Field>
                                 <Field label="Số ngày">
-                                    <input type="number" min="0" value={form.durationDays ?? 0} onChange={e => set('durationDays', Number(e.target.value))} className="input-field" />
+                                    <input type="number" min="0" value={form.durationDays ?? 0} onChange={e => handleDurationChange(e.target.value)} className="input-field" />
                                 </Field>
                             </div>
                         </Section>
@@ -298,10 +371,12 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
                     <div className="mt-5">
                         <Section title="Sắp xếp trên calendar">
                             <SubLocationCalendarPlanner
-                                planSlug={planSlug}
                                 location={location}
                                 subLocations={subLocations}
-                                onSaved={setSubLocations}
+                                onOrderChange={orderedIds => {
+                                    setPendingCalendarOrder(orderedIds);
+                                    setDirty(true);
+                                }}
                             />
                         </Section>
                     </div>
@@ -361,7 +436,7 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
 
             <div className="p-4 border-t border-white/10">
                 <button
-                    onClick={handleSave}
+                    onClick={() => void handleSave()}
                     disabled={!form.name?.trim()}
                     className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold rounded-xl transition-colors"
                 >

@@ -9,13 +9,11 @@ import {
     type DragEndEvent,
 } from '@dnd-kit/core';
 import type { Location, SubLocation } from '../../types/index.js';
-import { api } from '../../api/client.js';
 
 interface Props {
-    planSlug: string;
     location: Location;
     subLocations: SubLocation[];
-    onSaved: (subLocations: SubLocation[]) => void;
+    onOrderChange: (orderedIds: number[]) => void;
 }
 
 interface VisitSlot {
@@ -24,6 +22,7 @@ interface VisitSlot {
     label: 'Sáng' | 'Chiều';
     disabled?: boolean;
     reason?: string;
+    hint?: string;
 }
 
 interface CalendarDay {
@@ -113,12 +112,14 @@ function buildSlot(day: Date, label: 'Sáng' | 'Chiều', startKey: string, endK
     else if (key === endKey && end && end.getHours() < 12) reason = 'Checkout sáng';
     else if (key === endKey && end && end.getHours() >= 12 && label === 'Chiều') reason = 'Di chuyển / checkout';
 
+    const isTravelBoundary = key === startKey || reason === 'Checkout sáng' || reason === 'Di chuyển / checkout';
     return {
         id: `${key}-${label === 'Sáng' ? 'morning' : 'afternoon'}`,
         date: day,
         label,
-        disabled: Boolean(reason),
-        reason,
+        disabled: isTravelBoundary,
+        reason: isTravelBoundary ? reason : '',
+        hint: !isTravelBoundary ? reason : '',
     };
 }
 
@@ -138,6 +139,12 @@ function buildInitialAssignments(slots: VisitSlot[], subLocations: SubLocation[]
 
 function findContainer(assignments: Assignments, subId: number): string | null {
     return Object.entries(assignments).find(([, ids]) => ids.includes(subId))?.[0] ?? null;
+}
+
+function buildOrderedIds(assignments: Assignments, slots: VisitSlot[], subLocations: SubLocation[]): number[] {
+    const orderedIds = slots.flatMap(slot => assignments[slot.id] || []);
+    const missingIds = subLocations.map(sub => sub.id).filter(id => !orderedIds.includes(id));
+    return [...orderedIds, ...missingIds];
 }
 
 function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
@@ -165,19 +172,16 @@ function buildProximity(subLocations: SubLocation[]): Map<number, string> {
     }));
 }
 
-export function SubLocationCalendarPlanner({ planSlug, location, subLocations, onSaved }: Props) {
+export function SubLocationCalendarPlanner({ location, subLocations, onOrderChange }: Props) {
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
     const calendarDays = useMemo(() => buildCalendarDays(location), [location]);
     const slots = useMemo(() => buildVisitSlots(calendarDays), [calendarDays]);
     const subById = useMemo(() => new Map(subLocations.map(sub => [sub.id, sub])), [subLocations]);
     const proximity = useMemo(() => buildProximity(subLocations), [subLocations]);
     const [assignments, setAssignments] = useState<Assignments>(() => buildInitialAssignments(slots, subLocations));
-    const [saving, setSaving] = useState(false);
-    const [dirty, setDirty] = useState(false);
 
     useEffect(() => {
         setAssignments(buildInitialAssignments(slots, subLocations));
-        setDirty(false);
     }, [slots, subLocations]);
 
     function handleDragEnd(event: DragEndEvent) {
@@ -191,32 +195,14 @@ export function SubLocationCalendarPlanner({ planSlug, location, subLocations, o
         const toSlot = String(overId).startsWith('slot:') ? String(overId).slice(5) : (overSubId == null ? null : findContainer(assignments, overSubId));
         if (!fromSlot || !toSlot || !assignments[toSlot]) return;
 
-        setAssignments(prev => {
-            const next = Object.fromEntries(Object.entries(prev).map(([slotId, ids]) => [slotId, ids.filter(id => id !== activeId)])) as Assignments;
-            const target = [...next[toSlot]];
-            const insertAt = overSubId != null && target.includes(overSubId) ? target.indexOf(overSubId) : target.length;
-            target.splice(insertAt, 0, activeId);
-            next[toSlot] = target;
-            return next;
-        });
-        setDirty(true);
-    }
+        const next = Object.fromEntries(Object.entries(assignments).map(([slotId, ids]) => [slotId, ids.filter(id => id !== activeId)])) as Assignments;
+        const target = [...next[toSlot]];
+        const insertAt = overSubId != null && target.includes(overSubId) ? target.indexOf(overSubId) : target.length;
+        target.splice(insertAt, 0, activeId);
+        next[toSlot] = target;
 
-    async function handleSave() {
-        const orderedIds = slots.flatMap(slot => assignments[slot.id] || []);
-        const missingIds = subLocations.map(sub => sub.id).filter(id => !orderedIds.includes(id));
-        const finalIds = [...orderedIds, ...missingIds];
-        setSaving(true);
-        try {
-            await api.reorderSubLocations(planSlug, location.id, finalIds);
-            const order = new Map(finalIds.map((id, index) => [id, index]));
-            onSaved([...subLocations].sort((a, b) => (order.get(a.id) ?? 9999) - (order.get(b.id) ?? 9999)));
-            setDirty(false);
-        } catch (err) {
-            alert('Lỗi khi lưu calendar: ' + (err instanceof Error ? err.message : String(err)));
-        } finally {
-            setSaving(false);
-        }
+        setAssignments(next);
+        onOrderChange(buildOrderedIds(next, slots, subLocations));
     }
 
     if (!subLocations.length) return null;
@@ -228,14 +214,7 @@ export function SubLocationCalendarPlanner({ planSlug, location, subLocations, o
     return (
         <div className="space-y-3">
             <div className="flex items-center justify-between gap-3">
-                <p className="text-[11px] text-slate-500">Hiển thị toàn bộ ngày lưu trú. Kéo điểm tham quan vào ô sáng/chiều; ô khóa là ngày nghỉ hoặc di chuyển.</p>
-                <button
-                    onClick={() => void handleSave()}
-                    disabled={!dirty || saving}
-                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-xs font-bold rounded-lg"
-                >
-                    {saving ? 'Đang lưu...' : 'Lưu calendar'}
-                </button>
+                <p className="text-[11px] text-slate-500">Hiển thị toàn bộ ngày lưu trú. Kéo điểm tham quan vào ô sáng/chiều; thay đổi sẽ lưu bằng nút Lưu thay đổi bên dưới.</p>
             </div>
             <ProximityPanel subLocations={subLocations} proximity={proximity} />
             <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
@@ -298,6 +277,7 @@ function CalendarSlot({ slot, items, proximity }: { slot: VisitSlot; items: SubL
             <div className="flex items-center justify-between mb-2">
                 <span className={`text-[10px] font-bold ${isMorning ? 'text-sky-200' : 'text-orange-200'}`}>{slot.label}</span>
                 {slot.disabled && <span className="text-[9px] font-semibold text-slate-500">{slot.reason}</span>}
+                {!slot.disabled && slot.hint && <span className="text-[9px] font-semibold text-slate-500">{slot.hint}</span>}
             </div>
             <div className="space-y-1.5">
                 {items.map(item => <DraggableSub key={item.id} sub={item} proximity={proximity.get(item.id) || ''} />)}
