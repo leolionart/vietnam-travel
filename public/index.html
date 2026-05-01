@@ -1074,7 +1074,18 @@
                         // Detail mode: show sub-location markers, excluded ones grayed out
                         const subs = this.activeLocation.subLocations;
                         const visibleSubs = subs.filter(s => !this.excludedSubs[s.id]);
-                        const allPoints = subs.map(s => [s.lat, s.lng]);
+                        const basePoint = { lat: this.activeLocation.lat, lng: this.activeLocation.lng, name: this.activeLocation.accommodationName || this.activeLocation.name };
+                        const allPoints = [[basePoint.lat, basePoint.lng], ...subs.map(s => [s.lat, s.lng])];
+
+                        const baseMarkerHtml = `<div class="relative group">
+                            <div class="w-9 h-9 bg-blue-600 rounded-full border-2 border-white shadow-xl flex items-center justify-center text-white font-bold text-sm">⌂</div>
+                            <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-white text-slate-900 px-2 py-1 rounded text-[10px] font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity shadow-lg pointer-events-none">
+                                ${basePoint.name}
+                            </div>
+                        </div>`;
+                        this.markers[`base-${this.activeLocation.id}`] = L.marker([basePoint.lat, basePoint.lng], {
+                            icon: L.divIcon({ className: 'custom-div-icon', html: baseMarkerHtml, iconSize: [36, 36], iconAnchor: [18, 18] })
+                        }).addTo(this.map);
 
                         // Visible sub index (chỉ đánh số các sub còn trong lịch trình)
                         let visibleIdx = 0;
@@ -1106,23 +1117,75 @@
                             this.markers[sub.id] = marker;
                         });
 
-                        // Route chỉ nối các sub còn trong lịch trình
-                        if (visibleSubs.length > 1) {
-                            const mapCoords = visibleSubs.map(s => `${s.lng},${s.lat}`).join(';');
+                        const addDetailRouteBadge = (lat, lng, label, metrics, routeStyle) => {
+                            const detail = [
+                                metrics.distance ? this.formatRouteDistance(metrics.distance) : '',
+                                metrics.duration ? this.formatRouteDuration(metrics.duration) : '',
+                            ].filter(Boolean).join(' · ');
+                            const badge = L.marker([lat, lng], {
+                                icon: L.divIcon({
+                                    className: '',
+                                    html: `<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(10,15,30,0.9);border:1.5px solid ${routeStyle.color};color:${routeStyle.text};border-radius:999px;padding:4px 9px;font-family:'Space Grotesk','Inter',sans-serif;box-shadow:0 2px 12px rgba(0,0,0,0.7),0 0 0 3px rgba(0,0,0,0.3);white-space:nowrap;backdrop-filter:blur(6px);transform:translate(-50%,-50%);pointer-events:none"><span style="font-size:10px;font-weight:800;line-height:1">${label}</span>${detail ? `<span style="font-size:9px;font-weight:700;line-height:1;color:#e2e8f0">${detail}</span>` : ''}</div>`,
+                                    iconSize: [0, 0],
+                                    iconAnchor: [0, 0]
+                                }),
+                                interactive: false,
+                                zIndexOffset: 200
+                            }).addTo(this.map);
+                            this.transportMarkers.push(badge);
+                        };
+
+                        const detailRouteLayers = [];
+                        const detailRoutePoints = [basePoint, ...visibleSubs];
+                        for (let idx = 1; idx < detailRoutePoints.length; idx += 1) {
+                            const prev = detailRoutePoints[idx - 1];
+                            const next = detailRoutePoints[idx];
+                            const routeStyle = this.getRouteLegStyle(idx - 1);
                             try {
-                                const response = await fetch(`https://router.project-osrm.org/route/v1/driving/${mapCoords}?overview=full&geometries=geojson`);
-                                const data = await response.json();
-                                if (data.routes && data.routes.length > 0) {
-                                    this.polyline = L.geoJSON(data.routes[0].geometry, {
-                                        style: { color: '#10b981', weight: 3, opacity: 0.7, dashArray: '8, 8', lineJoin: 'round' }
+                                const route = await this.fetchDrivingRoute(prev, next);
+                                const coords = route.coordinates;
+                                detailRouteLayers.push(L.polyline(coords.map(([lng, lat]) => [lat, lng]), {
+                                    color: routeStyle.color,
+                                    weight: 3,
+                                    opacity: 0.82,
+                                    dashArray: '8, 12',
+                                    lineJoin: 'round'
+                                }));
+
+                                const mid = coords[Math.floor(coords.length / 2)];
+                                addDetailRouteBadge(mid[1], mid[0], `${idx - 1}→${idx}`, route, routeStyle);
+
+                                [0.35, 0.7].forEach(p => {
+                                    const i = Math.floor(p * (coords.length - 1));
+                                    if (i <= 0 || i >= coords.length - 1) return;
+                                    const [lng1, lat1] = coords[i - 1];
+                                    const [lng2, lat2] = coords[i + 1];
+                                    const bearing = this.routeBearing(lat1, lng1, lat2, lng2);
+                                    const [aLng, aLat] = coords[i];
+                                    const arrow = L.marker([aLat, aLng], {
+                                        icon: L.divIcon({
+                                            className: '',
+                                            html: `<span style="display:block;color:${routeStyle.arrow};font-size:9px;line-height:1;transform:translate(-50%,-50%) rotate(${bearing}deg);pointer-events:none;filter:drop-shadow(0 1px 3px rgba(0,0,0,1))">▲</span>`,
+                                            iconSize: [0, 0],
+                                            iconAnchor: [0, 0]
+                                        }),
+                                        interactive: false,
+                                        zIndexOffset: 100
                                     }).addTo(this.map);
-                                } else {
-                                    throw new Error('no route');
-                                }
-                            } catch {
-                                const visiblePoints = visibleSubs.map(s => [s.lat, s.lng]);
-                                this.polyline = L.polyline(visiblePoints, { color: '#10b981', weight: 3, opacity: 0.7, dashArray: '8, 8' }).addTo(this.map);
+                                    this.transportMarkers.push(arrow);
+                                });
+                            } catch (error) {
+                                console.warn(`Không vẽ đường bộ ${prev.name} -> ${next.name}:`, error);
                             }
+                        }
+                        if (detailRouteLayers.length) {
+                            this.polyline = L.featureGroup(detailRouteLayers).addTo(this.map);
+                            setTimeout(() => {
+                                this.polyline.eachLayer(layer => {
+                                    const el = layer._path;
+                                    if (el) el.style.animation = 'route-flow 0.9s linear infinite';
+                                });
+                            });
                         }
 
                         if (allPoints.length > 0) {
