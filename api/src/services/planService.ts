@@ -167,6 +167,30 @@ export function createSessionPlan(data: { slug: string; name: string; dateRange?
     return getPlanBySessionId(data.sessionId)!;
 }
 
+function slugify(input: string): string {
+    const slug = input
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 80);
+    return slug || 'trip';
+}
+
+export function createPublicSessionPlan(data: { slug?: string; name: string; dateRange?: string; sessionId: string }) {
+    const db = getDb();
+    const baseSlug = slugify(data.slug || data.name);
+    let slug = baseSlug;
+    let i = 1;
+    while (db.prepare('SELECT id FROM plans WHERE slug = ?').get(slug)) {
+        const suffix = i === 1 ? data.sessionId.slice(0, 6) : `${data.sessionId.slice(0, 6)}-${i}`;
+        slug = `${baseSlug}-${suffix}`.slice(0, 96);
+        i += 1;
+    }
+    return createSessionPlan({ slug, name: data.name, dateRange: data.dateRange, sessionId: data.sessionId });
+}
+
 export function getPlanBySessionId(sessionId: string) {
     const db = getDb();
     const plan = db.prepare('SELECT * FROM plans WHERE session_id = ?').get(sessionId) as DbPlan | undefined;

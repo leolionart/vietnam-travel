@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { randomUUID } from 'crypto';
 import { getDb } from '../db/connection.js';
-import { getPlanBySessionId, createSessionPlan } from '../services/planService.js';
-import { addLocation, updateLocation, deleteLocation } from '../services/locationService.js';
+import { createPublicSessionPlan, getPlanBySessionId } from '../services/planService.js';
+import { addLocation, updateLocation, deleteLocation, reorderLocations } from '../services/locationService.js';
 
 const router = Router();
 
@@ -24,22 +24,13 @@ function getLocationForPlan(planId: number, locationId: number): boolean {
 // POST /api/public/plans — tạo session plan (không có trong admin list, chỉ truy cập qua sessionId)
 router.post('/plans', (req, res) => {
     const { slug, name, dateRange } = req.body as { slug?: string; name?: string; dateRange?: string };
-    if (!slug || !name) {
-        res.status(400).json({ error: 'slug and name are required' });
+    if (!name) {
+        res.status(400).json({ error: 'name is required' });
         return;
     }
     const sessionId = generateSessionId();
-    try {
-        const plan = createSessionPlan({ slug, name, dateRange, sessionId });
-        res.status(201).json({ ...plan, sessionId });
-    } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        if (msg.includes('UNIQUE')) {
-            res.status(409).json({ error: 'Slug already exists' });
-        } else {
-            throw err;
-        }
-    }
+    const plan = createPublicSessionPlan({ slug, name, dateRange, sessionId });
+    res.status(201).json({ ...plan, sessionId });
 });
 
 // DELETE /api/public/plans/:slug
@@ -77,6 +68,17 @@ router.delete('/plans/:slug/locations/:id', (req, res) => {
     res.json({ ok: true });
 });
 
+// PATCH /api/public/plans/:slug/locations/reorder
+router.patch('/plans/:slug/locations/reorder', (req, res) => {
+    const planId = getSessionPlanId(req.params.slug);
+    if (!planId) { res.status(404).json({ error: 'Plan not found' }); return; }
+    const { orderedIds } = req.body as { orderedIds?: number[] };
+    if (!Array.isArray(orderedIds)) { res.status(400).json({ error: 'orderedIds must be an array' }); return; }
+    reorderLocations(planId, orderedIds);
+    const plan = getDb().prepare('SELECT session_id FROM plans WHERE id = ?').get(planId) as { session_id: string };
+    res.json(getPlanBySessionId(plan.session_id));
+});
+
 // POST /api/public/plans/:slug/locations/:id/sub-locations
 router.post('/plans/:slug/locations/:id/sub-locations', (req, res) => {
     const planId = getSessionPlanId(req.params.slug);
@@ -84,8 +86,8 @@ router.post('/plans/:slug/locations/:id/sub-locations', (req, res) => {
     const locationId = Number(req.params.id);
     if (!getLocationForPlan(planId, locationId)) { res.status(404).json({ error: 'Location not found' }); return; }
 
-    const { name, lat, lng, durationMinutes, description, adultPrice, childPrice } = req.body as {
-        name?: string; lat?: number; lng?: number; durationMinutes?: number; description?: string; adultPrice?: number; childPrice?: number;
+    const { name, lat, lng, durationMinutes, description, sortOrder, adultPrice, childPrice } = req.body as {
+        name?: string; lat?: number; lng?: number; durationMinutes?: number; description?: string; sortOrder?: number; adultPrice?: number; childPrice?: number;
     };
     if (!name?.trim()) { res.status(400).json({ error: 'name is required' }); return; }
 
@@ -93,7 +95,7 @@ router.post('/plans/:slug/locations/:id/sub-locations', (req, res) => {
     const maxOrder = (db.prepare('SELECT MAX(sort_order) as m FROM sub_locations WHERE location_id = ?').get(locationId) as { m: number | null }).m ?? 0;
     const result = db.prepare(
         'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, description, adult_price, child_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(locationId, maxOrder + 1, name, lat ?? 0, lng ?? 0, durationMinutes ?? 60, description ?? '', adultPrice ?? 0, childPrice ?? 0);
+    ).run(locationId, sortOrder ?? maxOrder + 1, name, lat ?? 0, lng ?? 0, durationMinutes ?? 60, description ?? '', adultPrice ?? 0, childPrice ?? 0);
     res.status(201).json({ id: result.lastInsertRowid });
 });
 
@@ -110,14 +112,15 @@ router.put('/plans/:slug/locations/:id/sub-locations/:subId', (req, res) => {
         res.status(404).json({ error: 'Sub-location not found' }); return;
     }
 
-    const { name, lat, lng, durationMinutes, description, adultPrice, childPrice } = req.body as {
-        name?: string; lat?: number; lng?: number; durationMinutes?: number; description?: string; adultPrice?: number; childPrice?: number;
+    const { name, lat, lng, durationMinutes, description, sortOrder, adultPrice, childPrice } = req.body as {
+        name?: string; lat?: number; lng?: number; durationMinutes?: number; description?: string; sortOrder?: number; adultPrice?: number; childPrice?: number;
     };
     const fields: string[] = [];
     const values: unknown[] = [];
     if (name !== undefined) { fields.push('name = ?'); values.push(name); }
     if (lat !== undefined) { fields.push('lat = ?'); values.push(lat); }
     if (lng !== undefined) { fields.push('lng = ?'); values.push(lng); }
+    if (sortOrder !== undefined) { fields.push('sort_order = ?'); values.push(sortOrder); }
     if (durationMinutes !== undefined) { fields.push('duration_minutes = ?'); values.push(durationMinutes); }
     if (description !== undefined) { fields.push('description = ?'); values.push(description); }
     if (adultPrice !== undefined) { fields.push('adult_price = ?'); values.push(adultPrice); }
@@ -138,6 +141,25 @@ router.delete('/plans/:slug/locations/:id/sub-locations/:subId', (req, res) => {
 
     const result = getDb().prepare('DELETE FROM sub_locations WHERE id = ? AND location_id = ?').run(Number(req.params.subId), locationId);
     if (result.changes === 0) { res.status(404).json({ error: 'Sub-location not found' }); return; }
+    res.json({ ok: true });
+});
+
+// PATCH /api/public/plans/:slug/locations/:id/sub-locations/reorder
+router.patch('/plans/:slug/locations/:id/sub-locations/reorder', (req, res) => {
+    const planId = getSessionPlanId(req.params.slug);
+    if (!planId) { res.status(404).json({ error: 'Plan not found' }); return; }
+    const locationId = Number(req.params.id);
+    if (!getLocationForPlan(planId, locationId)) { res.status(404).json({ error: 'Location not found' }); return; }
+
+    const { orderedIds } = req.body as { orderedIds?: number[] };
+    if (!Array.isArray(orderedIds)) { res.status(400).json({ error: 'orderedIds must be an array' }); return; }
+
+    const db = getDb();
+    const update = db.prepare('UPDATE sub_locations SET sort_order = ? WHERE id = ? AND location_id = ?');
+    const tx = db.transaction(() => {
+        orderedIds.forEach((id, idx) => update.run(idx, id, locationId));
+    });
+    tx();
     res.json({ ok: true });
 });
 

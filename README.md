@@ -203,6 +203,22 @@ Here's your trip: https://trips.naai.studio/?session=a3f8c2e1d4b7
 
 Open it. Share it. Done.
 
+### Continue editing later
+
+The share link is the edit handle for AI workflows. If you want to continue
+editing an existing AI-created trip in a later chat, give the AI the original
+share link:
+
+```
+Continue editing this Vietnam Roadtrips plan:
+https://trips.naai.studio/?session=a3f8c2e1d4b7
+
+Add one extra night in Da Lat and update the cost estimates.
+```
+
+All edit tools accept either `shareUrl`, `sessionId`, or `planSlug`. For public
+editing, prefer `shareUrl` because it points to the exact session plan.
+
 ---
 
 ## What the app shows
@@ -221,14 +237,17 @@ Each stop on your itinerary gets its own card on a vertical timeline, connected 
 
 | Tool | What it does |
 |------|-------------|
-| `create_plan` | Create a new trip → returns `shareUrl` |
-| `add_location` | Add a stop (province/city) with transport, accommodation, food, cost details |
+| `list_plans` | List available sample plans and their slugs |
+| `create_plan` | Create a new public session trip → returns `shareUrl`; slug is optional and safely de-duped |
+| `get_plan` | Read a trip by `shareUrl`, `sessionId`, or slug |
+| `add_location` | Add a stop with dates, transport type/fares, accommodation, food, cost details |
 | `update_location` | Edit any field on a stop |
 | `delete_location` | Remove a stop |
-| `add_sub_location` | Add an attraction inside a stop (e.g. Ha Long Bay inside Quang Ninh) |
+| `reorder_locations` | Reorder stops and cascade dates |
+| `add_sub_location` | Add an attraction inside a stop, including visit duration, map pin, ticket prices, and sort order |
 | `update_sub_location` | Edit an attraction |
 | `delete_sub_location` | Remove an attraction |
-| `get_plan` | Read back the full plan (locations + attractions) |
+| `reorder_sub_locations` | Reorder attractions inside a stop |
 | `update_plan` | Rename or change the slug |
 | `delete_plan` | Delete the plan |
 

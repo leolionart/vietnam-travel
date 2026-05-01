@@ -81,6 +81,7 @@ let localMode: {
     addLocation: (planId: number, input: Record<string, unknown>) => number;
     updateLocation: (planId: number, id: number, input: Record<string, unknown>) => boolean;
     deleteLocation: (planId: number, id: number) => boolean;
+    reorderLocations: (planId: number, orderedIds: number[]) => void;
     getPlanId: (slug: string) => number | null;
     locationBelongsToPlan: (planId: number, locationId: number) => boolean;
     getDb: () => import('better-sqlite3').Database;
@@ -113,6 +114,7 @@ if (REMOTE_API_URL) {
         addLocation: locSvc.addLocation as unknown as (planId: number, input: Record<string, unknown>) => number,
         updateLocation: locSvc.updateLocation as unknown as (planId: number, id: number, input: Record<string, unknown>) => boolean,
         deleteLocation: locSvc.deleteLocation,
+        reorderLocations: locSvc.reorderLocations,
         getPlanId(slug) {
             const row = conn.getDb().prepare('SELECT id FROM plans WHERE slug = ?').get(slug) as { id: number } | undefined;
             return row?.id ?? null;
@@ -150,12 +152,12 @@ const TOOL_DEFINITIONS = [
     },
     {
         name: 'create_plan',
-        description: 'Tạo travel plan mới',
+        description: 'Tạo travel plan mới. Slug có thể bỏ trống hoặc trùng khi dùng public remote; hệ thống sẽ tự tạo slug an toàn.',
         inputSchema: {
             type: 'object',
-            required: ['slug', 'name'],
+            required: ['name'],
             properties: {
-                slug: { type: 'string', description: 'URL slug duy nhất, vd: ha-noi-sapa-2026' },
+                slug: { type: 'string', description: 'URL slug mong muốn, vd: ha-noi-sapa-2026' },
                 name: { type: 'string', description: 'Tên hiển thị, vd: Hà Nội → Sapa 2026' },
                 dateRange: { type: 'string', description: 'Tuỳ chọn, vd: 01/06/2026 - 05/06/2026' },
             },
@@ -198,10 +200,14 @@ const TOOL_DEFINITIONS = [
                 arriveAt: { type: 'number', description: 'Unix timestamp ms' },
                 departAt: { type: 'number', description: 'Unix timestamp ms' },
                 durationDays: { type: 'number' },
+                transportType: { type: 'string', description: 'car, bus, train, flight, motorbike, ferry, walking, other' },
                 transportLabel: { type: 'string', description: 'vd: Xe khách Hà Nội → Vinh (~5h)' },
                 transportFare: { type: 'number', description: 'Giá vé phương tiện (VND)' },
+                transportFareAdult: { type: 'number', description: 'Giá vé phương tiện/người lớn (VND)' },
+                transportFareChild: { type: 'number', description: 'Giá vé phương tiện/trẻ em (VND)' },
                 accommodationName: { type: 'string' },
                 accommodationUrl: { type: 'string' },
+                accommodationAddress: { type: 'string' },
                 adultPrice: { type: 'number', description: 'Tổng chi phí tham quan người lớn (VND)' },
                 childPrice: { type: 'number' },
                 stayCostPerNight: { type: 'number', description: 'Giá lưu trú mỗi đêm (VND)' },
@@ -231,10 +237,14 @@ const TOOL_DEFINITIONS = [
                 arriveAt: { type: 'number' },
                 departAt: { type: 'number' },
                 durationDays: { type: 'number' },
+                transportType: { type: 'string' },
                 transportLabel: { type: 'string' },
                 transportFare: { type: 'number' },
+                transportFareAdult: { type: 'number' },
+                transportFareChild: { type: 'number' },
                 accommodationName: { type: 'string' },
                 accommodationUrl: { type: 'string' },
+                accommodationAddress: { type: 'string' },
                 adultPrice: { type: 'number' },
                 childPrice: { type: 'number' },
                 stayCostPerNight: { type: 'number' },
@@ -261,6 +271,18 @@ const TOOL_DEFINITIONS = [
         },
     },
     {
+        name: 'reorder_locations',
+        description: 'Sắp xếp lại thứ tự các điểm dừng trong plan',
+        inputSchema: {
+            type: 'object',
+            required: ['planSlug', 'orderedIds'],
+            properties: {
+                planSlug: { type: 'string' },
+                orderedIds: { type: 'array', items: { type: 'number' } },
+            },
+        },
+    },
+    {
         name: 'add_sub_location',
         description: 'Thêm điểm tham quan con vào một điểm dừng (vd: Vịnh Hạ Long bên trong Hạ Long)',
         inputSchema: {
@@ -269,6 +291,7 @@ const TOOL_DEFINITIONS = [
             properties: {
                 planSlug: { type: 'string' },
                 locationId: { type: 'number' },
+                sortOrder: { type: 'number' },
                 name: { type: 'string' },
                 lat: { type: 'number' },
                 lng: { type: 'number' },
@@ -289,6 +312,7 @@ const TOOL_DEFINITIONS = [
                 planSlug: { type: 'string' },
                 locationId: { type: 'number' },
                 subLocationId: { type: 'number' },
+                sortOrder: { type: 'number' },
                 name: { type: 'string' },
                 lat: { type: 'number' },
                 lng: { type: 'number' },
@@ -296,6 +320,19 @@ const TOOL_DEFINITIONS = [
                 description: { type: 'string' },
                 adultPrice: { type: 'number' },
                 childPrice: { type: 'number' },
+            },
+        },
+    },
+    {
+        name: 'reorder_sub_locations',
+        description: 'Sắp xếp lại thứ tự các điểm tham quan con trong một điểm dừng',
+        inputSchema: {
+            type: 'object',
+            required: ['planSlug', 'locationId', 'orderedIds'],
+            properties: {
+                planSlug: { type: 'string' },
+                locationId: { type: 'number' },
+                orderedIds: { type: 'array', items: { type: 'number' } },
             },
         },
     },
@@ -366,6 +403,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 case 'delete_location':
                     return ok(await remote.del(`/api/plans/${planSlug}/locations/${locationId}`));
 
+                case 'reorder_locations':
+                    return ok(await remote.patch(`/api/plans/${planSlug}/locations/reorder`, { orderedIds: args.orderedIds }));
+
                 case 'add_sub_location': {
                     const { planSlug: ps, locationId: lid, ...rest } = args as Record<string, unknown>;
                     return ok(await remote.post(`/api/plans/${ps}/locations/${lid}/sub-locations`, rest));
@@ -376,6 +416,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
                 case 'delete_sub_location':
                     return ok(await remote.del(`/api/plans/${planSlug}/locations/${locationId}/sub-locations/${subLocationId}`));
+
+                case 'reorder_sub_locations':
+                    return ok(await remote.patch(`/api/plans/${planSlug}/locations/${locationId}/sub-locations/reorder`, { orderedIds: args.orderedIds }));
 
                 default:
                     return err(`Unknown tool: ${name}`);
@@ -430,6 +473,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 return ok({ ok: true });
             }
 
+            case 'reorder_locations': {
+                const planId = L.getPlanId(args.planSlug as string);
+                if (!planId) return err(`Plan "${args.planSlug}" not found`);
+                if (!Array.isArray(args.orderedIds)) return err('orderedIds must be an array');
+                L.reorderLocations(planId, args.orderedIds as number[]);
+                return ok({ ok: true });
+            }
+
             case 'add_sub_location': {
                 const planId = L.getPlanId(args.planSlug as string);
                 if (!planId) return err(`Plan "${args.planSlug}" not found`);
@@ -438,7 +489,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 const maxOrder = (db.prepare('SELECT MAX(sort_order) as m FROM sub_locations WHERE location_id = ?').get(args.locationId) as { m: number | null }).m ?? 0;
                 const result = db.prepare(
                     'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, description, adult_price, child_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-                ).run(args.locationId, maxOrder + 1, args.name, args.lat ?? 0, args.lng ?? 0, args.durationMinutes ?? 60, args.description ?? '', args.adultPrice ?? 0, args.childPrice ?? 0);
+                ).run(args.locationId, args.sortOrder ?? maxOrder + 1, args.name, args.lat ?? 0, args.lng ?? 0, args.durationMinutes ?? 60, args.description ?? '', args.adultPrice ?? 0, args.childPrice ?? 0);
                 return ok({ id: result.lastInsertRowid });
             }
 
@@ -450,11 +501,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 if (!db.prepare('SELECT id FROM sub_locations WHERE id = ? AND location_id = ?').get(args.subLocationId, args.locationId)) return err('Sub-location not found');
                 const fields: string[] = [];
                 const values: unknown[] = [];
-                const map: Record<string, unknown> = { name: args.name, lat: args.lat, lng: args.lng, duration_minutes: args.durationMinutes, description: args.description, adult_price: args.adultPrice, child_price: args.childPrice };
+                const map: Record<string, unknown> = { name: args.name, lat: args.lat, lng: args.lng, sort_order: args.sortOrder, duration_minutes: args.durationMinutes, description: args.description, adult_price: args.adultPrice, child_price: args.childPrice };
                 for (const [k, v] of Object.entries(map)) {
                     if (v !== undefined) { fields.push(`${k} = ?`); values.push(v); }
                 }
                 if (fields.length) { values.push(args.subLocationId); db.prepare(`UPDATE sub_locations SET ${fields.join(', ')} WHERE id = ?`).run(...values); }
+                return ok({ ok: true });
+            }
+
+            case 'reorder_sub_locations': {
+                const planId = L.getPlanId(args.planSlug as string);
+                if (!planId) return err(`Plan "${args.planSlug}" not found`);
+                if (!L.locationBelongsToPlan(planId, args.locationId as number)) return err('Location not found');
+                if (!Array.isArray(args.orderedIds)) return err('orderedIds must be an array');
+                const db = L.getDb();
+                const update = db.prepare('UPDATE sub_locations SET sort_order = ? WHERE id = ? AND location_id = ?');
+                const tx = db.transaction(() => {
+                    (args.orderedIds as number[]).forEach((id, idx) => update.run(idx, id, args.locationId));
+                });
+                tx();
                 return ok({ ok: true });
             }
 
