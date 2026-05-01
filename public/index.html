@@ -272,6 +272,12 @@
                     <span class="inline-flex items-center gap-1 rounded-md bg-white/5 text-slate-300 border border-white/10 px-2 py-0.5">
                         <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Lưu trú
                     </span>
+                    <span class="inline-flex items-center gap-1 rounded-md bg-cyan-400/10 text-cyan-200 border border-cyan-400/25 px-2 py-0.5">
+                        Check-in
+                    </span>
+                    <span class="inline-flex items-center gap-1 rounded-md bg-rose-400/10 text-rose-200 border border-rose-400/25 px-2 py-0.5">
+                        Check-out
+                    </span>
                     <span class="inline-flex items-center gap-1 rounded-md bg-amber-400/10 text-amber-300 border border-amber-400/20 px-2 py-0.5">
                         Cuối tuần
                     </span>
@@ -302,7 +308,7 @@
                 <div class="grid grid-cols-7 gap-1.5 lg:gap-2">
                     <template x-for="day in calendarDays()" :key="day.key">
                         <article class="rounded-lg lg:rounded-xl border p-1.5 lg:p-2 min-h-[92px] lg:min-h-[112px]"
-                                 :class="day.isBlank ? 'bg-white/[0.015] border-white/5 opacity-40' : (day.isWeekend ? 'bg-amber-400/10 border-amber-400/25' : 'bg-white/5 border-white/10')">
+                                 :class="calendarDayClass(day)">
                             <div x-show="!day.isBlank" class="flex items-start justify-between gap-1 lg:gap-2 mb-1.5 lg:mb-2">
                                 <div class="min-w-0">
                                     <p class="text-[8px] font-bold uppercase tracking-wider"
@@ -310,8 +316,16 @@
                                        x-text="day.weekday"></p>
                                     <h3 class="text-sm font-bold text-white leading-tight" x-text="day.label"></h3>
                                 </div>
-                                <span x-show="day.isWeekend"
-                                      class="text-[8px] font-bold rounded bg-amber-300 text-slate-950 px-1.5 py-0.5">T7/CN</span>
+                                <div class="flex flex-col items-end gap-1">
+                                    <span x-show="day.hasCheckin && day.hasCheckout"
+                                          class="text-[8px] font-bold rounded bg-violet-300 text-slate-950 px-1.5 py-0.5">Đổi điểm</span>
+                                    <span x-show="day.hasCheckin && !day.hasCheckout"
+                                          class="text-[8px] font-bold rounded bg-cyan-300 text-slate-950 px-1.5 py-0.5">In</span>
+                                    <span x-show="day.hasCheckout && !day.hasCheckin"
+                                          class="text-[8px] font-bold rounded bg-rose-300 text-slate-950 px-1.5 py-0.5">Out</span>
+                                    <span x-show="day.isWeekend && !day.hasCheckin && !day.hasCheckout"
+                                          class="text-[8px] font-bold rounded bg-amber-300 text-slate-950 px-1.5 py-0.5">T7/CN</span>
+                                </div>
                             </div>
 
                             <div x-show="!day.isBlank" class="space-y-1">
@@ -1873,6 +1887,15 @@
                     return classes[type] || classes.stay;
                 },
 
+                calendarDayClass(day) {
+                    if (day.isBlank) return 'bg-white/[0.015] border-white/5 opacity-40';
+                    if (day.hasCheckin && day.hasCheckout) return 'bg-violet-500/20 border-violet-300/45 shadow-[0_0_0_1px_rgba(196,181,253,0.16)]';
+                    if (day.hasCheckin) return 'bg-cyan-500/20 border-cyan-300/45 shadow-[0_0_0_1px_rgba(103,232,249,0.14)]';
+                    if (day.hasCheckout) return 'bg-rose-500/20 border-rose-300/45 shadow-[0_0_0_1px_rgba(253,164,175,0.14)]';
+                    if (day.isWeekend) return 'bg-amber-400/10 border-amber-400/25';
+                    return 'bg-white/5 border-white/10';
+                },
+
                 calendarTime(date) {
                     if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
                     const pad = (n) => String(n).padStart(2, '0');
@@ -1955,8 +1978,19 @@
                 calendarDays() {
                     const eventsByDay = this.calendarEventsByDay();
                     const allDates = [];
+                    const checkinsByDay = {};
+                    const checkoutsByDay = {};
+                    const addBoundary = (target, date, loc) => {
+                        const key = this.localDateKey(date);
+                        if (!key) return;
+                        if (!target[key]) target[key] = [];
+                        target[key].push(loc.name);
+                    };
                     for (const loc of this.currentPlan.locations || []) {
                         allDates.push(...this.locationStayDays(loc));
+                        const { start, end } = this.parseDateRange(loc.dateRange);
+                        if (start) addBoundary(checkinsByDay, start, loc);
+                        if (end) addBoundary(checkoutsByDay, end, loc);
                     }
                     if (!allDates.length) return [];
                     allDates.sort((a, b) => a - b);
@@ -1984,6 +2018,10 @@
                             weekday: this.formatWeekdayShort(date),
                             label: `${pad(date.getDate())}/${pad(date.getMonth() + 1)}`,
                             isWeekend: this.isWeekendDate(date),
+                            hasCheckin: !!checkinsByDay[key]?.length,
+                            hasCheckout: !!checkoutsByDay[key]?.length,
+                            checkins: checkinsByDay[key] || [],
+                            checkouts: checkoutsByDay[key] || [],
                             events: eventsByDay[key] || [],
                         });
                         cursor.setDate(cursor.getDate() + 1);
