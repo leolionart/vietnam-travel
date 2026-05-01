@@ -5,6 +5,7 @@ import { CurrencyInput } from '../ui/CurrencyInput.js';
 import { TagInput } from '../ui/TagInput.js';
 import { ConfirmDialog } from '../ui/ConfirmDialog.js';
 import { PopConfirm } from '../ui/PopConfirm.js';
+import { SubLocationCalendarPlanner } from './SubLocationCalendarPlanner.js';
 
 interface TripResult {
     tripCode: string;
@@ -293,6 +294,19 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
                 </div>
 
                 {/* Sub-locations — full width, only for existing locations */}
+                {location && (
+                    <div className="mt-5">
+                        <Section title="Sắp xếp trên calendar">
+                            <SubLocationCalendarPlanner
+                                planSlug={planSlug}
+                                location={location}
+                                subLocations={subLocations}
+                                onSaved={setSubLocations}
+                            />
+                        </Section>
+                    </div>
+                )}
+
                 {location && (
                     <div className="mt-5">
                         <Section title="Lịch trình chi tiết">
