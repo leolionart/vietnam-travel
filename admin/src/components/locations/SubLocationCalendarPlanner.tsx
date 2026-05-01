@@ -22,6 +22,14 @@ interface VisitSlot {
     id: string;
     date: Date;
     label: 'Sáng' | 'Chiều';
+    disabled?: boolean;
+    reason?: string;
+}
+
+interface CalendarDay {
+    key: string;
+    date: Date;
+    slots: VisitSlot[];
 }
 
 type Assignments = Record<string, number[]>;
@@ -68,7 +76,7 @@ function calendarVisitStartDate(location: Location, start: Date | null): Date | 
     return null;
 }
 
-function buildVisitSlots(location: Location): VisitSlot[] {
+function buildCalendarDays(location: Location): CalendarDay[] {
     const { start, end } = parseDateRange(location.dateRange);
     if (!start && !end) return [];
 
@@ -77,21 +85,45 @@ function buildVisitSlots(location: Location): VisitSlot[] {
     const startKey = start ? localDateKey(start) : '';
     const endKey = end ? localDateKey(end) : '';
     const visitStart = calendarVisitStartDate(location, start);
-    const slots: VisitSlot[] = [];
+    const days: CalendarDay[] = [];
     const cursor = new Date(first);
 
     while (cursor <= last) {
         const day = new Date(cursor);
         const key = localDateKey(day);
-        if (key !== startKey && (!visitStart || day >= visitStart) && !(key === endKey && end && end.getHours() < 12)) {
-            slots.push({ id: `${key}-morning`, date: day, label: 'Sáng' });
-            if (!(key === endKey && end && end.getHours() >= 12)) {
-                slots.push({ id: `${key}-afternoon`, date: day, label: 'Chiều' });
-            }
-        }
+        days.push({
+            key,
+            date: day,
+            slots: [
+                buildSlot(day, 'Sáng', startKey, endKey, visitStart, end),
+                buildSlot(day, 'Chiều', startKey, endKey, visitStart, end),
+            ],
+        });
         cursor.setDate(cursor.getDate() + 1);
     }
-    return slots;
+    return days;
+}
+
+function buildSlot(day: Date, label: 'Sáng' | 'Chiều', startKey: string, endKey: string, visitStart: Date | null, end: Date | null): VisitSlot {
+    const key = localDateKey(day);
+    let reason = '';
+
+    if (key === startKey) reason = 'Check-in / nghỉ';
+    else if (visitStart && day < visitStart) reason = 'Chưa xếp tham quan';
+    else if (key === endKey && end && end.getHours() < 12) reason = 'Checkout sáng';
+    else if (key === endKey && end && end.getHours() >= 12 && label === 'Chiều') reason = 'Di chuyển / checkout';
+
+    return {
+        id: `${key}-${label === 'Sáng' ? 'morning' : 'afternoon'}`,
+        date: day,
+        label,
+        disabled: Boolean(reason),
+        reason,
+    };
+}
+
+function buildVisitSlots(days: CalendarDay[]): VisitSlot[] {
+    return days.flatMap(day => day.slots).filter(slot => !slot.disabled);
 }
 
 function buildInitialAssignments(slots: VisitSlot[], subLocations: SubLocation[]): Assignments {
@@ -108,10 +140,37 @@ function findContainer(assignments: Assignments, subId: number): string | null {
     return Object.entries(assignments).find(([, ids]) => ids.includes(subId))?.[0] ?? null;
 }
 
+function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
+    const toRad = (n: number) => n * Math.PI / 180;
+    const lat1 = toRad(a.lat);
+    const lat2 = toRad(b.lat);
+    const dLat = toRad(b.lat - a.lat);
+    const dLng = toRad(b.lng - a.lng);
+    const x = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+    return 6371 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+}
+
+function formatKm(km: number): string {
+    return km < 10 ? `${km.toFixed(1)} km` : `${Math.round(km)} km`;
+}
+
+function buildProximity(subLocations: SubLocation[]): Map<number, string> {
+    return new Map(subLocations.map(sub => {
+        const nearest = subLocations
+            .filter(other => other.id !== sub.id)
+            .map(other => ({ name: other.name, km: haversineKm(sub, other) }))
+            .sort((a, b) => a.km - b.km)
+            .slice(0, 2);
+        return [sub.id, nearest.length ? `Gần: ${nearest.map(item => `${item.name} ${formatKm(item.km)}`).join(', ')}` : ''];
+    }));
+}
+
 export function SubLocationCalendarPlanner({ planSlug, location, subLocations, onSaved }: Props) {
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
-    const slots = useMemo(() => buildVisitSlots(location), [location]);
+    const calendarDays = useMemo(() => buildCalendarDays(location), [location]);
+    const slots = useMemo(() => buildVisitSlots(calendarDays), [calendarDays]);
     const subById = useMemo(() => new Map(subLocations.map(sub => [sub.id, sub])), [subLocations]);
+    const proximity = useMemo(() => buildProximity(subLocations), [subLocations]);
     const [assignments, setAssignments] = useState<Assignments>(() => buildInitialAssignments(slots, subLocations));
     const [saving, setSaving] = useState(false);
     const [dirty, setDirty] = useState(false);
@@ -169,7 +228,7 @@ export function SubLocationCalendarPlanner({ planSlug, location, subLocations, o
     return (
         <div className="space-y-3">
             <div className="flex items-center justify-between gap-3">
-                <p className="text-[11px] text-slate-500">Kéo điểm tham quan vào ô sáng/chiều. Lưu sẽ cập nhật thứ tự hiển thị trên lịch public.</p>
+                <p className="text-[11px] text-slate-500">Hiển thị toàn bộ ngày lưu trú. Kéo điểm tham quan vào ô sáng/chiều; ô khóa là ngày nghỉ hoặc di chuyển.</p>
                 <button
                     onClick={() => void handleSave()}
                     disabled={!dirty || saving}
@@ -178,14 +237,26 @@ export function SubLocationCalendarPlanner({ planSlug, location, subLocations, o
                     {saving ? 'Đang lưu...' : 'Lưu calendar'}
                 </button>
             </div>
+            <ProximityPanel subLocations={subLocations} proximity={proximity} />
             <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-                <div className="grid grid-cols-2 xl:grid-cols-3 gap-2">
-                    {slots.map(slot => (
-                        <CalendarSlot
-                            key={slot.id}
-                            slot={slot}
-                            items={(assignments[slot.id] || []).map(id => subById.get(id)).filter(Boolean) as SubLocation[]}
-                        />
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
+                    {calendarDays.map(day => (
+                        <div key={day.key} className="rounded-xl border border-white/10 bg-white/[0.03] p-2">
+                            <div className="mb-2 flex items-center justify-between">
+                                <span className="text-xs font-bold text-white">{formatDay(day.date)}</span>
+                                <span className="text-[10px] text-slate-500">{day.slots.some(slot => !slot.disabled) ? 'Có thể xếp' : 'Không xếp tham quan'}</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                {day.slots.map(slot => (
+                                    <CalendarSlot
+                                        key={slot.id}
+                                        slot={slot}
+                                        items={(assignments[slot.id] || []).map(id => subById.get(id)).filter(Boolean) as SubLocation[]}
+                                        proximity={proximity}
+                                    />
+                                ))}
+                            </div>
+                        </div>
                     ))}
                 </div>
             </DndContext>
@@ -193,29 +264,49 @@ export function SubLocationCalendarPlanner({ planSlug, location, subLocations, o
     );
 }
 
-function CalendarSlot({ slot, items }: { slot: VisitSlot; items: SubLocation[] }) {
-    const { setNodeRef, isOver } = useDroppable({ id: `slot:${slot.id}` });
+function ProximityPanel({ subLocations, proximity }: { subLocations: SubLocation[]; proximity: Map<number, string> }) {
+    if (subLocations.length < 2) return null;
+
+    return (
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-500">Gợi ý khoảng cách gần</p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-1.5">
+                {subLocations.map(sub => (
+                    <div key={sub.id} className="truncate text-[11px] text-slate-400">
+                        <span className="font-semibold text-slate-200">{sub.name}</span>
+                        <span className="ml-1">{proximity.get(sub.id)}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function CalendarSlot({ slot, items, proximity }: { slot: VisitSlot; items: SubLocation[]; proximity: Map<number, string> }) {
+    const { setNodeRef, isOver } = useDroppable({ id: `slot:${slot.id}`, disabled: slot.disabled });
     const isMorning = slot.label === 'Sáng';
 
     return (
         <div
             ref={setNodeRef}
             className={`min-h-[120px] rounded-xl border p-2 transition-colors ${
-                isMorning ? 'bg-sky-500/10 border-sky-400/25' : 'bg-orange-500/10 border-orange-400/25'
+                slot.disabled
+                    ? 'bg-slate-800/50 border-white/5 opacity-70'
+                    : (isMorning ? 'bg-sky-500/10 border-sky-400/25' : 'bg-orange-500/10 border-orange-400/25')
             } ${isOver ? 'ring-2 ring-white/40' : ''}`}
         >
             <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-bold text-white">{formatDay(slot.date)}</span>
                 <span className={`text-[10px] font-bold ${isMorning ? 'text-sky-200' : 'text-orange-200'}`}>{slot.label}</span>
+                {slot.disabled && <span className="text-[9px] font-semibold text-slate-500">{slot.reason}</span>}
             </div>
             <div className="space-y-1.5">
-                {items.map(item => <DraggableSub key={item.id} sub={item} />)}
+                {items.map(item => <DraggableSub key={item.id} sub={item} proximity={proximity.get(item.id) || ''} />)}
             </div>
         </div>
     );
 }
 
-function DraggableSub({ sub }: { sub: SubLocation }) {
+function DraggableSub({ sub, proximity }: { sub: SubLocation; proximity: string }) {
     const { attributes, listeners, setNodeRef: setDragRef, transform, isDragging } = useDraggable({ id: `sub:${sub.id}` });
     const { setNodeRef: setDropRef, isOver } = useDroppable({ id: `sub:${sub.id}` });
     const style = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined;
@@ -236,7 +327,8 @@ function DraggableSub({ sub }: { sub: SubLocation }) {
             }`}
             type="button"
         >
-            {sub.name}
+            <span className="block truncate">{sub.name}</span>
+            {proximity && <span className="mt-0.5 block truncate text-[9px] font-medium text-emerald-100/65">{proximity}</span>}
         </button>
     );
 }
