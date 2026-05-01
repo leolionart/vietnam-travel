@@ -1135,10 +1135,12 @@
                         return;
                     }
 
-                    const addTransportBadge = (lat, lng, loc, metrics = {}) => {
+                    const addTransportBadge = (lat, lng, loc, metrics = {}, routeStyle = null) => {
                         const ms = this.getTransportMapStyle(loc.transportType);
                         const icon = this.getTransportIcon(loc.transportType);
                         const label = this.getTransportShortLabel(loc.transportType, loc.transport);
+                        const borderColor = routeStyle?.color || ms.border;
+                        const textColor = routeStyle?.text || ms.color;
                         const detail = [
                             metrics.distance ? `${metrics.estimated ? '~' : ''}${this.formatRouteDistance(metrics.distance)}` : '',
                             metrics.duration ? `${metrics.estimated ? '~' : ''}${this.formatRouteDuration(metrics.duration)}` : '',
@@ -1146,7 +1148,7 @@
                         const badge = L.marker([lat, lng], {
                             icon: L.divIcon({
                                 className: '',
-                                html: `<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(10,15,30,0.9);border:1.5px solid ${ms.border};color:${ms.color};border-radius:999px;padding:4px 10px 4px 8px;font-family:'Space Grotesk','Inter',sans-serif;box-shadow:0 2px 12px rgba(0,0,0,0.7),0 0 0 3px rgba(0,0,0,0.3);white-space:nowrap;backdrop-filter:blur(6px);transform:translate(-50%,-50%);pointer-events:none;letter-spacing:0.01em"><span style="font-size:14px;line-height:1">${icon}</span><span style="display:flex;flex-direction:column;gap:1px"><span style="font-size:10px;font-weight:800;line-height:1">${label}</span>${detail ? `<span style="font-size:9px;font-weight:700;line-height:1;color:#e2e8f0">${detail}</span>` : ''}</span></div>`,
+                                html: `<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(10,15,30,0.9);border:1.5px solid ${borderColor};color:${textColor};border-radius:999px;padding:4px 10px 4px 8px;font-family:'Space Grotesk','Inter',sans-serif;box-shadow:0 2px 12px rgba(0,0,0,0.7),0 0 0 3px rgba(0,0,0,0.3);white-space:nowrap;backdrop-filter:blur(6px);transform:translate(-50%,-50%);pointer-events:none;letter-spacing:0.01em"><span style="font-size:14px;line-height:1">${icon}</span><span style="display:flex;flex-direction:column;gap:1px"><span style="font-size:10px;font-weight:800;line-height:1">${label}</span>${detail ? `<span style="font-size:9px;font-weight:700;line-height:1;color:#e2e8f0">${detail}</span>` : ''}</span></div>`,
                                 iconSize: [0, 0],
                                 iconAnchor: [0, 0]
                             }),
@@ -1160,6 +1162,7 @@
                     for (let idx = 1; idx < visibleLocs.length; idx += 1) {
                         const prev = visibleLocs[idx - 1];
                         const loc = visibleLocs[idx];
+                        const routeStyle = this.getRouteLegStyle(idx - 1);
                         let coords = [];
                         let metrics = null;
 
@@ -1168,9 +1171,9 @@
                             coords = route.coordinates;
                             metrics = { distance: route.distance, duration: route.duration, estimated: false };
                             routeLayers.push(L.polyline(coords.map(([lng, lat]) => [lat, lng]), {
-                                color: '#3b82f6',
+                                color: routeStyle.color,
                                 weight: 3,
-                                opacity: 0.72,
+                                opacity: 0.78,
                                 dashArray: '12, 18',
                                 lineJoin: 'round'
                             }));
@@ -1184,9 +1187,9 @@
                                 estimated: true,
                             };
                             routeLayers.push(L.polyline([[prev.lat, prev.lng], [loc.lat, loc.lng]], {
-                                color: '#64748b',
+                                color: routeStyle.fallback,
                                 weight: 2.5,
-                                opacity: 0.65,
+                                opacity: 0.7,
                                 dashArray: '4, 10',
                                 lineJoin: 'round'
                             }));
@@ -1194,7 +1197,7 @@
 
                         if (coords.length) {
                             const mid = coords[Math.floor(coords.length / 2)];
-                            addTransportBadge(mid[1], mid[0], loc, metrics);
+                            addTransportBadge(mid[1], mid[0], loc, metrics, routeStyle);
 
                             [0.25, 0.5, 0.75].forEach(p => {
                                 const i = Math.floor(p * (coords.length - 1));
@@ -1206,7 +1209,7 @@
                                 const arrow = L.marker([aLat, aLng], {
                                     icon: L.divIcon({
                                         className: '',
-                                        html: `<span style="display:block;color:rgba(96,165,250,0.9);font-size:9px;line-height:1;transform:translate(-50%,-50%) rotate(${bearing}deg);pointer-events:none;filter:drop-shadow(0 1px 3px rgba(0,0,0,1))">▲</span>`,
+                                        html: `<span style="display:block;color:${routeStyle.arrow};font-size:9px;line-height:1;transform:translate(-50%,-50%) rotate(${bearing}deg);pointer-events:none;filter:drop-shadow(0 1px 3px rgba(0,0,0,1))">▲</span>`,
                                         iconSize: [0, 0],
                                         iconAnchor: [0, 0]
                                     }),
@@ -1555,6 +1558,19 @@
                     const name = names[(type || '').toLowerCase()] || 'Di chuyển';
                     const dur = (label || '').match(/~?(\d+h\s*\d*m?)/i);
                     return dur ? `${name} · ${dur[0]}` : name;
+                },
+
+                getRouteLegStyle(index) {
+                    const palette = [
+                        { color: '#38bdf8', text: '#7dd3fc', arrow: 'rgba(125,211,252,0.95)', fallback: '#0ea5e9' },
+                        { color: '#fb923c', text: '#fdba74', arrow: 'rgba(253,186,116,0.95)', fallback: '#f97316' },
+                        { color: '#a78bfa', text: '#c4b5fd', arrow: 'rgba(196,181,253,0.95)', fallback: '#8b5cf6' },
+                        { color: '#22c55e', text: '#86efac', arrow: 'rgba(134,239,172,0.95)', fallback: '#16a34a' },
+                        { color: '#facc15', text: '#fde047', arrow: 'rgba(253,224,71,0.95)', fallback: '#eab308' },
+                        { color: '#f472b6', text: '#f9a8d4', arrow: 'rgba(249,168,212,0.95)', fallback: '#ec4899' },
+                        { color: '#2dd4bf', text: '#5eead4', arrow: 'rgba(94,234,212,0.95)', fallback: '#14b8a6' },
+                    ];
+                    return palette[index % palette.length];
                 },
 
                 async fetchDrivingRoute(from, to) {
