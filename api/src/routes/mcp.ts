@@ -214,6 +214,11 @@ const TOOL_DEFINITIONS = [
                 scheduledDate: { type: 'string', description: 'Ngày tham quan dạng YYYY-MM-DD' },
                 scheduledPeriod: { type: 'string', enum: ['morning', 'afternoon'], description: 'Buổi tham quan' },
                 description: { type: 'string' },
+                activityType: { type: 'string', enum: ['sightseeing', 'accommodation', 'food', 'transport', 'other'] },
+                pricingMode: { type: 'string', enum: ['per_person', 'per_room', 'per_group'] },
+                unitPrice: { type: 'number' },
+                quantity: { type: 'number' },
+                surcharge: { type: 'number' },
                 adultPrice: { type: 'number', description: 'Giá vé người lớn (VND)' },
                 childPrice: { type: 'number' },
             },
@@ -233,6 +238,9 @@ const TOOL_DEFINITIONS = [
                 scheduledDate: { type: 'string' },
                 scheduledPeriod: { type: 'string', enum: ['morning', 'afternoon', ''] },
                 description: { type: 'string' },
+                activityType: { type: 'string', enum: ['sightseeing', 'accommodation', 'food', 'transport', 'other'] },
+                pricingMode: { type: 'string', enum: ['per_person', 'per_room', 'per_group'] },
+                unitPrice: { type: 'number' }, surcharge: { type: 'number' }, quantity: { type: 'number' },
                 adultPrice: { type: 'number' }, childPrice: { type: 'number' },
             },
         },
@@ -375,8 +383,8 @@ function buildServer(): Server {
                     const db = getDb();
                     const maxOrder = (db.prepare('SELECT MAX(sort_order) as m FROM sub_locations WHERE location_id = ?').get(a.locationId) as { m: number | null }).m ?? 0;
                     const result = db.prepare(
-                        'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, scheduled_date, scheduled_period, description, adult_price, child_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-                    ).run(a.locationId, a.sortOrder ?? maxOrder + 1, a.name, a.lat ?? 0, a.lng ?? 0, a.durationMinutes ?? 60, a.scheduledDate ?? '', a.scheduledPeriod ?? '', a.description ?? '', a.adultPrice ?? 0, a.childPrice ?? 0);
+                        'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, scheduled_date, scheduled_period, description, activity_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                    ).run(a.locationId, a.sortOrder ?? maxOrder + 1, a.name, a.lat ?? 0, a.lng ?? 0, a.durationMinutes ?? 60, a.scheduledDate ?? '', a.scheduledPeriod ?? '', a.description ?? '', a.activityType ?? 'sightseeing', a.pricingMode ?? 'per_person', a.unitPrice ?? 0, a.quantity ?? 1, a.surcharge ?? 0, a.adultPrice ?? 0, a.childPrice ?? 0);
                     return ok({ id: result.lastInsertRowid, planSlug: ref.slug, sessionId: ref.sessionId, shareUrl: `${APP_URL}/?session=${ref.sessionId}` });
                 }
 
@@ -388,7 +396,7 @@ function buildServer(): Server {
                     if (!db.prepare('SELECT id FROM sub_locations WHERE id = ? AND location_id = ?').get(a.subLocationId, a.locationId)) return err('Sub-location not found');
                     const fields: string[] = [];
                     const values: unknown[] = [];
-                    const map: Record<string, unknown> = { name: a.name, lat: a.lat, lng: a.lng, sort_order: a.sortOrder, duration_minutes: a.durationMinutes, scheduled_date: a.scheduledDate, scheduled_period: a.scheduledPeriod, description: a.description, adult_price: a.adultPrice, child_price: a.childPrice };
+                    const map: Record<string, unknown> = { name: a.name, lat: a.lat, lng: a.lng, sort_order: a.sortOrder, duration_minutes: a.durationMinutes, scheduled_date: a.scheduledDate, scheduled_period: a.scheduledPeriod, description: a.description, activity_type: a.activityType, pricing_mode: a.pricingMode, unit_price: a.unitPrice, quantity: a.quantity, surcharge: a.surcharge, adult_price: a.adultPrice, child_price: a.childPrice };
                     for (const [k, v] of Object.entries(map)) {
                         if (v !== undefined) { fields.push(`${k} = ?`); values.push(v); }
                     }

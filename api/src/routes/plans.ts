@@ -152,16 +152,16 @@ router.post('/:slug/locations/:id/sub-locations', requireAuth, (req, res) => {
     const locationId = Number(req.params.id);
     if (!getLocationForPlan(planId, locationId)) { res.status(404).json({ error: 'Location not found' }); return; }
 
-    const { name, lat, lng, durationMinutes, scheduledDate, scheduledPeriod, description, sortOrder, adultPrice, childPrice } = req.body as {
-        name?: string; lat?: number; lng?: number; durationMinutes?: number; scheduledDate?: string; scheduledPeriod?: string; description?: string; sortOrder?: number; adultPrice?: number; childPrice?: number;
+    const { name, lat, lng, durationMinutes, scheduledDate, scheduledPeriod, description, sortOrder, activityType, pricingMode, unitPrice, quantity, surcharge, adultPrice, childPrice } = req.body as {
+        name?: string; lat?: number; lng?: number; durationMinutes?: number; scheduledDate?: string; scheduledPeriod?: string; description?: string; sortOrder?: number; activityType?: string; pricingMode?: string; unitPrice?: number; quantity?: number; surcharge?: number; adultPrice?: number; childPrice?: number;
     };
     if (!name?.trim()) { res.status(400).json({ error: 'name is required' }); return; }
 
     const db = getDb();
     const maxOrder = (db.prepare('SELECT MAX(sort_order) as m FROM sub_locations WHERE location_id = ?').get(locationId) as { m: number | null }).m ?? 0;
     const result = db.prepare(
-        'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, scheduled_date, scheduled_period, description, adult_price, child_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(locationId, sortOrder ?? maxOrder + 1, name, lat ?? 0, lng ?? 0, durationMinutes ?? 60, scheduledDate ?? '', scheduledPeriod ?? '', description ?? '', adultPrice ?? 0, childPrice ?? 0);
+        'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, scheduled_date, scheduled_period, description, activity_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(locationId, sortOrder ?? maxOrder + 1, name, lat ?? 0, lng ?? 0, durationMinutes ?? 60, scheduledDate ?? '', scheduledPeriod ?? '', description ?? '', activityType ?? 'sightseeing', pricingMode ?? 'per_person', unitPrice ?? 0, quantity ?? 1, surcharge ?? 0, adultPrice ?? 0, childPrice ?? 0);
 
     res.status(201).json({ id: result.lastInsertRowid });
 });
@@ -178,8 +178,8 @@ router.put('/:slug/locations/:id/sub-locations/:subId', requireAuth, (req, res) 
     const existing = db.prepare('SELECT id FROM sub_locations WHERE id = ? AND location_id = ?').get(subId, locationId) as { id: number } | undefined;
     if (!existing) { res.status(404).json({ error: 'Sub-location not found' }); return; }
 
-    const { name, lat, lng, durationMinutes, scheduledDate, scheduledPeriod, description, sortOrder, adultPrice, childPrice } = req.body as {
-        name?: string; lat?: number; lng?: number; durationMinutes?: number; scheduledDate?: string; scheduledPeriod?: string; description?: string; sortOrder?: number; adultPrice?: number; childPrice?: number;
+    const { name, lat, lng, durationMinutes, scheduledDate, scheduledPeriod, description, sortOrder, activityType, pricingMode, unitPrice, quantity, surcharge, adultPrice, childPrice } = req.body as {
+        name?: string; lat?: number; lng?: number; durationMinutes?: number; scheduledDate?: string; scheduledPeriod?: string; description?: string; sortOrder?: number; activityType?: string; pricingMode?: string; unitPrice?: number; quantity?: number; surcharge?: number; adultPrice?: number; childPrice?: number;
     };
 
     const fields: string[] = [];
@@ -191,6 +191,11 @@ router.put('/:slug/locations/:id/sub-locations/:subId', requireAuth, (req, res) 
     if (scheduledDate !== undefined) { fields.push('scheduled_date = ?'); values.push(scheduledDate); }
     if (scheduledPeriod !== undefined) { fields.push('scheduled_period = ?'); values.push(scheduledPeriod); }
     if (description !== undefined) { fields.push('description = ?'); values.push(description); }
+    if (activityType !== undefined) { fields.push('activity_type = ?'); values.push(activityType); }
+    if (pricingMode !== undefined) { fields.push('pricing_mode = ?'); values.push(pricingMode); }
+    if (unitPrice !== undefined) { fields.push('unit_price = ?'); values.push(unitPrice); }
+    if (quantity !== undefined) { fields.push('quantity = ?'); values.push(quantity); }
+    if (surcharge !== undefined) { fields.push('surcharge = ?'); values.push(surcharge); }
     if (sortOrder !== undefined) { fields.push('sort_order = ?'); values.push(sortOrder); }
     if (adultPrice !== undefined) { fields.push('adult_price = ?'); values.push(adultPrice); }
     if (childPrice !== undefined) { fields.push('child_price = ?'); values.push(childPrice); }

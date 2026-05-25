@@ -7,6 +7,11 @@ export interface SubLocation {
     scheduledDate: string;
     scheduledPeriod: 'morning' | 'afternoon' | '';
     description: string;
+    activityType: 'sightseeing' | 'accommodation' | 'food' | 'transport' | 'other';
+    pricingMode: 'per_person' | 'per_room' | 'per_group';
+    unitPrice: number;
+    quantity: number;
+    surcharge: number;
     adultPrice: number;
     childPrice: number;
 }

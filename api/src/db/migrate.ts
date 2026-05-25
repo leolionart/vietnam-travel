@@ -285,6 +285,65 @@ function patchNoiBaiStartPoint(): void {
     `).run(Date.now(), planSlug);
 }
 
+function patchActivityPricing(): void {
+    const db = getDb();
+    const planSlug = 'ha-noi-nghe-an-ninh-binh-ha-long-ha-noi';
+
+    const update = db.prepare(`
+        UPDATE sub_locations
+        SET activity_type = ?,
+            pricing_mode = ?,
+            adult_price = ?,
+            child_price = ?,
+            unit_price = ?,
+            quantity = ?,
+            surcharge = ?
+        WHERE name = ?
+          AND location_id = (
+              SELECT l.id
+              FROM locations l
+              JOIN plans p ON p.id = l.plan_id
+              WHERE p.slug = ? AND l.name = ?
+              ORDER BY l.sort_order DESC
+              LIMIT 1
+          )
+    `);
+
+    const pricing = [
+        ['Nghệ An', 'VinWonders Cửa Hội – Công viên nước', 'sightseeing', 'per_person', 240000, 240000, 0, 1, 0],
+        ['Nghệ An', 'Núi Quyết – Đền Quang Trung', 'sightseeing', 'per_person', 0, 0, 0, 1, 0],
+        ['Nghệ An', 'Đảo Ngư (Hòn Ngư – Song Ngư)', 'sightseeing', 'per_person', 250000, 140000, 0, 1, 0],
+        ['Nghệ An', 'Đền Cờn', 'sightseeing', 'per_person', 0, 0, 0, 1, 0],
+        ['Nghệ An', 'Đảo Chè Thanh Chương', 'sightseeing', 'per_person', 50000, 50000, 0, 1, 0],
+        ['Nghệ An', 'Suối Nước Mọc (Tạ Bó – Yên Khê)', 'sightseeing', 'per_person', 0, 0, 0, 1, 0],
+        ['Nghệ An', 'Bãi Lữ', 'sightseeing', 'per_person', 0, 0, 0, 1, 0],
+        ['Nghệ An', 'Đảo Chè Nghĩa Đàn – Phủ Quỳ', 'sightseeing', 'per_person', 0, 0, 0, 1, 0],
+        ['Nghệ An', 'Suối cá Nghĩa Đàn', 'sightseeing', 'per_person', 20000, 10000, 0, 1, 0],
+        ['Ninh Bình', 'Trang An River View Homestay – phòng 2 người (03-06/07)', 'accommodation', 'per_room', 0, 0, 2550000, 2, 0],
+        ['Ninh Bình', 'Khu DL Sinh thái Tràng An', 'sightseeing', 'per_person', 300000, 150000, 0, 1, 0],
+        ['Ninh Bình', 'Tam Cốc – Bích Động', 'sightseeing', 'per_person', 250000, 120000, 0, 1, 0],
+        ['Ninh Bình', 'Hang Múa', 'sightseeing', 'per_person', 150000, 150000, 0, 1, 0],
+        ['Ninh Bình', 'Chùa Bái Đính', 'sightseeing', 'per_person', 150000, 100000, 0, 1, 0],
+        ['Ninh Bình', 'Cố đô Hoa Lư', 'sightseeing', 'per_person', 20000, 10000, 0, 1, 0],
+        ['Ninh Bình', 'Đầm Vân Long', 'sightseeing', 'per_person', 100000, 50000, 0, 1, 0],
+        ['Hạ Long', 'Khách sạn Bãi Cháy – phòng 2 người (06, 08-09/07)', 'accommodation', 'per_room', 0, 0, 4500000, 2, 0],
+        ['Hạ Long', 'Bãi tắm Bãi Cháy – nghỉ nhẹ ven biển', 'sightseeing', 'per_person', 0, 0, 0, 1, 0],
+        ['Hạ Long', 'Du thuyền ngủ đêm trên Vịnh Hạ Long', 'accommodation', 'per_room', 0, 0, 7150000, 2, 3150000],
+        ['Hạ Long', 'Sun World Hạ Long – Cáp treo Nữ Hoàng', 'sightseeing', 'per_person', 380000, 280000, 0, 1, 0],
+        ['Hà Nội', 'Hồ Gươm – Đền Ngọc Sơn', 'sightseeing', 'per_person', 50000, 0, 0, 1, 0],
+        ['Hà Nội', 'Văn Miếu – Quốc Tử Giám', 'sightseeing', 'per_person', 70000, 0, 0, 1, 0],
+        ['Hà Nội', 'Lăng Chủ tịch Hồ Chí Minh', 'sightseeing', 'per_person', 0, 0, 0, 1, 0],
+    ] as const;
+
+    const patch = db.transaction(() => {
+        for (const [locationName, name, activityType, pricingMode, adultPrice, childPrice, unitPrice, quantity, surcharge] of pricing) {
+            update.run(activityType, pricingMode, adultPrice, childPrice, unitPrice, quantity, surcharge, name, planSlug, locationName);
+        }
+    });
+
+    patch();
+}
+
 export function runMigration(): void {
     const db = getDb();
 
@@ -296,6 +355,11 @@ export function runMigration(): void {
         'ALTER TABLE plans ADD COLUMN session_id TEXT',
         'ALTER TABLE sub_locations ADD COLUMN scheduled_date TEXT NOT NULL DEFAULT \'\'',
         'ALTER TABLE sub_locations ADD COLUMN scheduled_period TEXT NOT NULL DEFAULT \'\'',
+        'ALTER TABLE sub_locations ADD COLUMN activity_type TEXT NOT NULL DEFAULT \'sightseeing\'',
+        'ALTER TABLE sub_locations ADD COLUMN pricing_mode TEXT NOT NULL DEFAULT \'per_person\'',
+        'ALTER TABLE sub_locations ADD COLUMN unit_price INTEGER NOT NULL DEFAULT 0',
+        'ALTER TABLE sub_locations ADD COLUMN quantity REAL NOT NULL DEFAULT 1',
+        'ALTER TABLE sub_locations ADD COLUMN surcharge INTEGER NOT NULL DEFAULT 0',
     ];
     for (const sql of addColumns) {
         try { db.prepare(sql).run(); } catch { /* column already exists */ }
@@ -314,6 +378,7 @@ export function runMigration(): void {
         seedSubLocations();
         patchNoiBaiStartPoint();
         patchHalongCruiseItinerary();
+        patchActivityPricing();
         return;
     }
 
@@ -418,4 +483,5 @@ export function runMigration(): void {
     seedSubLocations();
     patchNoiBaiStartPoint();
     patchHalongCruiseItinerary();
+    patchActivityPricing();
 }

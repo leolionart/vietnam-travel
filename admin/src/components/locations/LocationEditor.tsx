@@ -85,7 +85,7 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
     const [pendingCalendarOrder, setPendingCalendarOrder] = useState<number[] | null>(null);
     const [pendingCalendarSchedules, setPendingCalendarSchedules] = useState<SubLocationSchedule[] | null>(null);
     const [expandedSubId, setExpandedSubId] = useState<number | 'new' | null>(null);
-    const [subForm, setSubForm] = useState<{ name: string; lat: string; lng: string; durationMinutes: string; description: string; adultPrice: string; childPrice: string }>({ name: '', lat: '', lng: '', durationMinutes: '60', description: '', adultPrice: '0', childPrice: '0' });
+    const [subForm, setSubForm] = useState<SubFormState>(emptySubFormState());
     const [confirmClose, setConfirmClose] = useState(false);
 
     useEffect(() => {
@@ -135,7 +135,7 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
     }
 
     function emptySubForm() {
-        setSubForm({ name: '', lat: '', lng: '', durationMinutes: '60', description: '', adultPrice: '0', childPrice: '0' });
+        setSubForm(emptySubFormState());
     }
 
     function openNewSub() {
@@ -144,7 +144,20 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
     }
 
     function openEditSub(sub: SubLocation) {
-        setSubForm({ name: sub.name, lat: String(sub.lat), lng: String(sub.lng), durationMinutes: String(sub.durationMinutes), description: sub.description, adultPrice: String(sub.adultPrice ?? 0), childPrice: String(sub.childPrice ?? 0) });
+        setSubForm({
+            name: sub.name,
+            lat: String(sub.lat),
+            lng: String(sub.lng),
+            durationMinutes: String(sub.durationMinutes),
+            description: sub.description,
+            activityType: sub.activityType ?? 'sightseeing',
+            pricingMode: sub.pricingMode ?? 'per_person',
+            unitPrice: String(sub.unitPrice ?? 0),
+            quantity: String(sub.quantity ?? 1),
+            surcharge: String(sub.surcharge ?? 0),
+            adultPrice: String(sub.adultPrice ?? 0),
+            childPrice: String(sub.childPrice ?? 0),
+        });
         setExpandedSubId(sub.id);
     }
 
@@ -189,6 +202,11 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
             lng: Number(subForm.lng) || 0,
             durationMinutes: Number(subForm.durationMinutes) || 60,
             description: subForm.description,
+            activityType: subForm.activityType,
+            pricingMode: subForm.pricingMode,
+            unitPrice: Number(subForm.unitPrice) || 0,
+            quantity: Number(subForm.quantity) || 1,
+            surcharge: Number(subForm.surcharge) || 0,
             adultPrice: Number(subForm.adultPrice) || 0,
             childPrice: Number(subForm.childPrice) || 0,
         };
@@ -705,7 +723,35 @@ function GeoSearch({ onResult }: { onResult: (r: GeoResult) => void }) {
 // --- SubForm ---
 
 interface SubFormState {
-    name: string; lat: string; lng: string; durationMinutes: string; description: string; adultPrice: string; childPrice: string;
+    name: string;
+    lat: string;
+    lng: string;
+    durationMinutes: string;
+    description: string;
+    activityType: 'sightseeing' | 'accommodation' | 'food' | 'transport' | 'other';
+    pricingMode: 'per_person' | 'per_room' | 'per_group';
+    unitPrice: string;
+    quantity: string;
+    surcharge: string;
+    adultPrice: string;
+    childPrice: string;
+}
+
+function emptySubFormState(): SubFormState {
+    return {
+        name: '',
+        lat: '',
+        lng: '',
+        durationMinutes: '60',
+        description: '',
+        activityType: 'sightseeing',
+        pricingMode: 'per_person',
+        unitPrice: '0',
+        quantity: '1',
+        surcharge: '0',
+        adultPrice: '0',
+        childPrice: '0',
+    };
 }
 
 function SubForm({ form, setForm }: { form: SubFormState; setForm: React.Dispatch<React.SetStateAction<SubFormState>> }) {
@@ -737,12 +783,46 @@ function SubForm({ form, setForm }: { form: SubFormState; setForm: React.Dispatc
             </div>
             <div className="grid grid-cols-2 gap-2">
                 <div>
+                    <label className="block text-[10px] text-slate-500 mb-1">Loại activity</label>
+                    <select value={form.activityType} onChange={e => setForm(f => ({ ...f, activityType: e.target.value as SubFormState['activityType'] }))} className="input-field">
+                        <option value="sightseeing">Tham quan</option>
+                        <option value="accommodation">Lưu trú</option>
+                        <option value="food">Ăn uống</option>
+                        <option value="transport">Di chuyển</option>
+                        <option value="other">Khác</option>
+                    </select>
+                </div>
+                <div>
+                    <label className="block text-[10px] text-slate-500 mb-1">Cách tính</label>
+                    <select value={form.pricingMode} onChange={e => setForm(f => ({ ...f, pricingMode: e.target.value as SubFormState['pricingMode'] }))} className="input-field">
+                        <option value="per_person">Theo người</option>
+                        <option value="per_room">Theo phòng/đơn vị</option>
+                        <option value="per_group">Theo nhóm</option>
+                    </select>
+                </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+                <div>
                     <label className="block text-[10px] text-slate-500 mb-1">Giá người lớn</label>
                     <CurrencyInput value={Number(form.adultPrice) || 0} onChange={v => setForm(f => ({ ...f, adultPrice: String(v) }))} />
                 </div>
                 <div>
                     <label className="block text-[10px] text-slate-500 mb-1">Giá trẻ em</label>
                     <CurrencyInput value={Number(form.childPrice) || 0} onChange={v => setForm(f => ({ ...f, childPrice: String(v) }))} />
+                </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+                <div>
+                    <label className="block text-[10px] text-slate-500 mb-1">Giá đơn vị</label>
+                    <CurrencyInput value={Number(form.unitPrice) || 0} onChange={v => setForm(f => ({ ...f, unitPrice: String(v) }))} />
+                </div>
+                <div>
+                    <label className="block text-[10px] text-slate-500 mb-1">{form.pricingMode === 'per_room' ? 'Sức chứa/phòng' : 'Số lượng'}</label>
+                    <input type="number" min="0" step="0.5" value={form.quantity} onChange={e => setForm(f => ({ ...f, quantity: e.target.value }))} className="input-field" />
+                </div>
+                <div>
+                    <label className="block text-[10px] text-slate-500 mb-1">{form.pricingMode === 'per_room' ? 'Phụ thu/TE' : 'Phụ thu'}</label>
+                    <CurrencyInput value={Number(form.surcharge) || 0} onChange={v => setForm(f => ({ ...f, surcharge: String(v) }))} />
                 </div>
             </div>
             <div>

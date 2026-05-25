@@ -444,13 +444,13 @@
                                         <p class="text-[10px] transition-colors"
                                            :class="excludedSubs[sub.id] ? 'text-slate-600' : 'text-emerald-400'"
                                            x-text="sub.durationMinutes + ' phút'"></p>
-                                        <template x-if="sub.adultPrice > 0 && !excludedSubs[sub.id]">
-                                            <span class="text-[10px] text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded-full" x-text="'NL: ' + formatCurrency(sub.adultPrice)"></span>
+                                        <template x-if="!excludedSubs[sub.id]">
+                                            <span class="text-[10px] text-violet-300 bg-violet-400/10 px-1.5 py-0.5 rounded-full" x-text="activityTypeLabel(sub.activityType)"></span>
                                         </template>
-                                        <template x-if="sub.childPrice > 0 && !excludedSubs[sub.id]">
-                                            <span class="text-[10px] text-sky-400 bg-sky-400/10 px-1.5 py-0.5 rounded-full" x-text="'TE: ' + formatCurrency(sub.childPrice)"></span>
+                                        <template x-if="subActivityCost(sub, activeLocation) > 0 && !excludedSubs[sub.id]">
+                                            <span class="text-[10px] text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded-full" x-text="formatCurrency(subActivityCost(sub, activeLocation))"></span>
                                         </template>
-                                        <template x-if="sub.adultPrice === 0 && sub.childPrice === 0 && !excludedSubs[sub.id]">
+                                        <template x-if="subActivityCost(sub, activeLocation) === 0 && !excludedSubs[sub.id]">
                                             <span class="text-[10px] text-green-400 bg-green-400/10 px-1.5 py-0.5 rounded-full">Miễn phí</span>
                                         </template>
                                         <template x-if="excludedSubs[sub.id]">
@@ -635,20 +635,20 @@
                         </template>
 
                         <!-- Lưu trú -->
-                        <template x-if="activeLocation.stayCostPerNight > 0">
+                        <template x-if="activeLocation.stayCostPerNight > 0 || subActivityTotal(activeLocation, ['accommodation']) > 0">
                             <div class="flex items-center gap-2 text-slate-300">
                                 <span class="text-slate-400 flex-1 min-w-0 truncate">Lưu trú</span>
-                                <span class="flex-none whitespace-nowrap" x-text="Math.max((activeLocation.duration||1)-1,0) + ' đêm × ' + formatCurrency(activeLocation.stayCostPerNight)"></span>
-                                <span class="flex-none whitespace-nowrap font-bold text-white" x-text="formatCurrency(activeLocation.stayCostPerNight * Math.max((activeLocation.duration||1)-1,0))"></span>
+                                <span class="flex-none whitespace-nowrap" x-text="subActivityTotal(activeLocation, ['accommodation']) > 0 ? 'Theo activity' : Math.max((activeLocation.duration||1)-1,0) + ' đêm × ' + formatCurrency(activeLocation.stayCostPerNight)"></span>
+                                <span class="flex-none whitespace-nowrap font-bold text-white" x-text="formatCurrency(subActivityTotal(activeLocation, ['accommodation']) > 0 ? subActivityTotal(activeLocation, ['accommodation']) : activeLocation.stayCostPerNight * Math.max((activeLocation.duration||1)-1,0))"></span>
                             </div>
                         </template>
 
                         <!-- Ăn uống -->
-                        <template x-if="activeLocation.foodBudgetPerDay > 0">
+                        <template x-if="activeLocation.foodBudgetPerDay > 0 || subActivityTotal(activeLocation, ['food']) > 0">
                             <div class="flex items-center gap-2 text-slate-300">
                                 <span class="text-slate-400 flex-1 min-w-0 truncate">Ăn uống</span>
-                                <span class="flex-none whitespace-nowrap" x-text="(activeLocation.duration||1) + ' ngày × ' + formatCurrency(activeLocation.foodBudgetPerDay)"></span>
-                                <span class="flex-none whitespace-nowrap font-bold text-white" x-text="formatCurrency(activeLocation.foodBudgetPerDay * (activeLocation.duration||1))"></span>
+                                <span class="flex-none whitespace-nowrap" x-text="subActivityTotal(activeLocation, ['food']) > 0 ? 'Theo activity' : (activeLocation.duration||1) + ' ngày × ' + formatCurrency(activeLocation.foodBudgetPerDay)"></span>
+                                <span class="flex-none whitespace-nowrap font-bold text-white" x-text="formatCurrency(subActivityTotal(activeLocation, ['food']) > 0 ? subActivityTotal(activeLocation, ['food']) : activeLocation.foodBudgetPerDay * (activeLocation.duration||1))"></span>
                             </div>
                         </template>
 
@@ -667,6 +667,14 @@
                                 <span class="text-slate-400 flex-1 min-w-0 truncate" x-text="(activeLocation.transport || 'Di chuyển') + ' (TE)'"></span>
                                 <span class="flex-none whitespace-nowrap" x-text="activeLocation.children + ' ng × ' + formatCurrency(activeLocation.transportFareChild)"></span>
                                 <span class="flex-none whitespace-nowrap font-bold text-white" x-text="formatCurrency(activeLocation.children * activeLocation.transportFareChild)"></span>
+                            </div>
+                        </template>
+
+                        <template x-if="subActivityTotal(activeLocation, ['transport', 'other']) > 0">
+                            <div class="flex items-center gap-2 text-slate-300">
+                                <span class="text-slate-400 flex-1 min-w-0 truncate">Activity khác</span>
+                                <span class="flex-none whitespace-nowrap">Theo activity</span>
+                                <span class="flex-none whitespace-nowrap font-bold text-white" x-text="formatCurrency(subActivityTotal(activeLocation, ['transport', 'other']))"></span>
                             </div>
                         </template>
 
@@ -1623,15 +1631,52 @@
                 },
 
                 ticketAdultTotal(loc) {
-                    const subs = (loc.subLocations || []).filter(s => !this.excludedSubs[s.id]);
+                    const subs = (loc.subLocations || []).filter(s => !this.excludedSubs[s.id] && this.subActivityType(s) === 'sightseeing');
                     const subSum = subs.reduce((sum, s) => sum + (s.adultPrice || 0), 0);
                     return subSum > 0 ? subSum : (loc.adultPrice || 0);
                 },
 
                 ticketChildTotal(loc) {
-                    const subs = (loc.subLocations || []).filter(s => !this.excludedSubs[s.id]);
+                    const subs = (loc.subLocations || []).filter(s => !this.excludedSubs[s.id] && this.subActivityType(s) === 'sightseeing');
                     const subSum = subs.reduce((sum, s) => sum + (s.childPrice || 0), 0);
                     return subSum > 0 ? subSum : (loc.childPrice || 0);
+                },
+
+                subActivityType(sub) {
+                    return sub.activityType || 'sightseeing';
+                },
+
+                activityTypeLabel(type) {
+                    return {
+                        sightseeing: 'Tham quan',
+                        accommodation: 'Lưu trú',
+                        food: 'Ăn uống',
+                        transport: 'Di chuyển',
+                        other: 'Khác',
+                    }[type || 'sightseeing'] || 'Khác';
+                },
+
+                subActivityCost(sub, loc) {
+                    const mode = sub.pricingMode || 'per_person';
+                    const quantity = Number(sub.quantity ?? 1) || 0;
+                    const surcharge = Number(sub.surcharge || 0);
+                    if (mode === 'per_room') {
+                        const capacity = Math.max(quantity || 2, 1);
+                        const people = Math.max((loc.adults || 0) + (loc.children || 0), 1);
+                        const rooms = Math.max(Math.ceil(people / capacity), 1);
+                        return (Number(sub.unitPrice || 0) * rooms) + (surcharge * (loc.children || 0));
+                    }
+                    if (mode === 'per_group') {
+                        return (Number(sub.unitPrice || 0) * Math.max(quantity, 1)) + surcharge;
+                    }
+                    return ((Number(sub.adultPrice || 0) * (loc.adults || 0)) + (Number(sub.childPrice || 0) * (loc.children || 0))) + surcharge;
+                },
+
+                subActivityTotal(loc, types) {
+                    const allowed = new Set(types);
+                    return (loc.subLocations || [])
+                        .filter(s => !this.excludedSubs[s.id] && allowed.has(this.subActivityType(s)))
+                        .reduce((sum, s) => sum + this.subActivityCost(s, loc), 0);
                 },
 
                 getTransportIcon(type) {
@@ -2197,19 +2242,22 @@
                     const adults = loc.adults || 0;
                     const children = loc.children || 0;
 
-                    // Vé tham quan: dùng tổng sub-locations nếu có, ngược lại dùng giá parent
-                    const subTicketAdult = (loc.subLocations || []).filter(s => !this.excludedSubs[s.id]).reduce((sum, s) => sum + (s.adultPrice || 0), 0);
-                    const subTicketChild = (loc.subLocations || []).filter(s => !this.excludedSubs[s.id]).reduce((sum, s) => sum + (s.childPrice || 0), 0);
+                    // Vé tham quan: dùng tổng sub-locations loại tham quan nếu có, ngược lại dùng giá parent.
+                    const subTicketAdult = (loc.subLocations || []).filter(s => !this.excludedSubs[s.id] && this.subActivityType(s) === 'sightseeing').reduce((sum, s) => sum + (s.adultPrice || 0), 0);
+                    const subTicketChild = (loc.subLocations || []).filter(s => !this.excludedSubs[s.id] && this.subActivityType(s) === 'sightseeing').reduce((sum, s) => sum + (s.childPrice || 0), 0);
                     const adultTicket = subTicketAdult > 0 ? subTicketAdult : (loc.adultPrice || 0);
                     const childTicket = subTicketChild > 0 ? subTicketChild : (loc.childPrice || 0);
                     const ticketCost = adultTicket * adults + childTicket * children;
-                    const stayCost = (loc.stayCostPerNight || 0) * Math.max(rawDays - 1, 0);
-                    const foodCost = (loc.foodBudgetPerDay || 0) * days;
+                    const activityStayCost = this.subActivityTotal(loc, ['accommodation']);
+                    const activityFoodCost = this.subActivityTotal(loc, ['food']);
+                    const activityOtherCost = this.subActivityTotal(loc, ['transport', 'other']);
+                    const stayCost = activityStayCost > 0 ? activityStayCost : (loc.stayCostPerNight || 0) * Math.max(rawDays - 1, 0);
+                    const foodCost = activityFoodCost > 0 ? activityFoodCost : (loc.foodBudgetPerDay || 0) * days;
                     const adultFare = loc.transportFareAdult || loc.transportFare || 0;
                     const childFare = loc.transportFareChild || 0;
                     const transportCost = adultFare * adults + childFare * children;
 
-                    return ticketCost + stayCost + foodCost + transportCost;
+                    return ticketCost + stayCost + foodCost + transportCost + activityOtherCost;
                 },
 
                 calculateTotalPlanCost(plan = this.currentPlan) {

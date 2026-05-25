@@ -55,6 +55,11 @@ CREATE TABLE IF NOT EXISTS sub_locations (
     scheduled_date   TEXT    NOT NULL DEFAULT '',
     scheduled_period TEXT    NOT NULL DEFAULT '',
     description      TEXT    NOT NULL DEFAULT '',
+    activity_type    TEXT    NOT NULL DEFAULT 'sightseeing',
+    pricing_mode     TEXT    NOT NULL DEFAULT 'per_person',
+    unit_price       INTEGER NOT NULL DEFAULT 0,
+    quantity         REAL    NOT NULL DEFAULT 1,
+    surcharge        INTEGER NOT NULL DEFAULT 0,
     adult_price      INTEGER NOT NULL DEFAULT 0,
     child_price      INTEGER NOT NULL DEFAULT 0,
     created_at       INTEGER NOT NULL DEFAULT (unixepoch('now') * 1000)

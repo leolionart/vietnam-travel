@@ -6,7 +6,7 @@
 
 ## Tổng quan
 
-Mỗi **location** (điểm dừng trong lịch trình) có một bộ chi phí riêng. Toàn bộ plan là **tổng cộng của tất cả location chưa bị loại**.
+Mỗi **location** (điểm dừng trong lịch trình) có một bộ chi phí riêng. Chi phí chi tiết nên cấu hình ở từng **activity/sub-location** khi cần phân biệt tham quan, lưu trú, ăn uống, di chuyển hoặc phụ thu.
 
 ```
 Tổng plan = Σ calculateLocationCost(loc)   // với mỗi loc chưa bị excludedLocations
@@ -22,7 +22,31 @@ Tổng plan = Σ calculateLocationCost(loc)   // với mỗi loc chưa bị excl
 Chi phí location = Vé tham quan + Lưu trú + Ăn uống + Di chuyển
 ```
 
-### 1. Vé tham quan
+### 1. Activity/sub-location
+
+`sub_locations` là lớp activity chi tiết. Mỗi activity có:
+
+| Field | Ý nghĩa |
+|---|---|
+| `activityType` | `sightseeing`, `accommodation`, `food`, `transport`, `other` |
+| `pricingMode` | `per_person`, `per_room`, `per_group` |
+| `adultPrice` / `childPrice` | Giá theo người khi `pricingMode = per_person` |
+| `unitPrice` | Giá theo phòng/đơn vị/nhóm |
+| `quantity` | Với `per_room`: sức chứa/phòng; với `per_group`: số lượng đơn vị |
+| `surcharge` | Với `per_room`: phụ thu mỗi trẻ em; loại khác: phụ thu cố định |
+
+Activity loại `sightseeing` vẫn dùng cho vé tham quan. Activity loại `accommodation` hoặc `food` sẽ thay thế chi phí lưu trú/ăn uống cố định ở parent location nếu có tổng > 0.
+
+Với `pricingMode = per_room`, chi phí được tính:
+
+```
+số phòng = ceil((adults + children) / quantity)
+chi phí = unitPrice × số phòng + surcharge × children
+```
+
+Nếu không có phụ thu trẻ em rõ ràng, để `surcharge = 0`.
+
+### 2. Vé tham quan
 
 **Nguồn dữ liệu:** Có 2 nguồn, ưu tiên theo thứ tự:
 
@@ -51,7 +75,7 @@ Vé tham quan = ticketAdultTotal(loc) × adults + ticketChildTotal(loc) × child
 
 ---
 
-### 2. Lưu trú
+### 3. Lưu trú
 
 ```
 Lưu trú = stayCostPerNight × (duration - 1)
@@ -64,7 +88,9 @@ Lưu trú = stayCostPerNight × (duration - 1)
 
 ---
 
-### 3. Ăn uống
+Nếu đã có activity `accommodation` có chi phí, hệ thống dùng tổng activity đó thay vì `stayCostPerNight`.
+
+### 4. Ăn uống
 
 ```
 Ăn uống = foodBudgetPerDay × duration
@@ -75,7 +101,9 @@ Lưu trú = stayCostPerNight × (duration - 1)
 
 ---
 
-### 4. Di chuyển đến điểm này
+Nếu đã có activity `food` có chi phí, hệ thống dùng tổng activity đó thay vì `foodBudgetPerDay`.
+
+### 5. Di chuyển đến điểm này
 
 ```
 Di chuyển = transportFareAdult × adults + transportFareChild × children

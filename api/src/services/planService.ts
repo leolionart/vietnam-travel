@@ -13,6 +13,11 @@ interface DbSubLocation {
     scheduled_date: string;
     scheduled_period: string;
     description: string;
+    activity_type: string;
+    pricing_mode: string;
+    unit_price: number;
+    quantity: number;
+    surcharge: number;
     adult_price: number;
     child_price: number;
 }
@@ -68,6 +73,11 @@ function subToPublic(sub: DbSubLocation) {
         scheduledDate: sub.scheduled_date,
         scheduledPeriod: sub.scheduled_period,
         description: sub.description,
+        activityType: sub.activity_type || 'sightseeing',
+        pricingMode: sub.pricing_mode || 'per_person',
+        unitPrice: sub.unit_price || 0,
+        quantity: sub.quantity ?? 1,
+        surcharge: sub.surcharge || 0,
         adultPrice: sub.adult_price,
         childPrice: sub.child_price,
     };
