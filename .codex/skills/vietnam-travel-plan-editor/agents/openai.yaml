@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vietnam Travel Plan Editor"
+  short_description: "Edit prod travel plans via CLI or MCP"
+  default_prompt: "Use $vietnam-travel-plan-editor to update the prod trip plan."

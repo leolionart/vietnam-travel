@@ -2,6 +2,9 @@
 
 Follow `docs/agents.md` for the full project map and maintenance guide.
 
+For requests to inspect, configure, or edit existing prod travel plans, use the
+project skill `.codex/skills/vietnam-travel-plan-editor/SKILL.md`.
+
 ## Project Scope
 
 This workspace is the Vietnam Travel Planner project. Public UI changes go in
