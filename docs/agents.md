@@ -177,6 +177,19 @@ POST   /api/plans/:slug/locations/:id/sub-locations   🔒
 PUT    /api/plans/:slug/locations/:id/sub-locations/:sid 🔒
 DELETE /api/plans/:slug/locations/:id/sub-locations/:sid 🔒
 
+GET    /api/plans/:slug/activities
+POST   /api/plans/:slug/activities                  🔒
+PUT    /api/plans/:slug/activities/:activityId      🔒
+DELETE /api/plans/:slug/activities/:activityId      🔒
+GET    /api/sub-locations?planSlug=...
+POST   /api/sub-locations                           🔒
+PUT    /api/sub-locations/:activityId               🔒
+DELETE /api/sub-locations/:activityId               🔒
+GET    /api/admin/activities?planSlug=...
+POST   /api/admin/activities                        🔒
+PUT    /api/admin/activities/:activityId            🔒
+DELETE /api/admin/activities/:activityId            🔒
+
 GET    /api/vexere-link?from=X&to=Y&date=YYYY-MM-DD
 GET    /api/health
 ```

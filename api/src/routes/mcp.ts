@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { randomUUID } from 'crypto';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { createPlan, createPublicSessionPlan, deletePlan, getPlanBySessionId, getPlanBySlug, listPlans, updatePlan } from '../services/planService.js';
@@ -8,6 +9,7 @@ import { addLocation, updateLocation, deleteLocation, reorderLocations, type Cre
 import { getDb } from '../db/connection.js';
 
 const router = Router();
+const sseTransports = new Map<string, SSEServerTransport>();
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -510,11 +512,13 @@ function buildServer(): Server {
 router.use((_req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, Mcp-Session-Id');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, Mcp-Session-Id, Authorization');
+    res.setHeader('Access-Control-Expose-Headers', 'Mcp-Session-Id');
     next();
 });
 
 router.options('/', (_req, res) => { res.sendStatus(204); });
+router.options('/messages', (_req, res) => { res.sendStatus(204); });
 
 async function handleMcp(req: import('express').Request, res: import('express').Response) {
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
@@ -527,8 +531,46 @@ async function handleMcp(req: import('express').Request, res: import('express').
 // POST: tool calls từ MCP clients
 router.post('/', handleMcp);
 
-// GET: SSE stream (dành cho clients dùng SSE protocol)
-router.get('/', handleMcp);
+// GET: legacy SSE clients. Sends the endpoint event immediately so reverse
+// proxies do not close an idle text/event-stream connection.
+router.get('/', async (_req, res) => {
+    try {
+        const transport = new SSEServerTransport('/mcp/messages', res);
+        sseTransports.set(transport.sessionId, transport);
+        res.on('close', () => {
+            sseTransports.delete(transport.sessionId);
+        });
+        const server = buildServer();
+        await server.connect(transport);
+    } catch (error) {
+        if (!res.headersSent) {
+            res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
+        } else {
+            res.end();
+        }
+    }
+});
+
+// POST target advertised by the legacy SSE endpoint event.
+router.post('/messages', async (req, res) => {
+    const sessionId = req.query.sessionId;
+    if (typeof sessionId !== 'string') {
+        res.status(400).send('Missing sessionId');
+        return;
+    }
+    const transport = sseTransports.get(sessionId);
+    if (!transport) {
+        res.status(400).send('No transport found for sessionId');
+        return;
+    }
+    try {
+        await transport.handlePostMessage(req, res, req.body);
+    } catch (error) {
+        if (!res.headersSent) {
+            res.status(500).send(error instanceof Error ? error.message : String(error));
+        }
+    }
+});
 
 // DELETE: session termination (stateless — không cần làm gì)
 router.delete('/', (_req, res) => { res.sendStatus(200); });
