@@ -341,6 +341,77 @@ function patchActivityPricing(): void {
             update.run(activityType, pricingMode, adultPrice, childPrice, unitPrice, quantity, surcharge, durationDays, name, planSlug, locationName);
         }
 
+        const insertActivity = db.prepare(`
+            INSERT INTO sub_locations (
+                location_id, sort_order, name, lat, lng, duration_minutes, duration_days,
+                scheduled_date, scheduled_period, description,
+                activity_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price
+            )
+            SELECT l.id, ?, ?, l.lat, l.lng, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            FROM locations l
+            JOIN plans p ON p.id = l.plan_id
+            WHERE p.slug = ? AND l.name = ?
+              AND NOT EXISTS (
+                  SELECT 1 FROM sub_locations s
+                  WHERE s.location_id = l.id AND s.name = ?
+              )
+        `);
+
+        const missingActivities = [
+            [
+                'Ninh Bình',
+                0,
+                'Trang An River View Homestay – phòng 2 người (03-06/07)',
+                4320,
+                4,
+                '2026-07-03',
+                'afternoon',
+                'Lưu trú Ninh Bình theo phòng 2 người cho giai đoạn 03-06/07. Trẻ em mặc định tính surcharge 0 nếu không có phụ thu.',
+                'accommodation',
+                'per_room',
+                2550000,
+                2,
+                0,
+                0,
+                0,
+            ],
+            [
+                'Hạ Long',
+                0,
+                'Khách sạn Bãi Cháy – phòng 2 người (06, 08-09/07)',
+                4320,
+                4,
+                '2026-07-06',
+                'afternoon',
+                'Lưu trú khách sạn Bãi Cháy theo phòng 2 người cho các đêm ngoài du thuyền. Trẻ em mặc định tính surcharge 0 nếu không có phụ thu.',
+                'accommodation',
+                'per_room',
+                4500000,
+                2,
+                0,
+                0,
+                0,
+            ],
+        ] as const;
+
+        for (const [locationName, sortOrder, name, durationMinutes, durationDays, scheduledDate, scheduledPeriod, description, activityType, pricingMode, unitPrice, quantity, surcharge, adultPrice, childPrice] of missingActivities) {
+            insertActivity.run(sortOrder, name, durationMinutes, durationDays, scheduledDate, scheduledPeriod, description, activityType, pricingMode, unitPrice, quantity, surcharge, adultPrice, childPrice, planSlug, locationName, name);
+        }
+
+        const duplicateCruiseRows = db.prepare(`
+            SELECT s.id
+            FROM sub_locations s
+            JOIN locations l ON l.id = s.location_id
+            JOIN plans p ON p.id = l.plan_id
+            WHERE p.slug = ?
+              AND l.name = 'Hạ Long'
+              AND s.name = 'Du thuyền ngủ đêm trên Vịnh Hạ Long'
+            ORDER BY s.id ASC
+        `).all(planSlug) as Array<{ id: number }>;
+        for (const duplicate of duplicateCruiseRows.slice(1)) {
+            db.prepare('DELETE FROM sub_locations WHERE id = ?').run(duplicate.id);
+        }
+
         const insertTransport = db.prepare(`
             INSERT INTO sub_locations (
                 location_id, sort_order, name, lat, lng, duration_minutes, duration_days,
