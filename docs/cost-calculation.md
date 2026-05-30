@@ -34,8 +34,9 @@ Chi phí location = Vé tham quan + Lưu trú + Ăn uống + Di chuyển
 | `unitPrice` | Giá theo phòng/đơn vị/nhóm |
 | `quantity` | Với `per_room`: sức chứa/phòng; với `per_group`: số lượng đơn vị |
 | `surcharge` | Với `per_room`: phụ thu mỗi trẻ em; loại khác: phụ thu cố định |
+| `durationDays` | Số ngày activity kéo dài, dùng để hiển thị khách sạn/tour nhiều ngày |
 
-Activity loại `sightseeing` vẫn dùng cho vé tham quan. Activity loại `accommodation` hoặc `food` sẽ thay thế chi phí lưu trú/ăn uống cố định ở parent location nếu có tổng > 0.
+Activity loại `sightseeing` dùng cho vé tham quan. Activity loại `accommodation` hoặc `food` là nguồn chi phí lưu trú/ăn uống; parent location chỉ giữ summary và thông tin lịch trình.
 
 Với `pricingMode = per_room`, chi phí được tính:
 
@@ -48,23 +49,13 @@ Nếu không có phụ thu trẻ em rõ ràng, để `surcharge = 0`.
 
 ### 2. Vé tham quan
 
-**Nguồn dữ liệu:** Có 2 nguồn, ưu tiên theo thứ tự:
+**Nguồn dữ liệu:** chỉ lấy từ activity/sub-location loại `sightseeing`.
 
-| Ưu tiên | Điều kiện | Giá trị dùng |
-|---------|-----------|-------------|
-| 1 (cao) | Location có sub-locations, và tổng giá sub > 0 | `Σ sub.adultPrice` (chỉ các sub chưa bị bỏ qua) |
-| 2 (thấp) | Không có sub-locations hoặc sub chưa có giá | `location.adultPrice` |
-
-Tương tự cho trẻ em với `sub.childPrice` / `location.childPrice`.
+Người lớn dùng `Σ sub.adultPrice`; trẻ em dùng `Σ sub.childPrice`. Các sub bị bỏ qua không được tính.
 
 **Helper functions:**
-- `ticketAdultTotal(loc)` — giá vé/người lớn theo logic ưu tiên trên
-- `ticketChildTotal(loc)` — giá vé/trẻ em theo logic ưu tiên trên
-
-**Tại sao có 2 nguồn?**
-- `location.adultPrice` là ước tính thủ công nhập trong admin panel, thường được nhập trước khi có sub-locations
-- `subLocation.adultPrice` là giá chính xác từng điểm tham quan (cụ thể hơn)
-- Khi đã có sub-locations với giá → sub-locations là nguồn chân thực, **không cộng thêm** parent price
+- `ticketAdultTotal(loc)` — tổng vé/người lớn từ activity
+- `ticketChildTotal(loc)` — tổng vé/trẻ em từ activity
 
 **Công thức:**
 ```
@@ -77,41 +68,23 @@ Vé tham quan = ticketAdultTotal(loc) × adults + ticketChildTotal(loc) × child
 
 ### 3. Lưu trú
 
-```
-Lưu trú = stayCostPerNight × (duration - 1)
-```
+Lưu trú = tổng `subActivityCost()` của các activity `activityType = accommodation`.
 
-- `duration` = số ngày ở tại điểm này
-- Số đêm = số ngày trừ 1 (ngày cuối rời đi, không cần ngủ)
-- Nếu `duration = 1` → 0 đêm → 0đ
-- Nếu `duration < 1` → dùng `rawDays - 1` nhưng floor về 0 (`Math.max(..., 0)`)
-
----
-
-Nếu đã có activity `accommodation` có chi phí, hệ thống dùng tổng activity đó thay vì `stayCostPerNight`.
+Không còn fallback về `location.stayCostPerNight`. Khách sạn/du thuyền phải nhập như activity, thường là `pricingMode = per_room`, `quantity = sức chứa/phòng`, `surcharge = phụ thu mỗi trẻ em nếu có`.
 
 ### 4. Ăn uống
 
-```
-Ăn uống = foodBudgetPerDay × duration
-```
+Ăn uống = tổng `subActivityCost()` của các activity `activityType = food`.
 
-- Tính theo **ngày** (không trừ 1 như lưu trú)
-- `duration` tối thiểu là 1
-
----
-
-Nếu đã có activity `food` có chi phí, hệ thống dùng tổng activity đó thay vì `foodBudgetPerDay`.
+Không còn fallback về `location.foodBudgetPerDay`.
 
 ### 5. Di chuyển đến điểm này
 
-```
-Di chuyển = transportFareAdult × adults + transportFareChild × children
-```
+Di chuyển = tổng `subActivityCost()` của các activity `activityType = transport`.
 
-- `transportFareAdult` = vé người lớn (fallback về `transportFare` nếu không có)
-- `transportFareChild` = vé trẻ em (0 nếu không có)
-- Đây là chi phí **đến** location này (xe khách, tàu, bay từ điểm trước)
+- `transportLabel` ở parent location chỉ là mô tả tuyến đi để hiển thị.
+- Chi phí xe/tàu/bay phải nhập bằng activity `transport`, thường là `pricingMode = per_person`.
+- Nếu có vé trẻ em riêng, nhập `childPrice`; nếu trẻ em không tính phí thì để 0.
 
 ---
 
@@ -141,18 +114,16 @@ Vé TE = 370.000 × 2 =   740.000đ
 Vé tham quan tổng   = 4.520.000đ
 ```
 
-> `location.adultPrice = 107.000đ` bị bỏ qua vì sub-locations đã có giá.
+> Parent location không còn là nguồn nhập vé. Nếu thiếu activity giá, hệ thống coi khoản đó là 0.
 
 ---
 
 ## Sơ đồ luồng tính vé
 
 ```
-location có subLocations?
-    ├─ Có → tính Σ sub.adultPrice (bỏ qua excluded subs)
-    │        ├─ Tổng > 0 → dùng tổng này ✓
-    │        └─ Tổng = 0 → fallback về location.adultPrice
-    └─ Không → dùng location.adultPrice
+activity sightseeing chưa bị bỏ qua?
+    ├─ Có → tính Σ sub.adultPrice / Σ sub.childPrice
+    └─ Không → 0
 ```
 
 ---

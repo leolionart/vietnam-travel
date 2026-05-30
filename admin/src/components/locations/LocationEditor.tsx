@@ -2,22 +2,9 @@ import { useState, useEffect } from 'react';
 import type { Location, LocationInput, SubLocation } from '../../types/index.js';
 import { api } from '../../api/client.js';
 import { CurrencyInput } from '../ui/CurrencyInput.js';
-import { TagInput } from '../ui/TagInput.js';
 import { ConfirmDialog } from '../ui/ConfirmDialog.js';
 import { PopConfirm } from '../ui/PopConfirm.js';
 import { SubLocationCalendarPlanner, type SubLocationSchedule } from './SubLocationCalendarPlanner.js';
-
-interface TripResult {
-    tripCode: string;
-    companyName: string;
-    companyRating: number;
-    departureTime: string;
-    priceOriginal: number;
-    priceDiscount: number;
-    availableSeats: number;
-    seatType: number;
-    seatTypeName: string;
-}
 
 interface Props {
     location: Location | null;
@@ -67,16 +54,40 @@ function durationBetweenInputs(arrive: string, depart: string): number | null {
     return Math.max(0, Math.round((departDate.getTime() - arriveDate.getTime()) / MS_PER_DAY));
 }
 
-const TRANSPORT_TYPES = [
-    { value: 'car', label: 'Ô tô / Taxi' },
-    { value: 'bus', label: 'Xe khách' },
-    { value: 'train', label: 'Tàu hỏa' },
-    { value: 'flight', label: 'Máy bay' },
-    { value: 'motorbike', label: 'Xe máy' },
-    { value: 'other', label: 'Khác' },
-];
+function activityCost(sub: SubLocation, adults: number, children: number): number {
+    const mode = sub.pricingMode || 'per_person';
+    const quantity = Number(sub.quantity ?? 1) || 0;
+    const surcharge = Number(sub.surcharge || 0);
+    if (mode === 'per_room') {
+        const capacity = Math.max(quantity || 2, 1);
+        const rooms = Math.max(Math.ceil(Math.max(adults + children, 1) / capacity), 1);
+        return (Number(sub.unitPrice || 0) * rooms) + (surcharge * children);
+    }
+    if (mode === 'per_group') {
+        return (Number(sub.unitPrice || 0) * Math.max(quantity, 1)) + surcharge;
+    }
+    return (Number(sub.adultPrice || 0) * adults) + (Number(sub.childPrice || 0) * children) + surcharge;
+}
 
-export function LocationEditor({ location, planSlug, onSave, onClose, previousProvince }: Props) {
+function activityDurationLabel(sub: Pick<SubLocation, 'durationDays' | 'durationMinutes'>): string {
+    if (sub.durationDays && sub.durationDays > 0) return `${sub.durationDays} ngày`;
+    return `${sub.durationMinutes} phút`;
+}
+
+function costSummary(subLocations: SubLocation[], adults: number, children: number) {
+    return subLocations.reduce((sum, sub) => {
+        const type = sub.activityType || 'sightseeing';
+        const cost = activityCost(sub, adults, children);
+        if (type === 'sightseeing') sum.sightseeing += cost;
+        else if (type === 'accommodation') sum.accommodation += cost;
+        else if (type === 'food') sum.food += cost;
+        else sum.other += cost;
+        sum.total += cost;
+        return sum;
+    }, { sightseeing: 0, accommodation: 0, food: 0, other: 0, total: 0 });
+}
+
+export function LocationEditor({ location, planSlug, onSave, onClose }: Props) {
     const [form, setForm] = useState<LocationInput>({});
     const [arriveInput, setArriveInput] = useState('');
     const [departInput, setDepartInput] = useState('');
@@ -103,13 +114,6 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
                 durationDays: location.duration,
                 transportType: location.transportType,
                 transportLabel: location.transport,
-                transportFare: location.transportFare,
-                accommodationName: location.accommodationName,
-                accommodationUrl: location.accommodationUrl,
-                adultPrice: location.adultPrice,
-                childPrice: location.childPrice,
-                stayCostPerNight: location.stayCostPerNight,
-                foodBudgetPerDay: location.foodBudgetPerDay,
                 adults: location.adults,
                 children: location.children,
                 highlight: location.highlight,
@@ -149,6 +153,7 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
             lat: String(sub.lat),
             lng: String(sub.lng),
             durationMinutes: String(sub.durationMinutes),
+            durationDays: String(sub.durationDays ?? 0),
             description: sub.description,
             activityType: sub.activityType ?? 'sightseeing',
             pricingMode: sub.pricingMode ?? 'per_person',
@@ -201,6 +206,7 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
             lat: Number(subForm.lat) || 0,
             lng: Number(subForm.lng) || 0,
             durationMinutes: Number(subForm.durationMinutes) || 60,
+            durationDays: Number(subForm.durationDays) || 0,
             description: subForm.description,
             activityType: subForm.activityType,
             pricingMode: subForm.pricingMode,
@@ -245,6 +251,15 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
             ...form,
             arriveAt: inputToMs(arriveInput),
             departAt: inputToMs(departInput),
+            transportFare: 0,
+            transportFareAdult: 0,
+            transportFareChild: 0,
+            accommodationName: '',
+            accommodationUrl: '',
+            adultPrice: 0,
+            childPrice: 0,
+            stayCostPerNight: 0,
+            foodBudgetPerDay: 0,
         };
 
         if (location && pendingCalendarOrder) {
@@ -284,9 +299,9 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
 
             <div className="flex-1 overflow-y-auto p-5">
                 <div className="grid grid-cols-2 gap-x-6 gap-y-5">
-                    {/* ── Cột trái: thông tin địa lý & mô tả ── */}
+                    {/* ── Cột trái: hồ sơ địa điểm ── */}
                     <div className="space-y-5">
-                        <Section title="Thông tin cơ bản">
+                        <Section title="Hồ sơ địa điểm">
                             <div className="grid grid-cols-2 gap-3">
                                 <Field label="Tên địa điểm *">
                                     <input type="text" value={form.name ?? ''} onChange={e => set('name', e.target.value)} className="input-field" placeholder="Hà Nội" />
@@ -311,20 +326,11 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
                                 <textarea rows={3} value={form.description ?? ''} onChange={e => set('description', e.target.value)} className="input-field resize-none" placeholder="Chi tiết về địa điểm..." />
                             </Field>
                         </Section>
-
-                        <Section title="Hoạt động & Ẩm thực">
-                            <Field label="Hoạt động nổi bật">
-                                <TagInput tags={form.activities ?? []} onChange={tags => set('activities', tags)} placeholder="Tràng An..." />
-                            </Field>
-                            <Field label="Ẩm thực nên thử">
-                                <TagInput tags={form.food ?? []} onChange={tags => set('food', tags)} placeholder="Cơm cháy..." />
-                            </Field>
-                        </Section>
                     </div>
 
-                    {/* ── Cột phải: thời gian, di chuyển, lưu trú, chi phí ── */}
+                    {/* ── Cột phải: thời gian và summary ── */}
                     <div className="space-y-5">
-                        <Section title="Thời gian">
+                        <Section title="Thời gian ở địa điểm">
                             <div className="grid grid-cols-3 gap-3">
                                 <Field label="Đến lúc">
                                     <input type="datetime-local" value={arriveInput} onChange={e => handleArriveChange(e.target.value)} className="input-field" />
@@ -332,62 +338,27 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
                                 <Field label="Rời lúc">
                                     <input type="datetime-local" value={departInput} onChange={e => handleDepartChange(e.target.value)} className="input-field" />
                                 </Field>
-                                <Field label="Số ngày">
+                                <Field label="Kéo dài (ngày)">
                                     <input type="number" min="0" value={form.durationDays ?? 0} onChange={e => handleDurationChange(e.target.value)} className="input-field" />
                                 </Field>
                             </div>
+                            <p className="text-[10px] text-slate-500">
+                                Chỉ dùng để xác định điểm dừng kéo dài bao lâu. Lưu trú, ăn uống, vui chơi và di chuyển nhập ở activity bên dưới.
+                            </p>
                         </Section>
 
-                        <Section title="Di chuyển">
+                        <Section title="Quy mô đoàn & summary chi phí">
                             <div className="grid grid-cols-2 gap-3">
-                                <Field label="Loại phương tiện">
-                                    <select value={form.transportType ?? 'car'} onChange={e => set('transportType', e.target.value)} className="input-field">
-                                        {TRANSPORT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                                    </select>
-                                </Field>
-                                <Field label="Vé xe / máy bay">
-                                    <CurrencyInput value={form.transportFare ?? 0} onChange={v => set('transportFare', v)} />
-                                </Field>
-                            </div>
-                            {previousProvince && form.province && form.province !== previousProvince && (
-                                <VexereButton from={previousProvince} to={form.province} arriveInput={arriveInput} />
-                            )}
-                        </Section>
-
-                        <Section title="Lưu trú">
-                            <div className="grid grid-cols-2 gap-3">
-                                <Field label="Tên chỗ ở">
-                                    <input type="text" value={form.accommodationName ?? ''} onChange={e => set('accommodationName', e.target.value)} className="input-field" placeholder="Khách sạn ABC" />
-                                </Field>
-                                <Field label="Giá / đêm">
-                                    <CurrencyInput value={form.stayCostPerNight ?? 0} onChange={v => set('stayCostPerNight', v)} />
-                                </Field>
-                            </div>
-                            <Field label="Link đặt phòng">
-                                <input type="url" value={form.accommodationUrl ?? ''} onChange={e => set('accommodationUrl', e.target.value)} className="input-field" placeholder="https://..." />
-                            </Field>
-                        </Section>
-
-                        <Section title="Chi phí">
-                            <div className="grid grid-cols-2 gap-3">
-                                <Field label="Giá người lớn">
-                                    <CurrencyInput value={form.adultPrice ?? 0} onChange={v => set('adultPrice', v)} />
-                                </Field>
-                                <Field label="Giá trẻ em">
-                                    <CurrencyInput value={form.childPrice ?? 0} onChange={v => set('childPrice', v)} />
-                                </Field>
                                 <Field label="Số người lớn">
                                     <input type="number" min="1" value={form.adults ?? 2} onChange={e => set('adults', Number(e.target.value))} className="input-field" />
                                 </Field>
                                 <Field label="Số trẻ em">
                                     <input type="number" min="0" value={form.children ?? 0} onChange={e => set('children', Number(e.target.value))} className="input-field" />
                                 </Field>
-                                <div className="col-span-2">
-                                    <Field label="Ăn uống / ngày">
-                                        <CurrencyInput value={form.foodBudgetPerDay ?? 0} onChange={v => set('foodBudgetPerDay', v)} />
-                                    </Field>
-                                </div>
                             </div>
+                            <CostSummaryPanel
+                                summary={costSummary(subLocations, Number(form.adults ?? 0), Number(form.children ?? 0))}
+                            />
                         </Section>
                     </div>
                 </div>
@@ -421,7 +392,7 @@ export function LocationEditor({ location, planSlug, onSave, onClose, previousPr
                                         >
                                             <span className="text-xs text-slate-300 font-medium">
                                                 <span className="text-slate-500 mr-2">{idx + 1}.</span>{sub.name}
-                                                <span className="text-slate-500 ml-2 text-[10px]">· {sub.durationMinutes} phút</span>
+                                                <span className="text-slate-500 ml-2 text-[10px]">· {activityDurationLabel(sub)}</span>
                                             </span>
                                             <div onClick={e => e.stopPropagation()}>
                                                 <PopConfirm
@@ -501,72 +472,32 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     );
 }
 
-// Days until a given date (negative = past)
-function daysUntil(d: Date): number {
-    return Math.round((d.getTime() - Date.now()) / 86400000);
+function CostSummaryPanel({ summary }: { summary: ReturnType<typeof costSummary> }) {
+    const total = summary.total;
+    const format = (value: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+    return (
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400">Tổng dự toán location</span>
+                <span className="font-bold text-white">{format(total)}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-[10px]">
+                <SummaryPill label="Vé tham quan" value={summary.sightseeing} />
+                <SummaryPill label="Lưu trú" value={summary.accommodation} />
+                <SummaryPill label="Ăn uống" value={summary.food} />
+                <SummaryPill label="Di chuyển/khác" value={summary.other} />
+            </div>
+            <p className="text-[10px] text-slate-500">Các khoản vé, lưu trú, ăn uống và di chuyển đều lấy từ activity.</p>
+        </div>
+    );
 }
 
-function VexereButton({ from, to, arriveInput }: { from: string; to: string; arriveInput: string }) {
-    const [minPrice, setMinPrice] = useState<number | null>(null);
-    const [vexereUrl, setVexereUrl] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        setMinPrice(null);
-        setVexereUrl(null);
-        if (!from || !to) return;
-
-        const d = arriveInput ? new Date(arriveInput) : null;
-        const refDate = (d && !Number.isNaN(d.getTime())) ? d : new Date();
-        const dateStr = `${refDate.getDate().toString().padStart(2, '0')}/${(refDate.getMonth() + 1).toString().padStart(2, '0')}/${refDate.getFullYear()}`;
-
-        // Always fetch deeplink
-        fetch(`/api/vexere-link?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&date=${encodeURIComponent(dateStr)}`)
-            .then(r => r.ok ? r.json() as Promise<{ url: string }> : Promise.reject())
-            .then(data => { if (data.url) setVexereUrl(data.url); })
-            .catch(() => {});
-
-        // Fetch price for any future date (Vexere sells tickets well in advance)
-        if (d && !Number.isNaN(d.getTime()) && daysUntil(d) >= 0) {
-            const isoDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-            setLoading(true);
-            fetch(`/api/vexere-link/trips?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&date=${isoDate}&sort=fare:asc&pagesize=1`)
-                .then(r => r.ok ? r.json() as Promise<{ trips: TripResult[] }> : Promise.reject())
-                .then(data => {
-                    const trip = data.trips?.[0];
-                    if (trip) setMinPrice(trip.priceDiscount || trip.priceOriginal);
-                })
-                .catch(() => {})
-                .finally(() => setLoading(false));
-        }
-    }, [from, to, arriveInput]);
-
-    if (!from || !to) return null;
-
-    const priceNode = loading
-        ? <span className="text-slate-500">Đang tải giá...</span>
-        : minPrice != null
-            ? <span className="text-emerald-400 font-semibold">từ {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(minPrice)}</span>
-            : <span className="text-slate-600">Chưa tìm thấy vé cho ngày này</span>;
-
+function SummaryPill({ label, value }: { label: string; value: number }) {
+    const format = (amount: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
     return (
-        <div className="flex items-center gap-3 mt-1 p-2.5 bg-amber-500/5 border border-amber-500/20 rounded-xl">
-            <div className="flex-1 min-w-0">
-                <p className="text-[11px] text-slate-400 font-medium">{from} → {to}</p>
-                <p className="text-[11px] mt-0.5">{priceNode}</p>
-            </div>
-            {vexereUrl ? (
-                <a
-                    href={vexereUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-none px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap"
-                >
-                    Xem vé →
-                </a>
-            ) : (
-                <span className="flex-none px-3 py-1.5 bg-white/5 text-slate-600 text-xs rounded-lg whitespace-nowrap">Vexere</span>
-            )}
+        <div className="rounded-lg bg-white/5 px-2 py-1.5">
+            <p className="text-slate-500">{label}</p>
+            <p className="font-bold text-slate-200">{format(value)}</p>
         </div>
     );
 }
@@ -727,6 +658,7 @@ interface SubFormState {
     lat: string;
     lng: string;
     durationMinutes: string;
+    durationDays: string;
     description: string;
     activityType: 'sightseeing' | 'accommodation' | 'food' | 'transport' | 'other';
     pricingMode: 'per_person' | 'per_room' | 'per_group';
@@ -743,6 +675,7 @@ function emptySubFormState(): SubFormState {
         lat: '',
         lng: '',
         durationMinutes: '60',
+        durationDays: '0',
         description: '',
         activityType: 'sightseeing',
         pricingMode: 'per_person',
@@ -780,6 +713,10 @@ function SubForm({ form, setForm }: { form: SubFormState; setForm: React.Dispatc
             <div>
                 <label className="block text-[10px] text-slate-500 mb-1">Thời lượng (phút)</label>
                 <input type="number" min="1" value={form.durationMinutes} onChange={e => setForm(f => ({ ...f, durationMinutes: e.target.value }))} className="input-field" />
+            </div>
+            <div>
+                <label className="block text-[10px] text-slate-500 mb-1">Kéo dài nhiều ngày</label>
+                <input type="number" min="0" step="0.5" value={form.durationDays} onChange={e => setForm(f => ({ ...f, durationDays: e.target.value }))} className="input-field" placeholder="0 nếu chỉ trong ngày" />
             </div>
             <div className="grid grid-cols-2 gap-2">
                 <div>

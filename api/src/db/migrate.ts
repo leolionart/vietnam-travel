@@ -297,7 +297,8 @@ function patchActivityPricing(): void {
             child_price = ?,
             unit_price = ?,
             quantity = ?,
-            surcharge = ?
+            surcharge = ?,
+            duration_days = ?
         WHERE name = ?
           AND location_id = (
               SELECT l.id
@@ -310,35 +311,99 @@ function patchActivityPricing(): void {
     `);
 
     const pricing = [
-        ['Nghệ An', 'VinWonders Cửa Hội – Công viên nước', 'sightseeing', 'per_person', 240000, 240000, 0, 1, 0],
-        ['Nghệ An', 'Núi Quyết – Đền Quang Trung', 'sightseeing', 'per_person', 0, 0, 0, 1, 0],
-        ['Nghệ An', 'Đảo Ngư (Hòn Ngư – Song Ngư)', 'sightseeing', 'per_person', 250000, 140000, 0, 1, 0],
-        ['Nghệ An', 'Đền Cờn', 'sightseeing', 'per_person', 0, 0, 0, 1, 0],
-        ['Nghệ An', 'Đảo Chè Thanh Chương', 'sightseeing', 'per_person', 50000, 50000, 0, 1, 0],
-        ['Nghệ An', 'Suối Nước Mọc (Tạ Bó – Yên Khê)', 'sightseeing', 'per_person', 0, 0, 0, 1, 0],
-        ['Nghệ An', 'Bãi Lữ', 'sightseeing', 'per_person', 0, 0, 0, 1, 0],
-        ['Nghệ An', 'Đảo Chè Nghĩa Đàn – Phủ Quỳ', 'sightseeing', 'per_person', 0, 0, 0, 1, 0],
-        ['Nghệ An', 'Suối cá Nghĩa Đàn', 'sightseeing', 'per_person', 20000, 10000, 0, 1, 0],
-        ['Ninh Bình', 'Trang An River View Homestay – phòng 2 người (03-06/07)', 'accommodation', 'per_room', 0, 0, 2550000, 2, 0],
-        ['Ninh Bình', 'Khu DL Sinh thái Tràng An', 'sightseeing', 'per_person', 300000, 150000, 0, 1, 0],
-        ['Ninh Bình', 'Tam Cốc – Bích Động', 'sightseeing', 'per_person', 250000, 120000, 0, 1, 0],
-        ['Ninh Bình', 'Hang Múa', 'sightseeing', 'per_person', 150000, 150000, 0, 1, 0],
-        ['Ninh Bình', 'Chùa Bái Đính', 'sightseeing', 'per_person', 150000, 100000, 0, 1, 0],
-        ['Ninh Bình', 'Cố đô Hoa Lư', 'sightseeing', 'per_person', 20000, 10000, 0, 1, 0],
-        ['Ninh Bình', 'Đầm Vân Long', 'sightseeing', 'per_person', 100000, 50000, 0, 1, 0],
-        ['Hạ Long', 'Khách sạn Bãi Cháy – phòng 2 người (06, 08-09/07)', 'accommodation', 'per_room', 0, 0, 4500000, 2, 0],
-        ['Hạ Long', 'Bãi tắm Bãi Cháy – nghỉ nhẹ ven biển', 'sightseeing', 'per_person', 0, 0, 0, 1, 0],
-        ['Hạ Long', 'Du thuyền ngủ đêm trên Vịnh Hạ Long', 'accommodation', 'per_room', 0, 0, 7150000, 2, 3150000],
-        ['Hạ Long', 'Sun World Hạ Long – Cáp treo Nữ Hoàng', 'sightseeing', 'per_person', 380000, 280000, 0, 1, 0],
-        ['Hà Nội', 'Hồ Gươm – Đền Ngọc Sơn', 'sightseeing', 'per_person', 50000, 0, 0, 1, 0],
-        ['Hà Nội', 'Văn Miếu – Quốc Tử Giám', 'sightseeing', 'per_person', 70000, 0, 0, 1, 0],
-        ['Hà Nội', 'Lăng Chủ tịch Hồ Chí Minh', 'sightseeing', 'per_person', 0, 0, 0, 1, 0],
+        ['Nghệ An', 'VinWonders Cửa Hội – Công viên nước', 'sightseeing', 'per_person', 240000, 240000, 0, 1, 0, 0],
+        ['Nghệ An', 'Núi Quyết – Đền Quang Trung', 'sightseeing', 'per_person', 0, 0, 0, 1, 0, 0],
+        ['Nghệ An', 'Đảo Ngư (Hòn Ngư – Song Ngư)', 'sightseeing', 'per_person', 250000, 140000, 0, 1, 0, 0],
+        ['Nghệ An', 'Đền Cờn', 'sightseeing', 'per_person', 0, 0, 0, 1, 0, 0],
+        ['Nghệ An', 'Đảo Chè Thanh Chương', 'sightseeing', 'per_person', 50000, 50000, 0, 1, 0, 0],
+        ['Nghệ An', 'Suối Nước Mọc (Tạ Bó – Yên Khê)', 'sightseeing', 'per_person', 0, 0, 0, 1, 0, 0],
+        ['Nghệ An', 'Bãi Lữ', 'sightseeing', 'per_person', 0, 0, 0, 1, 0, 0],
+        ['Nghệ An', 'Đảo Chè Nghĩa Đàn – Phủ Quỳ', 'sightseeing', 'per_person', 0, 0, 0, 1, 0, 0],
+        ['Nghệ An', 'Suối cá Nghĩa Đàn', 'sightseeing', 'per_person', 20000, 10000, 0, 1, 0, 0],
+        ['Ninh Bình', 'Trang An River View Homestay – phòng 2 người (03-06/07)', 'accommodation', 'per_room', 0, 0, 2550000, 2, 0, 4],
+        ['Ninh Bình', 'Khu DL Sinh thái Tràng An', 'sightseeing', 'per_person', 300000, 150000, 0, 1, 0, 0],
+        ['Ninh Bình', 'Tam Cốc – Bích Động', 'sightseeing', 'per_person', 250000, 120000, 0, 1, 0, 0],
+        ['Ninh Bình', 'Hang Múa', 'sightseeing', 'per_person', 150000, 150000, 0, 1, 0, 0],
+        ['Ninh Bình', 'Chùa Bái Đính', 'sightseeing', 'per_person', 150000, 100000, 0, 1, 0, 0],
+        ['Ninh Bình', 'Cố đô Hoa Lư', 'sightseeing', 'per_person', 20000, 10000, 0, 1, 0, 0],
+        ['Ninh Bình', 'Đầm Vân Long', 'sightseeing', 'per_person', 100000, 50000, 0, 1, 0, 0],
+        ['Hạ Long', 'Khách sạn Bãi Cháy – phòng 2 người (06, 08-09/07)', 'accommodation', 'per_room', 0, 0, 4500000, 2, 0, 4],
+        ['Hạ Long', 'Bãi tắm Bãi Cháy – nghỉ nhẹ ven biển', 'sightseeing', 'per_person', 0, 0, 0, 1, 0, 0],
+        ['Hạ Long', 'Du thuyền ngủ đêm trên Vịnh Hạ Long', 'accommodation', 'per_room', 0, 0, 7150000, 2, 3150000, 2],
+        ['Hạ Long', 'Sun World Hạ Long – Cáp treo Nữ Hoàng', 'sightseeing', 'per_person', 380000, 280000, 0, 1, 0, 0],
+        ['Hà Nội', 'Hồ Gươm – Đền Ngọc Sơn', 'sightseeing', 'per_person', 50000, 0, 0, 1, 0, 0],
+        ['Hà Nội', 'Văn Miếu – Quốc Tử Giám', 'sightseeing', 'per_person', 70000, 0, 0, 1, 0, 0],
+        ['Hà Nội', 'Lăng Chủ tịch Hồ Chí Minh', 'sightseeing', 'per_person', 0, 0, 0, 1, 0, 0],
     ] as const;
 
     const patch = db.transaction(() => {
-        for (const [locationName, name, activityType, pricingMode, adultPrice, childPrice, unitPrice, quantity, surcharge] of pricing) {
-            update.run(activityType, pricingMode, adultPrice, childPrice, unitPrice, quantity, surcharge, name, planSlug, locationName);
+        for (const [locationName, name, activityType, pricingMode, adultPrice, childPrice, unitPrice, quantity, surcharge, durationDays] of pricing) {
+            update.run(activityType, pricingMode, adultPrice, childPrice, unitPrice, quantity, surcharge, durationDays, name, planSlug, locationName);
         }
+
+        const insertTransport = db.prepare(`
+            INSERT INTO sub_locations (
+                location_id, sort_order, name, lat, lng, duration_minutes, duration_days,
+                scheduled_date, scheduled_period, description,
+                activity_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price
+            )
+            SELECT l.id, ?, ?, l.lat, l.lng, ?, 0, '', '', ?, 'transport', 'per_person', 0, 1, 0, ?, ?
+            FROM locations l
+            JOIN plans p ON p.id = l.plan_id
+            WHERE p.slug = ? AND l.name = ?
+              AND NOT EXISTS (
+                  SELECT 1 FROM sub_locations s
+                  WHERE s.location_id = l.id AND s.name = ?
+              )
+        `);
+
+        const transportPricing = [
+            ['Nghệ An', 'Di chuyển: Hà Nội -> Nghệ An', 360, 'Chi phí di chuyển từ Hà Nội/Nội Bài vào Nghệ An.', 150000, 0],
+            ['Ninh Bình', 'Di chuyển: Nghệ An -> Ninh Bình', 300, 'Chi phí di chuyển từ Nghệ An đến Ninh Bình.', 480000, 0],
+            ['Hạ Long', 'Di chuyển: Ninh Bình -> Hạ Long', 240, 'Chi phí di chuyển từ Ninh Bình đến Hạ Long.', 210000, 0],
+            ['Hà Nội', 'Di chuyển: Hạ Long -> Hà Nội', 240, 'Chi phí di chuyển từ Hạ Long về Hà Nội.', 500000, 0],
+        ] as const;
+
+        for (const [locationName, name, durationMinutes, description, adultPrice, childPrice] of transportPricing) {
+            insertTransport.run(900, name, durationMinutes, description, adultPrice, childPrice, planSlug, locationName, name);
+        }
+
+        const updateSchedule = db.prepare(`
+            UPDATE sub_locations
+            SET scheduled_date = ?,
+                scheduled_period = ?
+            WHERE name = ?
+              AND location_id = (
+                  SELECT l.id
+                  FROM locations l
+                  JOIN plans p ON p.id = l.plan_id
+                  WHERE p.slug = ? AND l.name = ?
+              )
+        `);
+        const scheduleSeeds = [
+            ['Ninh Bình', 'Trang An River View Homestay – phòng 2 người (03-06/07)', '2026-07-03', 'afternoon'],
+            ['Hạ Long', 'Khách sạn Bãi Cháy – phòng 2 người (06, 08-09/07)', '2026-07-06', 'afternoon'],
+            ['Hạ Long', 'Du thuyền ngủ đêm trên Vịnh Hạ Long', '2026-07-07', 'morning'],
+        ] as const;
+        for (const [locationName, name, scheduledDate, scheduledPeriod] of scheduleSeeds) {
+            updateSchedule.run(scheduledDate, scheduledPeriod, name, planSlug, locationName);
+        }
+
+        db.prepare(`
+            UPDATE locations
+            SET accommodation_name = '',
+                accommodation_url = '',
+                accommodation_address = '',
+                transport_fare = 0,
+                transport_fare_adult = 0,
+                transport_fare_child = 0,
+                adult_price = 0,
+                child_price = 0,
+                stay_cost_per_night = 0,
+                food_budget_per_day = 0,
+                updated_at = ?
+            WHERE plan_id = (SELECT id FROM plans WHERE slug = ?)
+        `).run(Date.now(), planSlug);
     });
 
     patch();
@@ -355,6 +420,7 @@ export function runMigration(): void {
         'ALTER TABLE plans ADD COLUMN session_id TEXT',
         'ALTER TABLE sub_locations ADD COLUMN scheduled_date TEXT NOT NULL DEFAULT \'\'',
         'ALTER TABLE sub_locations ADD COLUMN scheduled_period TEXT NOT NULL DEFAULT \'\'',
+        'ALTER TABLE sub_locations ADD COLUMN duration_days REAL NOT NULL DEFAULT 0',
         'ALTER TABLE sub_locations ADD COLUMN activity_type TEXT NOT NULL DEFAULT \'sightseeing\'',
         'ALTER TABLE sub_locations ADD COLUMN pricing_mode TEXT NOT NULL DEFAULT \'per_person\'',
         'ALTER TABLE sub_locations ADD COLUMN unit_price INTEGER NOT NULL DEFAULT 0',

@@ -1,5 +1,6 @@
 .mcp.json
 .playwright-mcp/
+.attachments/
 playwright-*.png
 playwright-*.jpeg
 node_modules/

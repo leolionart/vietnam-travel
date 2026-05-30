@@ -4,6 +4,7 @@ export interface SubLocation {
     lat: number;
     lng: number;
     durationMinutes: number;
+    durationDays: number;
     scheduledDate: string;
     scheduledPeriod: 'morning' | 'afternoon' | '';
     description: string;
@@ -62,6 +63,8 @@ export interface LocationInput {
     transportType?: string;
     transportLabel?: string;
     transportFare?: number;
+    transportFareAdult?: number;
+    transportFareChild?: number;
     accommodationName?: string;
     accommodationUrl?: string;
     adultPrice?: number;

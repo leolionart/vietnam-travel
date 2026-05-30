@@ -10,6 +10,7 @@ interface DbSubLocation {
     lat: number;
     lng: number;
     duration_minutes: number;
+    duration_days: number;
     scheduled_date: string;
     scheduled_period: string;
     description: string;
@@ -70,6 +71,7 @@ function subToPublic(sub: DbSubLocation) {
         lat: sub.lat,
         lng: sub.lng,
         durationMinutes: sub.duration_minutes,
+        durationDays: sub.duration_days || 0,
         scheduledDate: sub.scheduled_date,
         scheduledPeriod: sub.scheduled_period,
         description: sub.description,

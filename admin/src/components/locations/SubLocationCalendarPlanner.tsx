@@ -39,6 +39,14 @@ interface CalendarDay {
 
 type Assignments = Record<string, number[]>;
 
+interface MultiDayActivity {
+    sub: SubLocation;
+    dayIndex: number;
+    totalDays: number;
+    startsToday: boolean;
+    endsToday: boolean;
+}
+
 function parseDateRange(dateRange: string): { start: Date | null; end: Date | null } {
     const [startPart, endPart] = String(dateRange || '').split(' - ');
     const fallbackYear = Number(startPart?.match(/\b(\d{4})\b/)?.[1] || endPart?.match(/\b(\d{4})\b/)?.[1] || new Date().getFullYear());
@@ -160,6 +168,38 @@ function buildOrderedSchedule(assignments: Assignments, slots: VisitSlot[], subL
     return { orderedIds: [...orderedIds, ...missingIds], schedules };
 }
 
+function assignedSlotBySub(assignments: Assignments, slots: VisitSlot[]): Map<number, VisitSlot> {
+    const slotById = new Map(slots.map(slot => [slot.id, slot]));
+    const result = new Map<number, VisitSlot>();
+    for (const [slotId, ids] of Object.entries(assignments)) {
+        const slot = slotById.get(slotId);
+        if (!slot) continue;
+        ids.forEach(id => result.set(id, slot));
+    }
+    return result;
+}
+
+function multiDayActivitiesForDay(day: CalendarDay, subLocations: SubLocation[], assignedSlots: Map<number, VisitSlot>): MultiDayActivity[] {
+    return subLocations
+        .map(sub => {
+            const totalDays = Math.ceil(Number(sub.durationDays || 0));
+            const startSlot = assignedSlots.get(sub.id);
+            if (!startSlot || totalDays <= 1) return null;
+            const start = normalizeDay(startSlot.date);
+            const current = normalizeDay(day.date);
+            const dayIndex = Math.round((current.getTime() - start.getTime()) / 86400000);
+            if (dayIndex < 0 || dayIndex >= totalDays) return null;
+            return {
+                sub,
+                dayIndex,
+                totalDays,
+                startsToday: dayIndex === 0,
+                endsToday: dayIndex === totalDays - 1,
+            };
+        })
+        .filter(Boolean) as MultiDayActivity[];
+}
+
 function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
     const toRad = (n: number) => n * Math.PI / 180;
     const lat1 = toRad(a.lat);
@@ -192,6 +232,7 @@ export function SubLocationCalendarPlanner({ location, subLocations, onScheduleC
     const subById = useMemo(() => new Map(subLocations.map(sub => [sub.id, sub])), [subLocations]);
     const proximity = useMemo(() => buildProximity(subLocations), [subLocations]);
     const [assignments, setAssignments] = useState<Assignments>(() => buildInitialAssignments(slots, subLocations));
+    const assignedSlots = useMemo(() => assignedSlotBySub(assignments, slots), [assignments, slots]);
 
     useEffect(() => {
         setAssignments(buildInitialAssignments(slots, subLocations));
@@ -239,6 +280,7 @@ export function SubLocationCalendarPlanner({ location, subLocations, onScheduleC
                                 <span className="text-xs font-bold text-white">{formatDay(day.date)}</span>
                                 <span className="text-[10px] text-slate-500">{day.slots.some(slot => !slot.disabled) ? 'Có thể xếp' : 'Không xếp tham quan'}</span>
                             </div>
+                            <MultiDayActivityBars items={multiDayActivitiesForDay(day, subLocations, assignedSlots)} />
                             <div className="grid grid-cols-2 gap-2">
                                 {day.slots.map(slot => (
                                     <CalendarSlot
@@ -253,6 +295,29 @@ export function SubLocationCalendarPlanner({ location, subLocations, onScheduleC
                     ))}
                 </div>
             </DndContext>
+        </div>
+    );
+}
+
+function MultiDayActivityBars({ items }: { items: MultiDayActivity[] }) {
+    if (!items.length) return null;
+
+    return (
+        <div className="mb-2 space-y-1">
+            {items.map(item => (
+                <div
+                    key={item.sub.id}
+                    className={`border px-2 py-1.5 text-[10px] font-semibold text-violet-100 bg-violet-500/15 border-violet-400/25 ${
+                        item.startsToday ? 'rounded-l-lg' : 'rounded-l-sm border-l-violet-400/10'
+                    } ${item.endsToday ? 'rounded-r-lg' : 'rounded-r-sm border-r-violet-400/10'}`}
+                    title={`${item.sub.name} · ngày ${item.dayIndex + 1}/${item.totalDays}`}
+                >
+                    <div className="flex items-center justify-between gap-2">
+                        <span className="truncate">{item.sub.name}</span>
+                        <span className="flex-none text-violet-200/75">Ngày {item.dayIndex + 1}/{item.totalDays}</span>
+                    </div>
+                </div>
+            ))}
         </div>
     );
 }

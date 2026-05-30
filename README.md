@@ -253,6 +253,49 @@ Each stop on your itinerary gets its own card on a vertical timeline, connected 
 
 Plans created via MCP are session-isolated — they don't appear in the main site listing and are only accessible via your unique share link.
 
+### Admin/prod editing through MCP
+
+MCP supports two editing modes:
+
+- Without an admin password, write tools create and edit session plans only. These are shared by `?session=...`.
+- With an admin password, write tools can create and edit the canonical prod/admin plans by slug. Pass `adminPassword` in the tool arguments for that call, or use the stdio tool `set_admin_password` once for the current MCP process.
+
+Do not store the admin password in checked-in MCP config. For local stdio MCP, prefer environment variables:
+
+```json
+{
+  "mcpServers": {
+    "vietnam-roadtrips-prod": {
+      "command": "npx",
+      "args": ["tsx", "/absolute/path/to/vietnam-travel/api/src/mcp.ts"],
+      "env": {
+        "REMOTE_API_URL": "https://trips.naai.studio",
+        "ADMIN_PASSWORD": "<set outside git>"
+      }
+    }
+  }
+}
+```
+
+Activity cost data belongs in `sub_locations`: use `activityType` (`sightseeing`, `accommodation`, `food`, `transport`, `other`) plus `pricingMode` (`per_person`, `per_room`, `per_group`), `unitPrice`, `quantity`, `surcharge`, `adultPrice`, `childPrice`, and `durationDays`. Location-level cost fields are retained only as legacy/summary fields.
+
+## CLI
+
+The API package includes a JSON-first CLI for Codex or other automation.
+
+```bash
+# Read public data
+npm --prefix api run cli -- list-plans --api-url https://trips.naai.studio
+npm --prefix api run cli -- show-plan ha-noi-nghe-an-ninh-binh-ha-long-ha-noi --api-url https://trips.naai.studio
+
+# Write prod/admin data. Keep the password in the shell environment, not in files.
+TRAVEL_ADMIN_PASSWORD=... npm --prefix api run cli -- add-activity ha-long 12 \
+  --api-url https://trips.naai.studio \
+  --json '{"name":"Khach san","activityType":"accommodation","pricingMode":"per_room","unitPrice":900000,"quantity":1,"surcharge":0,"durationDays":2}'
+```
+
+Core CLI commands: `create-plan`, `update-plan`, `delete-plan`, `add-location`, `update-location`, `delete-location`, `reorder-locations`, `add-activity`, `update-activity`, `delete-activity`, `reorder-activities`, `get-plan`, and `show-plan`.
+
 ---
 
 ## Self-hosting

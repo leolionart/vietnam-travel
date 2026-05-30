@@ -6,7 +6,8 @@
     "dev": "DOTENV_CONFIG_PATH=../.env tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "mcp": "tsx src/mcp.ts"
+    "mcp": "tsx src/mcp.ts",
+    "cli": "tsx src/cli.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",

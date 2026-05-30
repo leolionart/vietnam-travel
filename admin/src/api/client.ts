@@ -91,13 +91,13 @@ export const api = {
         return request<{ url: string }>(`/vexere-link?${params}`);
     },
 
-    addSubLocation: (slug: string, locationId: number, data: { name: string; lat: number; lng: number; durationMinutes: number; scheduledDate?: string; scheduledPeriod?: string; description: string; activityType?: string; pricingMode?: string; unitPrice?: number; quantity?: number; surcharge?: number; adultPrice: number; childPrice: number }) =>
+    addSubLocation: (slug: string, locationId: number, data: { name: string; lat: number; lng: number; durationMinutes: number; durationDays?: number; scheduledDate?: string; scheduledPeriod?: string; description: string; activityType?: string; pricingMode?: string; unitPrice?: number; quantity?: number; surcharge?: number; adultPrice: number; childPrice: number }) =>
         request<{ id: number }>(`/plans/${slug}/locations/${locationId}/sub-locations`, {
             method: 'POST',
             body: JSON.stringify(data),
         }),
 
-    updateSubLocation: (slug: string, locationId: number, subId: number, data: Partial<{ name: string; lat: number; lng: number; durationMinutes: number; scheduledDate: string; scheduledPeriod: string; description: string; sortOrder: number; activityType: string; pricingMode: string; unitPrice: number; quantity: number; surcharge: number; adultPrice: number; childPrice: number }>) =>
+    updateSubLocation: (slug: string, locationId: number, subId: number, data: Partial<{ name: string; lat: number; lng: number; durationMinutes: number; durationDays: number; scheduledDate: string; scheduledPeriod: string; description: string; sortOrder: number; activityType: string; pricingMode: string; unitPrice: number; quantity: number; surcharge: number; adultPrice: number; childPrice: number }>) =>
         request<{ ok: boolean }>(`/plans/${slug}/locations/${locationId}/sub-locations/${subId}`, {
             method: 'PUT',
             body: JSON.stringify(data),
