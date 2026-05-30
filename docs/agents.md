@@ -165,29 +165,35 @@ GET    /api/plans                            → [{ slug, name, dateRange }]
 GET    /api/plans/:slug                      → { slug, name, dateRange, locations[] }
 POST   /api/plans                      🔒   create plan
 PUT    /api/plans/:slug                🔒   update plan metadata
+PATCH  /api/plans/:slug                🔒   partial update, including manual dateRange
 
 GET    /api/plans/:slug/locations            → locations[]
 POST   /api/plans/:slug/locations      🔒   create location
 PUT    /api/plans/:slug/locations/:id  🔒   update location
+PATCH  /api/plans/:slug/locations/:id  🔒   partial update location dates/details
 DELETE /api/plans/:slug/locations/:id  🔒   delete location
 PATCH  /api/plans/:slug/locations/reorder 🔒
 
 GET    /api/plans/:slug/locations/:id/sub-locations
 POST   /api/plans/:slug/locations/:id/sub-locations   🔒
 PUT    /api/plans/:slug/locations/:id/sub-locations/:sid 🔒
+PATCH  /api/plans/:slug/locations/:id/sub-locations/:sid 🔒
 DELETE /api/plans/:slug/locations/:id/sub-locations/:sid 🔒
 
 GET    /api/plans/:slug/activities
 POST   /api/plans/:slug/activities                  🔒
 PUT    /api/plans/:slug/activities/:activityId      🔒
+PATCH  /api/plans/:slug/activities/:activityId      🔒
 DELETE /api/plans/:slug/activities/:activityId      🔒
 GET    /api/sub-locations?planSlug=...
 POST   /api/sub-locations                           🔒
 PUT    /api/sub-locations/:activityId               🔒
+PATCH  /api/sub-locations/:activityId               🔒
 DELETE /api/sub-locations/:activityId               🔒
 GET    /api/admin/activities?planSlug=...
 POST   /api/admin/activities                        🔒
 PUT    /api/admin/activities/:activityId            🔒
+PATCH  /api/admin/activities/:activityId            🔒
 DELETE /api/admin/activities/:activityId            🔒
 
 GET    /api/vexere-link?from=X&to=Y&date=YYYY-MM-DD

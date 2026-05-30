@@ -152,6 +152,7 @@ const TOOL_DEFINITIONS = [
                 sessionId: { type: 'string' },
                 slug: { type: 'string', description: 'Slug hiện tại' },
                 name: { type: 'string' },
+                dateRange: { type: 'string' },
                 newSlug: { type: 'string', description: 'Slug mới nếu cần đổi' },
                 adminPassword: { type: 'string', description: 'Admin password để chỉnh plan prod/admin thay vì chỉ session plan' },
             },
@@ -392,13 +393,14 @@ function buildServer(): Server {
                     const ref = getEditablePlanRef(a);
                     if (!ref) return err('Plan not found or admin password missing. Provide session shareUrl/sessionId, or adminPassword with slug/planSlug.');
                     if (!ref.sessionId && ref.isAdmin) {
-                        const plan = updatePlan(ref.slug, { name: a.name as string | undefined, slug: a.newSlug as string | undefined });
+                        const plan = updatePlan(ref.slug, { name: a.name as string | undefined, slug: a.newSlug as string | undefined, dateRange: a.dateRange as string | undefined });
                         if (!plan) return err(`Plan "${ref.slug}" not found`);
                         return ok({ ...plan, shareUrl: `${APP_URL}/?slug=${plan.slug}` });
                     }
                     const db = getDb();
                     if (a.name !== undefined) db.prepare('UPDATE plans SET name = ?, updated_at = ? WHERE id = ?').run(a.name, Date.now(), ref.id);
                     if (a.newSlug !== undefined) db.prepare('UPDATE plans SET slug = ?, updated_at = ? WHERE id = ?').run(a.newSlug, Date.now(), ref.id);
+                    if (a.dateRange !== undefined) db.prepare('UPDATE plans SET date_range = ?, updated_at = ? WHERE id = ?').run(a.dateRange, Date.now(), ref.id);
                     return ok(planPayload({ ...ref, slug: (a.newSlug as string | undefined) ?? ref.slug }));
                 }
 

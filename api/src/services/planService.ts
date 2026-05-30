@@ -230,7 +230,7 @@ export function getPlanBySessionId(sessionId: string) {
     };
 }
 
-export function updatePlan(slug: string, data: { name?: string; slug?: string }) {
+export function updatePlan(slug: string, data: { name?: string; slug?: string; dateRange?: string }) {
     const db = getDb();
     const plan = db.prepare('SELECT * FROM plans WHERE slug = ?').get(slug) as DbPlan | undefined;
     if (!plan) return null;
@@ -242,6 +242,10 @@ export function updatePlan(slug: string, data: { name?: string; slug?: string })
     if (data.slug !== undefined && data.slug !== slug) {
         db.prepare('UPDATE plans SET slug = ?, updated_at = ? WHERE id = ?')
             .run(data.slug, Date.now(), plan.id);
+    }
+    if (data.dateRange !== undefined) {
+        db.prepare('UPDATE plans SET date_range = ?, updated_at = ? WHERE id = ?')
+            .run(data.dateRange, Date.now(), plan.id);
     }
 
     const newSlug = data.slug ?? slug;

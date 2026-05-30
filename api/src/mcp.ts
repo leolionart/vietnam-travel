@@ -76,7 +76,7 @@ let localMode: {
     listPlans: () => unknown;
     getPlanBySlug: (slug: string) => unknown;
     createPlan: (d: { slug: string; name: string; dateRange?: string }) => unknown;
-    updatePlan: (slug: string, d: { name?: string; slug?: string }) => unknown;
+    updatePlan: (slug: string, d: { name?: string; slug?: string; dateRange?: string }) => unknown;
     deletePlan: (slug: string) => boolean;
     addLocation: (planId: number, input: Record<string, unknown>) => number;
     updateLocation: (planId: number, id: number, input: Record<string, unknown>) => boolean;
@@ -183,6 +183,7 @@ const TOOL_DEFINITIONS = [
             properties: {
                 slug: { type: 'string', description: 'Slug hiện tại' },
                 name: { type: 'string' },
+                dateRange: { type: 'string' },
                 newSlug: { type: 'string', description: 'Đổi slug mới nếu cần' },
             },
         },
@@ -441,7 +442,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 }
 
                 case 'update_plan':
-                    return ok(await client.put(`/api/plans/${slug}`, stripMcpMeta({ name: args.name, slug: args.newSlug })));
+                    return ok(await client.put(`/api/plans/${slug}`, stripMcpMeta({ name: args.name, slug: args.newSlug, dateRange: args.dateRange })));
 
                 case 'delete_plan':
                     return ok(await client.del(`/api/plans/${slug}`));
@@ -500,7 +501,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 return ok(L.createPlan({ slug: args.slug as string, name: args.name as string, dateRange: args.dateRange as string | undefined }));
 
             case 'update_plan': {
-                const plan = L.updatePlan(args.slug as string, { name: args.name as string | undefined, slug: args.newSlug as string | undefined });
+                const plan = L.updatePlan(args.slug as string, { name: args.name as string | undefined, slug: args.newSlug as string | undefined, dateRange: args.dateRange as string | undefined });
                 if (!plan) return err(`Plan "${args.slug}" not found`);
                 return ok(plan);
             }

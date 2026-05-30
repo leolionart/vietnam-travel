@@ -54,7 +54,17 @@ router.post('/', requireAuth, (req, res) => {
 
 // PUT /api/plans/:slug
 router.put('/:slug', requireAuth, (req, res) => {
-    const plan = updatePlan(req.params.slug, req.body as { name?: string; slug?: string });
+    const plan = updatePlan(req.params.slug, req.body as { name?: string; slug?: string; dateRange?: string });
+    if (!plan) {
+        res.status(404).json({ error: 'Plan not found' });
+        return;
+    }
+    res.json(plan);
+});
+
+// PATCH /api/plans/:slug
+router.patch('/:slug', requireAuth, (req, res) => {
+    const plan = updatePlan(req.params.slug, req.body as { name?: string; slug?: string; dateRange?: string });
     if (!plan) {
         res.status(404).json({ error: 'Plan not found' });
         return;
@@ -93,6 +103,21 @@ router.post('/:slug/locations', requireAuth, (req, res) => {
 
 // PUT /api/plans/:slug/locations/:id
 router.put('/:slug/locations/:id', requireAuth, (req, res) => {
+    const planId = getPlanIdBySlug(req.params.slug);
+    if (!planId) {
+        res.status(404).json({ error: 'Plan not found' });
+        return;
+    }
+    const ok = updateLocation(planId, Number(req.params.id), req.body);
+    if (!ok) {
+        res.status(404).json({ error: 'Location not found' });
+        return;
+    }
+    res.json(getPlanBySlug(req.params.slug));
+});
+
+// PATCH /api/plans/:slug/locations/:id
+router.patch('/:slug/locations/:id', requireAuth, (req, res) => {
     const planId = getPlanIdBySlug(req.params.slug);
     if (!planId) {
         res.status(404).json({ error: 'Plan not found' });
@@ -168,6 +193,49 @@ router.post('/:slug/locations/:id/sub-locations', requireAuth, (req, res) => {
 
 // PUT /api/plans/:slug/locations/:id/sub-locations/:subId
 router.put('/:slug/locations/:id/sub-locations/:subId', requireAuth, (req, res) => {
+    const planId = getPlanIdBySlug(req.params.slug);
+    if (!planId) { res.status(404).json({ error: 'Plan not found' }); return; }
+    const locationId = Number(req.params.id);
+    if (!getLocationForPlan(planId, locationId)) { res.status(404).json({ error: 'Location not found' }); return; }
+
+    const subId = Number(req.params.subId);
+    const db = getDb();
+    const existing = db.prepare('SELECT id FROM sub_locations WHERE id = ? AND location_id = ?').get(subId, locationId) as { id: number } | undefined;
+    if (!existing) { res.status(404).json({ error: 'Sub-location not found' }); return; }
+
+    const { name, lat, lng, durationMinutes, durationDays, scheduledDate, scheduledPeriod, description, sortOrder, activityType, pricingMode, unitPrice, quantity, surcharge, adultPrice, childPrice } = req.body as {
+        name?: string; lat?: number; lng?: number; durationMinutes?: number; durationDays?: number; scheduledDate?: string; scheduledPeriod?: string; description?: string; sortOrder?: number; activityType?: string; pricingMode?: string; unitPrice?: number; quantity?: number; surcharge?: number; adultPrice?: number; childPrice?: number;
+    };
+
+    const fields: string[] = [];
+    const values: unknown[] = [];
+    if (name !== undefined) { fields.push('name = ?'); values.push(name); }
+    if (lat !== undefined) { fields.push('lat = ?'); values.push(lat); }
+    if (lng !== undefined) { fields.push('lng = ?'); values.push(lng); }
+    if (durationMinutes !== undefined) { fields.push('duration_minutes = ?'); values.push(durationMinutes); }
+    if (durationDays !== undefined) { fields.push('duration_days = ?'); values.push(durationDays); }
+    if (scheduledDate !== undefined) { fields.push('scheduled_date = ?'); values.push(scheduledDate); }
+    if (scheduledPeriod !== undefined) { fields.push('scheduled_period = ?'); values.push(scheduledPeriod); }
+    if (description !== undefined) { fields.push('description = ?'); values.push(description); }
+    if (activityType !== undefined) { fields.push('activity_type = ?'); values.push(activityType); }
+    if (pricingMode !== undefined) { fields.push('pricing_mode = ?'); values.push(pricingMode); }
+    if (unitPrice !== undefined) { fields.push('unit_price = ?'); values.push(unitPrice); }
+    if (quantity !== undefined) { fields.push('quantity = ?'); values.push(quantity); }
+    if (surcharge !== undefined) { fields.push('surcharge = ?'); values.push(surcharge); }
+    if (sortOrder !== undefined) { fields.push('sort_order = ?'); values.push(sortOrder); }
+    if (adultPrice !== undefined) { fields.push('adult_price = ?'); values.push(adultPrice); }
+    if (childPrice !== undefined) { fields.push('child_price = ?'); values.push(childPrice); }
+
+    if (fields.length > 0) {
+        values.push(subId);
+        db.prepare(`UPDATE sub_locations SET ${fields.join(', ')} WHERE id = ?`).run(...values);
+    }
+
+    res.json({ ok: true });
+});
+
+// PATCH /api/plans/:slug/locations/:id/sub-locations/:subId
+router.patch('/:slug/locations/:id/sub-locations/:subId', requireAuth, (req, res) => {
     const planId = getPlanIdBySlug(req.params.slug);
     if (!planId) { res.status(404).json({ error: 'Plan not found' }); return; }
     const locationId = Number(req.params.id);

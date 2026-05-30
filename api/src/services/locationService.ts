@@ -1,5 +1,4 @@
 import { getDb } from '../db/connection.js';
-import { cascadeDates, type CascadableLocation } from './dateService.js';
 import { updatePlanDateRange } from './planService.js';
 
 interface DbLocation {
@@ -9,29 +8,6 @@ interface DbLocation {
     arrive_at: number | null;
     depart_at: number | null;
     duration_days: number;
-}
-
-function getCascadableLocations(planId: number): CascadableLocation[] {
-    const db = getDb();
-    return db.prepare(
-        'SELECT id, arrive_at, depart_at, duration_days FROM locations WHERE plan_id = ? ORDER BY sort_order ASC, id ASC'
-    ).all(planId) as CascadableLocation[];
-}
-
-function applyCascade(planId: number, startIndex: number): void {
-    const db = getDb();
-    const locs = getCascadableLocations(planId);
-    const cascaded = cascadeDates(locs, startIndex);
-
-    const update = db.prepare(
-        'UPDATE locations SET arrive_at = ?, depart_at = ?, updated_at = ? WHERE id = ?'
-    );
-    const now = Date.now();
-    for (let i = startIndex; i < cascaded.length; i++) {
-        update.run(cascaded[i].arrive_at, cascaded[i].depart_at, now, cascaded[i].id);
-    }
-
-    updatePlanDateRange(planId);
 }
 
 export interface CreateLocationInput {
@@ -109,14 +85,8 @@ export function addLocation(planId: number, input: CreateLocationInput): number 
         JSON.stringify(input.food ?? [])
     );
 
-    const newId = result.lastInsertRowid as number;
-
-    // If arrive_at was given, cascade from this location
-    const locs = getCascadableLocations(planId);
-    const idx = locs.findIndex(l => l.id === newId);
-    if (idx >= 0) applyCascade(planId, idx);
-
-    return newId;
+    updatePlanDateRange(planId);
+    return result.lastInsertRowid as number;
 }
 
 export function updateLocation(
@@ -173,10 +143,9 @@ export function updateLocation(
 
     db.prepare(`UPDATE locations SET ${fields.join(', ')} WHERE id = ?`).run(...values);
 
-    // Cascade dates if duration or arrive_at changed
-    const locs = getCascadableLocations(planId);
-    const idx = locs.findIndex(l => l.id === locationId);
-    if (idx >= 0) applyCascade(planId, idx);
+    if (input.arriveAt !== undefined || input.departAt !== undefined || input.durationDays !== undefined) {
+        updatePlanDateRange(planId);
+    }
 
     return true;
 }
@@ -188,11 +157,7 @@ export function deleteLocation(planId: number, locationId: number): boolean {
 
     db.prepare('DELETE FROM locations WHERE id = ?').run(locationId);
 
-    // Re-cascade from the position of the deleted location
-    const locs = getCascadableLocations(planId);
-    const idx = Math.min(loc.sort_order, locs.length - 1);
-    if (idx >= 0 && locs.length > 0) applyCascade(planId, idx);
-    else updatePlanDateRange(planId);
+    updatePlanDateRange(planId);
 
     return true;
 }
@@ -209,5 +174,4 @@ export function reorderLocations(planId: number, orderedIds: number[]): void {
         });
     });
     reorder();
-    applyCascade(planId, 0);
 }

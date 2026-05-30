@@ -41,6 +41,19 @@ router.delete('/plans/:slug', (req, res) => {
     res.json({ ok: true });
 });
 
+// PATCH /api/public/plans/:slug
+router.patch('/plans/:slug', (req, res) => {
+    const planId = getSessionPlanId(req.params.slug);
+    if (!planId) { res.status(404).json({ error: 'Plan not found' }); return; }
+    const { name, slug, dateRange } = req.body as { name?: string; slug?: string; dateRange?: string };
+    const db = getDb();
+    if (name !== undefined) db.prepare('UPDATE plans SET name = ?, updated_at = ? WHERE id = ?').run(name, Date.now(), planId);
+    if (slug !== undefined) db.prepare('UPDATE plans SET slug = ?, updated_at = ? WHERE id = ?').run(slug, Date.now(), planId);
+    if (dateRange !== undefined) db.prepare('UPDATE plans SET date_range = ?, updated_at = ? WHERE id = ?').run(dateRange, Date.now(), planId);
+    const plan = db.prepare('SELECT session_id FROM plans WHERE id = ?').get(planId) as { session_id: string };
+    res.json(getPlanBySessionId(plan.session_id));
+});
+
 // POST /api/public/plans/:slug/locations
 router.post('/plans/:slug/locations', (req, res) => {
     const planId = getSessionPlanId(req.params.slug);
@@ -56,6 +69,16 @@ router.put('/plans/:slug/locations/:id', (req, res) => {
     const ok = updateLocation(planId, Number(req.params.id), req.body);
     if (!ok) { res.status(404).json({ error: 'Location not found' }); return; }
     // Trả về plan theo sessionId để MCP có thể verify
+    const plan = getDb().prepare('SELECT session_id FROM plans WHERE id = ?').get(planId) as { session_id: string };
+    res.json(getPlanBySessionId(plan.session_id));
+});
+
+// PATCH /api/public/plans/:slug/locations/:id
+router.patch('/plans/:slug/locations/:id', (req, res) => {
+    const planId = getSessionPlanId(req.params.slug);
+    if (!planId) { res.status(404).json({ error: 'Plan not found' }); return; }
+    const ok = updateLocation(planId, Number(req.params.id), req.body);
+    if (!ok) { res.status(404).json({ error: 'Location not found' }); return; }
     const plan = getDb().prepare('SELECT session_id FROM plans WHERE id = ?').get(planId) as { session_id: string };
     res.json(getPlanBySessionId(plan.session_id));
 });

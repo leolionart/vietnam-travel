@@ -6,7 +6,7 @@ const router = Router();
 
 router.use((_req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-admin-password');
     next();
 });
@@ -168,6 +168,15 @@ router.put('/plans/:slug/activities/:activityId', requireAuth, (req, res) => {
     res.json({ ok: true });
 });
 
+router.patch('/plans/:slug/activities/:activityId', requireAuth, (req, res) => {
+    const planId = getPlanIdBySlug(req.params.slug);
+    const activityId = Number(req.params.activityId);
+    if (!planId) { res.status(404).json({ error: 'Plan not found' }); return; }
+    if (!activityBelongsToPlan(planId, activityId)) { res.status(404).json({ error: 'Activity not found' }); return; }
+    if (!updateActivity(activityId, req.body as ActivityInput)) { res.status(404).json({ error: 'Activity not found' }); return; }
+    res.json({ ok: true });
+});
+
 router.delete('/plans/:slug/activities/:activityId', requireAuth, (req, res) => {
     const planId = getPlanIdBySlug(req.params.slug);
     const activityId = Number(req.params.activityId);
@@ -190,6 +199,11 @@ router.post('/sub-locations', requireAuth, (req, res) => {
 });
 
 router.put('/sub-locations/:activityId', requireAuth, (req, res) => {
+    if (!updateActivity(Number(req.params.activityId), req.body as ActivityInput)) { res.status(404).json({ error: 'Activity not found' }); return; }
+    res.json({ ok: true });
+});
+
+router.patch('/sub-locations/:activityId', requireAuth, (req, res) => {
     if (!updateActivity(Number(req.params.activityId), req.body as ActivityInput)) { res.status(404).json({ error: 'Activity not found' }); return; }
     res.json({ ok: true });
 });
@@ -228,6 +242,11 @@ router.post('/activities', requireAuth, (req, res) => {
 });
 
 router.put('/activities/:activityId', requireAuth, (req, res) => {
+    if (!updateActivity(Number(req.params.activityId), req.body as ActivityInput)) { res.status(404).json({ error: 'Activity not found' }); return; }
+    res.json({ ok: true });
+});
+
+router.patch('/activities/:activityId', requireAuth, (req, res) => {
     if (!updateActivity(Number(req.params.activityId), req.body as ActivityInput)) { res.status(404).json({ error: 'Activity not found' }); return; }
     res.json({ ok: true });
 });
