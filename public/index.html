@@ -90,6 +90,7 @@
             .timeline-rail { display: none !important; }
             .calendar-view { position: relative !important; top: auto !important; left: auto !important; right: auto !important; bottom: auto !important; padding: 0 0.75rem 5rem !important; }
             .calendar-week-grid { min-width: 720px; }
+            .calendar-month-grid { min-width: 940px; }
             .mobile-timeline {
                 display: flex;
                 position: sticky;
@@ -194,7 +195,13 @@
                     class="px-3 lg:px-4 py-2 rounded-xl text-[10px] lg:text-xs font-bold transition-all inline-flex items-center gap-1.5"
                     :class="viewMode === 'calendar' ? 'bg-white text-slate-900' : 'text-slate-400 hover:text-white'">
                 <i data-lucide="calendar-days" class="w-3.5 h-3.5"></i>
-                <span>Lịch</span>
+                <span>Tuần</span>
+            </button>
+            <button @click="setViewMode('month')"
+                    class="px-3 lg:px-4 py-2 rounded-xl text-[10px] lg:text-xs font-bold transition-all inline-flex items-center gap-1.5"
+                    :class="viewMode === 'month' ? 'bg-white text-slate-900' : 'text-slate-400 hover:text-white'">
+                <i data-lucide="calendar-range" class="w-3.5 h-3.5"></i>
+                <span>Tháng</span>
             </button>
         </div>
     </header>
@@ -317,14 +324,190 @@
                             </div>
                         </div>
 
-                        <template x-for="week in calendarWeeks()" :key="week.key">
+                        <section class="rounded-xl border border-white/10 bg-white/[0.025] p-2">
+                            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-2 mb-2 px-1">
+                                <div>
+                                    <h3 class="text-sm lg:text-lg font-bold text-white" x-text="currentCalendarWeek().label"></h3>
+                                    <p class="text-[10px] font-bold text-slate-500" x-text="currentCalendarWeek().range"></p>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <button @click="shiftCalendarWeek(-1)"
+                                            :disabled="calendarWeekIndex <= 0"
+                                            class="w-9 h-9 rounded-lg border border-white/10 bg-white/5 text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed inline-flex items-center justify-center">
+                                        <span class="text-base leading-none">&lt;</span>
+                                    </button>
+                                    <button @click="setCalendarWeek(0)"
+                                            class="h-9 rounded-lg border border-white/10 bg-white/5 px-3 text-[10px] font-bold text-slate-200">
+                                        Đầu lịch
+                                    </button>
+                                    <button @click="shiftCalendarWeek(1)"
+                                            :disabled="calendarWeekIndex >= calendarWeeks().length - 1"
+                                            class="w-9 h-9 rounded-lg border border-white/10 bg-white/5 text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed inline-flex items-center justify-center">
+                                        <span class="text-base leading-none">&gt;</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="overflow-x-auto no-scrollbar">
+                                <div class="calendar-week-grid">
+                                    <div class="grid grid-cols-[48px_repeat(7,minmax(92px,1fr))] gap-1.5 text-center text-[8px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                                        <span></span>
+                                        <template x-for="day in currentCalendarWeek().days" :key="day.key">
+                                            <span :class="day.isWeekend ? 'text-amber-300' : 'text-slate-500'"
+                                                  x-text="day.isBlank ? '' : `${day.weekday} ${day.label}`"></span>
+                                        </template>
+                                    </div>
+
+                                    <div class="grid grid-cols-[48px_repeat(7,minmax(92px,1fr))] gap-1.5">
+                                        <div class="rounded-lg border border-white/5 bg-white/[0.02] px-1.5 py-2 text-[9px] font-bold text-slate-500 flex items-center justify-center">Cả ngày</div>
+                                        <template x-for="day in currentCalendarWeek().days" :key="`all-${day.key}`">
+                                            <article class="rounded-lg border p-1.5 min-h-[92px]" :class="calendarDayClass(day)">
+                                                <div x-show="!day.isBlank" class="flex items-start justify-between gap-1 mb-1.5">
+                                                    <h4 class="text-sm font-bold text-white leading-tight" x-text="day.dayOfMonth"></h4>
+                                                    <div class="flex flex-wrap items-start justify-end gap-1">
+                                                        <span x-show="day.hasCheckin" class="text-[8px] font-bold rounded bg-cyan-300 text-slate-950 px-1 py-0.5">In</span>
+                                                        <span x-show="day.hasCheckout" class="text-[8px] font-bold rounded bg-rose-300 text-slate-950 px-1 py-0.5">Out</span>
+                                                    </div>
+                                                </div>
+                                                <div x-show="!day.isBlank" class="space-y-1">
+                                                    <template x-for="event in calendarAllDayEvents(day)" :key="event.id">
+                                                        <button @click="openCalendarEvent(event)"
+                                                                class="w-full text-left rounded-md border px-1.5 py-1 transition-colors"
+                                                                :class="calendarEventClass(event.type)"
+                                                                :title="`${event.title} - ${event.meta}`">
+                                                            <div class="flex items-center gap-1 min-w-0">
+                                                                <span class="w-1.5 h-1.5 rounded-full bg-slate-300 flex-none"></span>
+                                                                <p class="text-[9px] font-bold leading-none truncate min-w-0" x-text="event.title"></p>
+                                                                <span x-show="event.span > 1"
+                                                                      class="text-[7px] font-bold rounded bg-white/15 px-1 flex-none"
+                                                                      x-text="eventProgressLabel(event)"></span>
+                                                            </div>
+                                                        </button>
+                                                    </template>
+                                                </div>
+                                            </article>
+                                        </template>
+
+                                        <div class="rounded-lg border border-sky-300/20 bg-sky-400/10 px-1.5 py-2 text-[9px] font-bold text-sky-200 flex items-center justify-center">Sáng</div>
+                                        <template x-for="day in currentCalendarWeek().days" :key="`morning-${day.key}`">
+                                            <article class="rounded-lg border border-sky-300/20 bg-sky-400/10 p-1.5 min-h-[118px]">
+                                                <div x-show="!day.isBlank" class="space-y-1">
+                                                    <template x-for="event in calendarPartEvents(day, 'morning')" :key="event.id">
+                                                        <button @click="openCalendarEvent(event)"
+                                                                class="w-full text-left rounded border px-1.5 py-1 transition-colors"
+                                                                :class="calendarEventClass(event.type)"
+                                                                :title="`${event.time ? event.time + ' · ' : ''}${event.title} - ${event.meta}`">
+                                                            <div class="flex items-center gap-1 min-w-0">
+                                                                <span class="w-1.5 h-1.5 rounded-full flex-none"
+                                                                      :class="event.type === 'transport' ? 'bg-sky-300' : 'bg-emerald-300'"></span>
+                                                                <p class="text-[9px] font-bold leading-none truncate min-w-0" x-text="event.title"></p>
+                                                                <span class="text-[7px] font-bold opacity-80 flex-none leading-none" x-show="event.time && !['Sáng', 'Chiều'].includes(event.time)" x-text="event.time"></span>
+                                                            </div>
+                                                        </button>
+                                                    </template>
+                                                </div>
+                                            </article>
+                                        </template>
+
+                                        <div class="rounded-lg border border-orange-300/20 bg-orange-400/10 px-1.5 py-2 text-[9px] font-bold text-orange-200 flex items-center justify-center">Chiều</div>
+                                        <template x-for="day in currentCalendarWeek().days" :key="`afternoon-${day.key}`">
+                                            <article class="rounded-lg border border-orange-300/20 bg-orange-400/10 p-1.5 min-h-[118px]">
+                                                <div x-show="!day.isBlank" class="space-y-1">
+                                                    <template x-for="event in calendarPartEvents(day, 'afternoon')" :key="event.id">
+                                                        <button @click="openCalendarEvent(event)"
+                                                                class="w-full text-left rounded border px-1.5 py-1 transition-colors"
+                                                                :class="calendarEventClass(event.type)"
+                                                                :title="`${event.time ? event.time + ' · ' : ''}${event.title} - ${event.meta}`">
+                                                            <div class="flex items-center gap-1 min-w-0">
+                                                                <span class="w-1.5 h-1.5 rounded-full flex-none"
+                                                                      :class="event.type === 'transport' ? 'bg-sky-300' : 'bg-emerald-300'"></span>
+                                                                <p class="text-[9px] font-bold leading-none truncate min-w-0" x-text="event.title"></p>
+                                                                <span class="text-[7px] font-bold opacity-80 flex-none leading-none" x-show="event.time && !['Sáng', 'Chiều'].includes(event.time)" x-text="event.time"></span>
+                                                            </div>
+                                                        </button>
+                                                    </template>
+                                                </div>
+                                            </article>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </section>
+
+    <!-- Month View -->
+    <section x-show="viewMode === 'month'"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 translate-y-3"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             class="calendar-view fixed left-3 right-3 top-24 bottom-3 lg:left-5 lg:right-5 lg:top-24 lg:bottom-5 z-40 pointer-events-none">
+        <div class="glass h-full rounded-2xl border-white/5 shadow-2xl pointer-events-auto overflow-hidden flex flex-col">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-2 px-3 py-2.5 lg:px-4 border-b border-white/10">
+                <div class="min-w-0">
+                    <p class="text-[8px] font-bold text-slate-500 uppercase tracking-[0.18em]">Month view</p>
+                    <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                        <h2 class="text-sm lg:text-base font-bold text-white">Lịch theo tháng</h2>
+                        <p class="text-[10px] text-slate-400" x-text="currentPlan.dateRange || 'Chưa có ngày'"></p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-1.5 text-[9px] font-bold">
+                    <span class="inline-flex items-center gap-1 rounded-md bg-white/5 text-slate-300 border border-white/10 px-2 py-0.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Cả ngày / nhiều ngày
+                    </span>
+                    <span class="inline-flex items-center gap-1 rounded-md bg-sky-500/10 text-sky-300 border border-sky-500/20 px-2 py-0.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-sky-300"></span> Sáng / di chuyển
+                    </span>
+                    <span class="inline-flex items-center gap-1 rounded-md bg-orange-400/10 text-orange-200 border border-orange-300/20 px-2 py-0.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-orange-200"></span> Chiều
+                    </span>
+                    <span class="inline-flex items-center gap-1 rounded-md bg-cyan-400/10 text-cyan-200 border border-cyan-400/25 px-2 py-0.5">Check-in</span>
+                    <span class="inline-flex items-center gap-1 rounded-md bg-rose-400/10 text-rose-200 border border-rose-400/25 px-2 py-0.5">Check-out</span>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-2.5 lg:p-3">
+                <template x-if="calendarDays().length === 0">
+                    <div class="h-full min-h-[320px] flex items-center justify-center text-center">
+                        <div>
+                            <i data-lucide="calendar-x" class="w-10 h-10 mx-auto text-slate-500 mb-4"></i>
+                            <p class="text-sm font-bold text-slate-300">Chưa có dữ liệu ngày</p>
+                            <p class="text-xs text-slate-500 mt-1">Thêm ngày đến, ngày đi hoặc duration để xem lịch.</p>
+                        </div>
+                    </div>
+                </template>
+
+                <template x-if="calendarDays().length > 0">
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                            <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+                                <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Tổng chi phí</p>
+                                <p class="mt-1 text-base lg:text-xl font-bold text-white font-display" x-text="formatCurrency(totalPlanCost)"></p>
+                            </div>
+                            <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+                                <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Lưu trú</p>
+                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['accommodation']))"></p>
+                            </div>
+                            <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+                                <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Ăn uống/đi lại</p>
+                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['food', 'transport', 'other']))"></p>
+                            </div>
+                            <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+                                <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Vé tham quan</p>
+                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planTicketTotal())"></p>
+                            </div>
+                        </div>
+
+                        <template x-for="month in calendarMonths()" :key="month.key">
                             <section class="rounded-xl border border-white/10 bg-white/[0.025] p-2">
                                 <div class="flex items-center justify-between gap-3 mb-2 px-1">
-                                    <h3 class="text-[11px] lg:text-sm font-bold text-white" x-text="week.label"></h3>
-                                    <p class="text-[9px] font-bold text-slate-500" x-text="week.range"></p>
+                                    <h3 class="text-sm lg:text-base font-bold text-white" x-text="month.label"></h3>
+                                    <p class="text-[9px] font-bold text-slate-500" x-text="month.range"></p>
                                 </div>
                                 <div class="overflow-x-auto no-scrollbar">
-                                    <div class="calendar-week-grid">
+                                    <div class="calendar-month-grid">
                                         <div class="grid grid-cols-7 gap-1.5 text-center text-[8px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
                                             <span>T2</span>
                                             <span>T3</span>
@@ -334,46 +517,39 @@
                                             <span class="text-amber-300">T7</span>
                                             <span class="text-amber-300">CN</span>
                                         </div>
-                                        <div class="grid grid-cols-7 gap-1.5 lg:gap-2">
-                                            <template x-for="day in week.days" :key="day.key">
-                                                <article class="rounded-lg lg:rounded-xl border p-1.5 lg:p-2 min-h-[112px] lg:min-h-[128px]"
+                                        <div class="grid grid-cols-7 gap-1.5">
+                                            <template x-for="day in month.days" :key="day.key">
+                                                <article class="rounded-lg border p-1.5 min-h-[136px]"
                                                          :class="calendarDayClass(day)">
-                                                    <div x-show="!day.isBlank" class="flex items-start justify-between gap-1 lg:gap-2 mb-1.5 lg:mb-2">
+                                                    <div x-show="!day.isBlank" class="flex items-start justify-between gap-1 mb-1.5">
                                                         <div class="min-w-0">
                                                             <p class="text-[8px] font-bold uppercase tracking-wider"
                                                                :class="day.isWeekend ? 'text-amber-300' : 'text-slate-500'"
                                                                x-text="day.weekday"></p>
-                                                            <h3 class="text-sm font-bold text-white leading-tight" x-text="day.label"></h3>
+                                                            <h4 class="text-sm font-bold text-white leading-tight" x-text="day.dayOfMonth"></h4>
                                                         </div>
                                                         <div class="flex flex-wrap items-start justify-end gap-1">
-                                                            <span x-show="day.hasCheckin"
-                                                                  class="text-[8px] font-bold rounded bg-cyan-300 text-slate-950 px-1.5 py-0.5">In</span>
-                                                            <span x-show="day.hasCheckout"
-                                                                  class="text-[8px] font-bold rounded bg-rose-300 text-slate-950 px-1.5 py-0.5">Out</span>
-                                                            <span x-show="day.isWeekend && !day.hasCheckin && !day.hasCheckout"
-                                                                  class="text-[8px] font-bold rounded bg-amber-300 text-slate-950 px-1.5 py-0.5">T7/CN</span>
+                                                            <span x-show="day.hasCheckin" class="text-[8px] font-bold rounded bg-cyan-300 text-slate-950 px-1 py-0.5">In</span>
+                                                            <span x-show="day.hasCheckout" class="text-[8px] font-bold rounded bg-rose-300 text-slate-950 px-1 py-0.5">Out</span>
                                                         </div>
                                                     </div>
 
                                                     <div x-show="!day.isBlank" class="space-y-1">
-                                                        <template x-if="calendarStayEvents(day).length">
-                                                            <div class="space-y-1">
-                                                                <template x-for="event in calendarStayEvents(day)" :key="event.id">
-                                                                    <button @click="openCalendarEvent(event)"
-                                                                            class="w-full text-left rounded-md border px-1.5 py-1 transition-colors"
-                                                                            :class="calendarEventClass(event.type)"
-                                                                            :title="`${event.title} - ${event.meta}`">
-                                                                        <div class="flex items-center gap-1.5 min-w-0">
-                                                                            <span class="w-1.5 h-1.5 rounded-full bg-slate-300 flex-none"></span>
-                                                                            <p class="text-[9px] font-bold leading-none truncate min-w-0" x-text="event.title"></p>
-                                                                        </div>
-                                                                    </button>
-                                                                </template>
-                                                            </div>
+                                                        <template x-for="event in calendarAllDayEvents(day).slice(0, 3)" :key="event.id">
+                                                            <button @click="openCalendarEvent(event)"
+                                                                    class="w-full text-left rounded-md border px-1.5 py-1 transition-colors"
+                                                                    :class="calendarEventClass(event.type)"
+                                                                    :title="`${event.title} - ${event.meta}`">
+                                                                <div class="flex items-center gap-1 min-w-0">
+                                                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 flex-none"></span>
+                                                                    <p class="text-[9px] font-bold leading-none truncate min-w-0" x-text="event.title"></p>
+                                                                    <span x-show="event.span > 1"
+                                                                          class="text-[7px] font-bold rounded bg-white/15 px-1 flex-none"
+                                                                          x-text="eventProgressLabel(event)"></span>
+                                                                </div>
+                                                            </button>
                                                         </template>
-                                                        <template x-if="calendarTimedEvents(day).length === 0">
-                                                            <p class="text-[10px] text-slate-600 py-2">Trống</p>
-                                                        </template>
+
                                                         <div class="grid grid-cols-2 gap-1">
                                                             <template x-for="part in ['morning', 'afternoon']" :key="part">
                                                                 <div class="rounded-md border min-h-[44px] p-1"
@@ -382,7 +558,7 @@
                                                                          :class="part === 'morning' ? 'text-sky-200' : 'text-orange-200'"
                                                                          x-text="part === 'morning' ? 'Sáng' : 'Chiều'"></div>
                                                                     <div class="space-y-1">
-                                                                        <template x-for="event in calendarPartEvents(day, part)" :key="event.id">
+                                                                        <template x-for="event in calendarPartEvents(day, part).slice(0, 3)" :key="event.id">
                                                                             <button @click="openCalendarEvent(event)"
                                                                                     class="w-full text-left rounded border px-1 py-0.5 transition-colors"
                                                                                     :class="calendarEventClass(event.type)"
@@ -391,7 +567,9 @@
                                                                                     <span class="w-1.5 h-1.5 rounded-full flex-none"
                                                                                           :class="event.type === 'transport' ? 'bg-sky-300' : 'bg-emerald-300'"></span>
                                                                                     <p class="text-[9px] font-bold leading-none truncate min-w-0" x-text="event.title"></p>
-                                                                                    <span class="text-[7px] font-bold opacity-80 flex-none leading-none" x-show="event.time && !['Sáng', 'Chiều'].includes(event.time)" x-text="event.time"></span>
+                                                                                    <span x-show="event.span > 1"
+                                                                                          class="text-[7px] font-bold opacity-80 flex-none leading-none"
+                                                                                          x-text="eventProgressLabel(event)"></span>
                                                                                 </div>
                                                                             </button>
                                                                         </template>
@@ -914,6 +1092,7 @@
                 currentPlanId: null,
                 activeId: null,
                 viewMode: 'map',
+                calendarWeekIndex: 0,
                 detailScrolled: false,
                 detailMode: 'overview',
                 map: null,
@@ -997,6 +1176,7 @@
                         const url = new URL(window.location.href);
                         const pathViewMode = this.viewModeFromPath(url.pathname, url.searchParams);
                         this.viewMode = pathViewMode;
+                        const requestedWeek = Math.max(0, Number(url.searchParams.get('week') || 1) - 1);
                         const slugParam = url.searchParams.get('slug') || url.searchParams.get('plan');
                         const sessionParam = url.searchParams.get('session');
 
@@ -1024,6 +1204,8 @@
                                 await this.loadSession(sessionParam);
                             }
                         }
+                        this.calendarWeekIndex = Number.isFinite(requestedWeek) ? requestedWeek : 0;
+                        this.clampCalendarWeek();
                     } catch (e) {
                         console.error("Lỗi khi tải dữ liệu kế hoạch:", e);
                     }
@@ -1052,6 +1234,7 @@
                         this.updateMap();
                     });
                     this.$watch('currentPlanId', () => {
+                        this.clampCalendarWeek();
                         this.$nextTick(() => lucide.createIcons());
                         this.updateMap();
                         this.syncPlanSlugToUrl();
@@ -1062,9 +1245,10 @@
 
                 viewModeFromPath(pathname, params = new URLSearchParams()) {
                     const requested = params.get('view');
-                    if (requested === 'calendar' || requested === 'map') return requested;
+                    if (requested === 'calendar' || requested === 'map' || requested === 'month') return requested;
                     const cleanPath = String(pathname || '').replace(/\/+$/, '') || '/';
                     if (cleanPath === '/calendar') return 'calendar';
+                    if (cleanPath === '/month') return 'month';
                     if (cleanPath === '/map') return 'map';
                     return 'map';
                 },
@@ -1650,8 +1834,11 @@
 
                 urlForView(mode = this.viewMode, sourceUrl = new URL(window.location.href)) {
                     const url = new URL(sourceUrl.toString());
-                    url.pathname = mode === 'calendar' ? '/calendar' : '/map';
+                    if (mode === 'month') url.pathname = '/month';
+                    else url.pathname = mode === 'calendar' ? '/calendar' : '/map';
                     url.searchParams.delete('view');
+                    if (mode === 'calendar') url.searchParams.set('week', String(this.calendarWeekIndex + 1));
+                    else url.searchParams.delete('week');
                     return url.toString();
                 },
 
@@ -2077,11 +2264,15 @@
                 },
 
                 calendarStayEvents(day) {
-                    return (day?.events || []).filter(event => event.type === 'stay');
+                    return this.calendarAllDayEvents(day);
+                },
+
+                calendarAllDayEvents(day) {
+                    return (day?.events || []).filter(event => event.type === 'stay' || event.isMultiDay);
                 },
 
                 calendarTimedEvents(day) {
-                    return (day?.events || []).filter(event => event.type !== 'stay');
+                    return (day?.events || []).filter(event => event.type !== 'stay' && !event.isMultiDay);
                 },
 
                 calendarPartEvents(day, part) {
@@ -2152,6 +2343,12 @@
                     return Array.from({ length: span }, (_, offset) => this.addDays(start, offset));
                 },
 
+                eventProgressLabel(event) {
+                    if (!event?.span || event.span <= 1) return '';
+                    const index = Number(event.dayIndex || 0) + 1;
+                    return `${index}/${event.span}`;
+                },
+
                 calendarEventsByDay() {
                     const byDay = {};
                     const add = (date, event) => {
@@ -2183,9 +2380,12 @@
                                 id: `stay-${loc.id}-${this.localDateKey(day)}`,
                                 type: 'stay',
                                 title: loc.name,
-                                meta: dayIndex === 0 ? 'Check-in / nghỉ ngơi' : 'Ngày ở lại',
+                                meta: `${dayIndex === 0 ? 'Check-in / nghỉ ngơi' : 'Ngày ở lại'} · ${dayIndex + 1}/${stayDays.length}`,
                                 time: '',
                                 order: dayIndex === 0 ? checkinOrder : 1,
+                                span: stayDays.length,
+                                dayIndex,
+                                isMultiDay: stayDays.length > 1,
                                 locationId: loc.id,
                             });
                         });
@@ -2208,9 +2408,12 @@
                                     id: `stay-activity-${sub.id}-${this.localDateKey(day)}`,
                                     type: 'stay',
                                     title: sub.name,
-                                    meta: `${loc.name} · ${dayIndex === 0 ? 'Check-in' : 'Lưu trú'} · ${this.formatCurrency(this.subActivityCost(sub, loc))}`,
+                                    meta: `${loc.name} · ${dayIndex === 0 ? 'Check-in' : 'Lưu trú'} ${dayIndex + 1}/${eventDays.length} · ${this.formatCurrency(this.subActivityCost(sub, loc))}`,
                                     time: '',
                                     order: 1.2 + (subIndex * 0.01),
+                                    span: eventDays.length,
+                                    dayIndex,
+                                    isMultiDay: eventDays.length > 1,
                                     locationId: loc.id,
                                     subLocationId: sub.id,
                                 }));
@@ -2225,6 +2428,9 @@
                                     meta: `${loc.name} · ${this.activityTypeLabel(activityType)} · ${this.formatCurrency(this.subActivityCost(sub, loc))}`,
                                     time: slot.label,
                                     order: slot.order + Math.floor(subIndex / visitSlots.length) * 0.01 + (dayIndex * 0.001),
+                                    span: eventDays.length,
+                                    dayIndex,
+                                    isMultiDay: eventDays.length > 1,
                                     locationId: loc.id,
                                     subLocationId: sub.id,
                                 });
@@ -2258,6 +2464,10 @@
                         if (start) addBoundary(checkinsByDay, start, loc);
                         if (end) addBoundary(checkoutsByDay, end, loc);
                     }
+                    Object.keys(eventsByDay).forEach((key) => {
+                        const date = this.normalizeDay(new Date(`${key}T00:00:00`));
+                        if (date) allDates.push(date);
+                    });
                     if (!allDates.length) return [];
                     allDates.sort((a, b) => a - b);
                     const first = this.normalizeDay(allDates[0]);
@@ -2283,6 +2493,7 @@
                             isBlank: false,
                             weekday: this.formatWeekdayShort(date),
                             label: `${pad(date.getDate())}/${pad(date.getMonth() + 1)}`,
+                            dayOfMonth: pad(date.getDate()),
                             isWeekend: this.isWeekendDate(date),
                             hasCheckin: !!checkinsByDay[key]?.length,
                             hasCheckout: !!checkoutsByDay[key]?.length,
@@ -2324,6 +2535,68 @@
                         });
                     }
                     return weeks;
+                },
+
+                clampCalendarWeek() {
+                    const maxIndex = Math.max(this.calendarWeeks().length - 1, 0);
+                    this.calendarWeekIndex = Math.min(Math.max(Number(this.calendarWeekIndex || 0), 0), maxIndex);
+                },
+
+                currentCalendarWeek() {
+                    const weeks = this.calendarWeeks();
+                    if (!weeks.length) return { key: 'empty-week', label: 'Tuần 1', range: '', days: [] };
+                    const index = Math.min(Math.max(Number(this.calendarWeekIndex || 0), 0), weeks.length - 1);
+                    return weeks[index];
+                },
+
+                setCalendarWeek(index) {
+                    const weeks = this.calendarWeeks();
+                    const maxIndex = Math.max(weeks.length - 1, 0);
+                    this.calendarWeekIndex = Math.min(Math.max(Number(index || 0), 0), maxIndex);
+                    this.syncPlanSlugToUrl();
+                    this.$nextTick(() => lucide.createIcons());
+                },
+
+                shiftCalendarWeek(delta) {
+                    this.setCalendarWeek(this.calendarWeekIndex + delta);
+                },
+
+                calendarMonths() {
+                    const days = this.calendarDays().filter(day => !day.isBlank);
+                    if (!days.length) return [];
+                    const months = [];
+                    const formatShort = (date) => {
+                        if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+                        const pad = (n) => String(n).padStart(2, '0');
+                        return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}`;
+                    };
+                    const first = days[0].date;
+                    const last = days[days.length - 1].date;
+                    const cursor = new Date(first.getFullYear(), first.getMonth(), 1);
+                    const lastMonth = new Date(last.getFullYear(), last.getMonth(), 1);
+                    while (cursor <= lastMonth) {
+                        const month = cursor.getMonth();
+                        const year = cursor.getFullYear();
+                        const realDays = days.filter(day => day.date.getMonth() === month && day.date.getFullYear() === year);
+                        const monthDays = [];
+                        const firstVisibleDay = realDays[0]?.date || new Date(year, month, 1);
+                        const leadingBlankCount = (firstVisibleDay.getDay() + 6) % 7;
+                        for (let i = 0; i < leadingBlankCount; i += 1) {
+                            monthDays.push({ key: `month-${year}-${month}-blank-start-${i}`, isBlank: true, isWeekend: false, events: [] });
+                        }
+                        monthDays.push(...realDays);
+                        while (monthDays.length % 7 !== 0) {
+                            monthDays.push({ key: `month-${year}-${month}-blank-end-${monthDays.length}`, isBlank: true, isWeekend: false, events: [] });
+                        }
+                        months.push({
+                            key: `${year}-${String(month + 1).padStart(2, '0')}`,
+                            label: cursor.toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' }),
+                            range: realDays.length ? `${formatShort(realDays[0].date)} - ${formatShort(realDays[realDays.length - 1].date)}` : '',
+                            days: monthDays,
+                        });
+                        cursor.setMonth(cursor.getMonth() + 1);
+                    }
+                    return months;
                 },
 
                 openCalendarEvent(event) {
