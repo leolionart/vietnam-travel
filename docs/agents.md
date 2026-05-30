@@ -194,7 +194,7 @@ GET    /api/vexere-link?from=X&to=Y&date=YYYY-MM-DD
 GET    /api/health
 ```
 
-🔒 = `Authorization: Bearer <JWT>`
+🔒 = `Authorization: Bearer <JWT>` or `x-admin-password: <admin password>` for automation clients.
 
 ---
 
