@@ -322,7 +322,7 @@ function formatActivityAnalysis(analysis: any): string {
         lines.push('- No transport activities found.');
     } else {
         for (const block of transports) {
-            const when = [block.scheduledDate, block.scheduledPeriod].filter(Boolean).join(' ');
+            const when = [block.scheduledDate, block.scheduledTime || block.scheduledPeriod].filter(Boolean).join(' ');
             lines.push(`- ${block.name}${when ? ` (${when})` : ''}: ${block.durationLabel}. ${block.calendarNote}`);
         }
     }

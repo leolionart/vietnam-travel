@@ -3,7 +3,8 @@ import type { Plan, LocationInput } from '../types/index.js';
 export interface SubLocationScheduleInput {
     id: number;
     scheduledDate: string;
-    scheduledPeriod: 'morning' | 'afternoon';
+    scheduledPeriod: string;
+    scheduledTime?: string;
 }
 
 const BASE = '/api';
@@ -93,13 +94,13 @@ export const api = {
         return request<{ url: string }>(`/vexere-link?${params}`);
     },
 
-    addSubLocation: (slug: string, locationId: number, data: { name: string; lat: number; lng: number; durationMinutes: number; durationDays?: number; scheduledDate?: string; scheduledPeriod?: string; description: string; activityType?: string; transportType?: string; pricingMode?: string; unitPrice?: number; quantity?: number; surcharge?: number; adultPrice: number; childPrice: number; participantAdults?: number | null; participantChildren?: number | null }) =>
+    addSubLocation: (slug: string, locationId: number, data: { name: string; lat: number; lng: number; durationMinutes: number; durationDays?: number; scheduledDate?: string; scheduledPeriod?: string; scheduledTime?: string; description: string; activityType?: string; transportType?: string; pricingMode?: string; unitPrice?: number; quantity?: number; surcharge?: number; adultPrice: number; childPrice: number; participantAdults?: number | null; participantChildren?: number | null }) =>
         request<{ id: number }>(`/plans/${slug}/locations/${locationId}/sub-locations`, {
             method: 'POST',
             body: JSON.stringify(data),
         }),
 
-    updateSubLocation: (slug: string, locationId: number, subId: number, data: Partial<{ name: string; lat: number; lng: number; durationMinutes: number; durationDays: number; scheduledDate: string; scheduledPeriod: string; description: string; sortOrder: number; activityType: string; transportType: string; pricingMode: string; unitPrice: number; quantity: number; surcharge: number; adultPrice: number; childPrice: number; participantAdults: number | null; participantChildren: number | null }>) =>
+    updateSubLocation: (slug: string, locationId: number, subId: number, data: Partial<{ name: string; lat: number; lng: number; durationMinutes: number; durationDays: number; scheduledDate: string; scheduledPeriod: string; scheduledTime: string; description: string; sortOrder: number; activityType: string; transportType: string; pricingMode: string; unitPrice: number; quantity: number; surcharge: number; adultPrice: number; childPrice: number; participantAdults: number | null; participantChildren: number | null }>) =>
         request<{ ok: boolean }>(`/plans/${slug}/locations/${locationId}/sub-locations/${subId}`, {
             method: 'PUT',
             body: JSON.stringify(data),

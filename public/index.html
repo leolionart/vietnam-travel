@@ -676,16 +676,16 @@
                                                                     </button>
                                                                 </template>
 
-                                                                <div class="grid grid-cols-2 gap-1">
-                                                                    <template x-for="part in ['morning', 'afternoon']" :key="part">
+                                                                <div class="grid grid-cols-3 gap-1">
+                                                                    <template x-for="part in ['morning', 'afternoon', 'evening']" :key="part">
                                                                         <div class="rounded-md border min-h-[44px] p-1"
                                                                              @dragover.prevent="calendarEditingEnabled()"
                                                                              @drop.prevent="handleCalendarDrop($event, day, part)"
-                                                                             :class="part === 'morning' ? 'bg-sky-400/10 border-sky-300/20' : 'bg-orange-400/10 border-orange-300/20'"
+                                                                             :class="part === 'morning' ? 'bg-sky-400/10 border-sky-300/20' : (part === 'afternoon' ? 'bg-orange-400/10 border-orange-300/20' : 'bg-violet-400/10 border-violet-300/20')"
                                                                              :style="calendarDayAccentStyle(day, part)">
                                                                             <div class="text-[8px] font-bold uppercase leading-none mb-1"
-                                                                                 :class="part === 'morning' ? 'text-sky-200' : 'text-orange-200'"
-                                                                                 x-text="part === 'morning' ? 'Sáng' : 'Chiều'"></div>
+                                                                                 :class="part === 'morning' ? 'text-sky-200' : (part === 'afternoon' ? 'text-orange-200' : 'text-violet-200')"
+                                                                                 x-text="part === 'morning' ? 'Sáng' : (part === 'afternoon' ? 'Chiều' : 'Tối')"></div>
                                                                             <div class="space-y-1">
                                                                                 <template x-for="event in calendarPartEvents(day, part)" :key="event.id">
                                                                                     <button @click="openCalendarEvent(event)"
@@ -2548,7 +2548,31 @@
                     const rect = event.currentTarget.getBoundingClientRect();
                     const ratio = Math.min(Math.max((event.clientY - rect.top) / Math.max(rect.height, 1), 0), 1);
                     const hour = 6 + Math.floor(ratio * 16);
-                    return hour < 12 ? 'morning' : 'afternoon';
+                    return this.calendarPeriodFromMinutes(hour * 60);
+                },
+
+                calendarPeriodFromMinutes(minutes) {
+                    if (minutes >= 18 * 60) return 'evening';
+                    if (minutes >= 12 * 60) return 'afternoon';
+                    return 'morning';
+                },
+
+                calendarDefaultTimeForPeriod(period) {
+                    if (period === 'evening') return '18:00';
+                    if (period === 'afternoon') return '13:00';
+                    return '08:00';
+                },
+
+                calendarDropScheduledTime(event, period) {
+                    const rect = event.currentTarget.getBoundingClientRect();
+                    if (rect.height < 240) return this.calendarDefaultTimeForPeriod(period);
+                    const startMinutes = 6 * 60;
+                    const endMinutes = 22 * 60;
+                    const ratio = Math.min(Math.max((event.clientY - rect.top) / Math.max(rect.height, 1), 0), 1);
+                    const raw = startMinutes + (ratio * (endMinutes - startMinutes));
+                    const snapped = Math.round(raw / 15) * 15;
+                    const minutes = Math.min(Math.max(snapped, startMinutes), endMinutes - 15);
+                    return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
                 },
 
                 async handleCalendarDrop(event, day, period) {
@@ -2558,7 +2582,8 @@
                     const locationId = Number(payload.locationId);
                     if (!subLocationId || !locationId) return;
                     const scheduledDate = this.localDateKey(day.date);
-                    const scheduledPeriod = period === 'afternoon' ? 'afternoon' : 'morning';
+                    const scheduledTime = this.calendarDropScheduledTime(event, period);
+                    const scheduledPeriod = this.calendarPeriodFromMinutes(this.calendarEventStartMinutes({ scheduledTime }));
 
                     const applyLocal = () => {
                         (this.currentPlan.locations || []).forEach(loc => {
@@ -2566,12 +2591,13 @@
                                 if (sub.id === subLocationId) {
                                     sub.scheduledDate = scheduledDate;
                                     sub.scheduledPeriod = scheduledPeriod;
+                                    sub.scheduledTime = scheduledTime;
                                 }
                             });
                         });
                         this.scheduleOverrides = {
                             ...this.scheduleOverrides,
-                            [subLocationId]: { scheduledDate, scheduledPeriod },
+                            [subLocationId]: { scheduledDate, scheduledPeriod, scheduledTime },
                         };
                     };
 
@@ -2581,7 +2607,7 @@
                             const res = await fetch(`/api/plans/${encodeURIComponent(slug)}/locations/${locationId}/sub-locations/${subLocationId}`, {
                                 method: 'PATCH',
                                 headers: { 'Content-Type': 'application/json', ...this.adminHeaders() },
-                                body: JSON.stringify({ scheduledDate, scheduledPeriod }),
+                                body: JSON.stringify({ scheduledDate, scheduledPeriod, scheduledTime }),
                             });
                             if (res.status === 401) {
                                 window.location.href = `/admin/login?return=${encodeURIComponent(window.location.pathname + window.location.search)}`;
@@ -2607,6 +2633,7 @@
                             if (schedule) {
                                 sub.scheduledDate = schedule.scheduledDate || '';
                                 sub.scheduledPeriod = schedule.scheduledPeriod || '';
+                                sub.scheduledTime = schedule.scheduledTime || '';
                             }
                         });
                     });
@@ -2646,12 +2673,14 @@
                 },
 
                 calendarEventPart(event) {
+                    if (event?.scheduledTime) return this.calendarPeriodFromMinutes(this.calendarEventStartMinutes(event));
                     if (event?.time === 'Sáng') return 'morning';
                     if (event?.time === 'Chiều') return 'afternoon';
+                    if (event?.time === 'Tối') return 'evening';
                     const match = String(event?.time || '').match(/^(\d{1,2})(?::(\d{2}))?/);
                     if (!match) return 'morning';
                     const hour = Number(match[1]);
-                    return hour < 12 ? 'morning' : 'afternoon';
+                    return this.calendarPeriodFromMinutes(hour * 60);
                 },
 
                 calendarTimeRows() {
@@ -2671,7 +2700,7 @@
                 },
 
                 calendarEventStartMinutes(event) {
-                    const rawTime = String(event?.time || '').trim();
+                    const rawTime = String(event?.scheduledTime || event?.time || '').trim();
                     if (rawTime === 'Sáng') return 8 * 60;
                     if (rawTime === 'Chiều') return 13 * 60;
                     if (rawTime === 'Tối') return 18 * 60;
@@ -2829,10 +2858,15 @@
                             if (this.excludedSubs[sub.id]) return;
                             if (!visitSlots.length) return;
                             const activityType = this.subActivityType(sub);
-                            const savedSlot = sub.scheduledDate && sub.scheduledPeriod
+                            const scheduledPeriod = sub.scheduledTime
+                                ? this.calendarPeriodFromMinutes(this.calendarEventStartMinutes({ scheduledTime: sub.scheduledTime }))
+                                : sub.scheduledPeriod;
+                            const savedSlot = sub.scheduledDate
                                 ? visitSlots.find(candidate => this.localDateKey(candidate.day) === sub.scheduledDate && (
-                                    (sub.scheduledPeriod === 'morning' && candidate.label === 'Sáng') ||
-                                    (sub.scheduledPeriod === 'afternoon' && candidate.label === 'Chiều')
+                                    !scheduledPeriod ||
+                                    (scheduledPeriod === 'morning' && candidate.label === 'Sáng') ||
+                                    (scheduledPeriod === 'afternoon' && candidate.label === 'Chiều') ||
+                                    scheduledPeriod === 'evening'
                                 ))
                                 : null;
                             const slot = savedSlot || visitSlots[subIndex % visitSlots.length];
@@ -2879,7 +2913,8 @@
                                     durationMinutes,
                                     travelNote,
                                     metaCost: costLabel,
-                                    time: slot.label,
+                                    scheduledTime: sub.scheduledTime || '',
+                                    time: sub.scheduledTime || (scheduledPeriod === 'evening' ? 'Tối' : slot.label),
                                     order: slot.order + Math.floor(subIndex / visitSlots.length) * 0.01 + (dayIndex * 0.001),
                                     span: eventDays.length,
                                     dayIndex,

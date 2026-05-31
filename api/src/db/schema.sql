@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS sub_locations (
     duration_days    REAL    NOT NULL DEFAULT 0,
     scheduled_date   TEXT    NOT NULL DEFAULT '',
     scheduled_period TEXT    NOT NULL DEFAULT '',
+    scheduled_time   TEXT    NOT NULL DEFAULT '',
     description      TEXT    NOT NULL DEFAULT '',
     activity_type    TEXT    NOT NULL DEFAULT 'sightseeing',
     transport_type   TEXT    NOT NULL DEFAULT '',

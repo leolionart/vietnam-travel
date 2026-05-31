@@ -210,16 +210,16 @@ router.post('/:slug/locations/:id/sub-locations', requireAuth, (req, res) => {
     const locationId = Number(req.params.id);
     if (!getLocationForPlan(planId, locationId)) { res.status(404).json({ error: 'Location not found' }); return; }
 
-    const { name, lat, lng, durationMinutes, durationDays, scheduledDate, scheduledPeriod, description, sortOrder, activityType, transportType, pricingMode, unitPrice, quantity, surcharge, adultPrice, childPrice, participantAdults, participantChildren } = req.body as {
-        name?: string; lat?: number; lng?: number; durationMinutes?: number; durationDays?: number; scheduledDate?: string; scheduledPeriod?: string; description?: string; sortOrder?: number; activityType?: string; transportType?: string; pricingMode?: string; unitPrice?: number; quantity?: number; surcharge?: number; adultPrice?: number; childPrice?: number; participantAdults?: number | null; participantChildren?: number | null;
+    const { name, lat, lng, durationMinutes, durationDays, scheduledDate, scheduledPeriod, scheduledTime, description, sortOrder, activityType, transportType, pricingMode, unitPrice, quantity, surcharge, adultPrice, childPrice, participantAdults, participantChildren } = req.body as {
+        name?: string; lat?: number; lng?: number; durationMinutes?: number; durationDays?: number; scheduledDate?: string; scheduledPeriod?: string; scheduledTime?: string; description?: string; sortOrder?: number; activityType?: string; transportType?: string; pricingMode?: string; unitPrice?: number; quantity?: number; surcharge?: number; adultPrice?: number; childPrice?: number; participantAdults?: number | null; participantChildren?: number | null;
     };
     if (!name?.trim()) { res.status(400).json({ error: 'name is required' }); return; }
 
     const db = getDb();
     const maxOrder = (db.prepare('SELECT MAX(sort_order) as m FROM sub_locations WHERE location_id = ?').get(locationId) as { m: number | null }).m ?? 0;
     const result = db.prepare(
-        'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, duration_days, scheduled_date, scheduled_period, description, activity_type, transport_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price, participant_adults, participant_children) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(locationId, sortOrder ?? maxOrder + 1, name, lat ?? 0, lng ?? 0, durationMinutes ?? 60, durationDays ?? 0, scheduledDate ?? '', scheduledPeriod ?? '', description ?? '', activityType ?? 'sightseeing', transportType ?? '', pricingMode ?? 'per_person', unitPrice ?? 0, quantity ?? 1, surcharge ?? 0, adultPrice ?? 0, childPrice ?? 0, participantAdults ?? null, participantChildren ?? null);
+        'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, duration_days, scheduled_date, scheduled_period, scheduled_time, description, activity_type, transport_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price, participant_adults, participant_children) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(locationId, sortOrder ?? maxOrder + 1, name, lat ?? 0, lng ?? 0, durationMinutes ?? 60, durationDays ?? 0, scheduledDate ?? '', scheduledPeriod ?? '', scheduledTime ?? '', description ?? '', activityType ?? 'sightseeing', transportType ?? '', pricingMode ?? 'per_person', unitPrice ?? 0, quantity ?? 1, surcharge ?? 0, adultPrice ?? 0, childPrice ?? 0, participantAdults ?? null, participantChildren ?? null);
 
     res.status(201).json({ id: result.lastInsertRowid });
 });
@@ -236,8 +236,8 @@ router.put('/:slug/locations/:id/sub-locations/:subId', requireAuth, (req, res) 
     const existing = getSubLocationForPlan(planId, subId);
     if (!existing) { res.status(404).json({ error: 'Sub-location not found' }); return; }
 
-    const { name, lat, lng, durationMinutes, durationDays, scheduledDate, scheduledPeriod, description, sortOrder, activityType, transportType, pricingMode, unitPrice, quantity, surcharge, adultPrice, childPrice, participantAdults, participantChildren } = req.body as {
-        name?: string; lat?: number; lng?: number; durationMinutes?: number; durationDays?: number; scheduledDate?: string; scheduledPeriod?: string; description?: string; sortOrder?: number; activityType?: string; transportType?: string; pricingMode?: string; unitPrice?: number; quantity?: number; surcharge?: number; adultPrice?: number; childPrice?: number; participantAdults?: number | null; participantChildren?: number | null;
+    const { name, lat, lng, durationMinutes, durationDays, scheduledDate, scheduledPeriod, scheduledTime, description, sortOrder, activityType, transportType, pricingMode, unitPrice, quantity, surcharge, adultPrice, childPrice, participantAdults, participantChildren } = req.body as {
+        name?: string; lat?: number; lng?: number; durationMinutes?: number; durationDays?: number; scheduledDate?: string; scheduledPeriod?: string; scheduledTime?: string; description?: string; sortOrder?: number; activityType?: string; transportType?: string; pricingMode?: string; unitPrice?: number; quantity?: number; surcharge?: number; adultPrice?: number; childPrice?: number; participantAdults?: number | null; participantChildren?: number | null;
     };
 
     const fields: string[] = [];
@@ -249,6 +249,7 @@ router.put('/:slug/locations/:id/sub-locations/:subId', requireAuth, (req, res) 
     if (durationDays !== undefined) { fields.push('duration_days = ?'); values.push(durationDays); }
     if (scheduledDate !== undefined) { fields.push('scheduled_date = ?'); values.push(scheduledDate); }
     if (scheduledPeriod !== undefined) { fields.push('scheduled_period = ?'); values.push(scheduledPeriod); }
+    if (scheduledTime !== undefined) { fields.push('scheduled_time = ?'); values.push(scheduledTime); }
     if (description !== undefined) { fields.push('description = ?'); values.push(description); }
     if (activityType !== undefined) { fields.push('activity_type = ?'); values.push(activityType); }
     if (transportType !== undefined) { fields.push('transport_type = ?'); values.push(transportType); }
@@ -282,8 +283,8 @@ router.patch('/:slug/locations/:id/sub-locations/:subId', requireAuth, (req, res
     const existing = getSubLocationForPlan(planId, subId);
     if (!existing) { res.status(404).json({ error: 'Sub-location not found' }); return; }
 
-    const { name, lat, lng, durationMinutes, durationDays, scheduledDate, scheduledPeriod, description, sortOrder, activityType, transportType, pricingMode, unitPrice, quantity, surcharge, adultPrice, childPrice, participantAdults, participantChildren } = req.body as {
-        name?: string; lat?: number; lng?: number; durationMinutes?: number; durationDays?: number; scheduledDate?: string; scheduledPeriod?: string; description?: string; sortOrder?: number; activityType?: string; transportType?: string; pricingMode?: string; unitPrice?: number; quantity?: number; surcharge?: number; adultPrice?: number; childPrice?: number; participantAdults?: number | null; participantChildren?: number | null;
+    const { name, lat, lng, durationMinutes, durationDays, scheduledDate, scheduledPeriod, scheduledTime, description, sortOrder, activityType, transportType, pricingMode, unitPrice, quantity, surcharge, adultPrice, childPrice, participantAdults, participantChildren } = req.body as {
+        name?: string; lat?: number; lng?: number; durationMinutes?: number; durationDays?: number; scheduledDate?: string; scheduledPeriod?: string; scheduledTime?: string; description?: string; sortOrder?: number; activityType?: string; transportType?: string; pricingMode?: string; unitPrice?: number; quantity?: number; surcharge?: number; adultPrice?: number; childPrice?: number; participantAdults?: number | null; participantChildren?: number | null;
     };
 
     const fields: string[] = [];
@@ -295,6 +296,7 @@ router.patch('/:slug/locations/:id/sub-locations/:subId', requireAuth, (req, res
     if (durationDays !== undefined) { fields.push('duration_days = ?'); values.push(durationDays); }
     if (scheduledDate !== undefined) { fields.push('scheduled_date = ?'); values.push(scheduledDate); }
     if (scheduledPeriod !== undefined) { fields.push('scheduled_period = ?'); values.push(scheduledPeriod); }
+    if (scheduledTime !== undefined) { fields.push('scheduled_time = ?'); values.push(scheduledTime); }
     if (description !== undefined) { fields.push('description = ?'); values.push(description); }
     if (activityType !== undefined) { fields.push('activity_type = ?'); values.push(activityType); }
     if (transportType !== undefined) { fields.push('transport_type = ?'); values.push(transportType); }
@@ -336,16 +338,16 @@ router.patch('/:slug/locations/:id/sub-locations/reorder', requireAuth, (req, re
     const locationId = Number(req.params.id);
     if (!getLocationForPlan(planId, locationId)) { res.status(404).json({ error: 'Location not found' }); return; }
 
-    const { orderedIds, schedules } = req.body as { orderedIds?: number[]; schedules?: Array<{ id: number; scheduledDate: string; scheduledPeriod: string }> };
+    const { orderedIds, schedules } = req.body as { orderedIds?: number[]; schedules?: Array<{ id: number; scheduledDate: string; scheduledPeriod: string; scheduledTime?: string }> };
     if (!Array.isArray(orderedIds)) { res.status(400).json({ error: 'orderedIds must be an array' }); return; }
 
     const db = getDb();
     const update = db.prepare('UPDATE sub_locations SET sort_order = ? WHERE id = ? AND location_id = ?');
-    const updateSchedule = db.prepare('UPDATE sub_locations SET scheduled_date = ?, scheduled_period = ? WHERE id = ? AND location_id = ?');
+    const updateSchedule = db.prepare('UPDATE sub_locations SET scheduled_date = ?, scheduled_period = ?, scheduled_time = ? WHERE id = ? AND location_id = ?');
     const tx = db.transaction(() => {
         orderedIds.forEach((id, idx) => update.run(idx, id, locationId));
         if (Array.isArray(schedules)) {
-            schedules.forEach(item => updateSchedule.run(item.scheduledDate || '', item.scheduledPeriod || '', item.id, locationId));
+            schedules.forEach(item => updateSchedule.run(item.scheduledDate || '', item.scheduledPeriod || '', item.scheduledTime || '', item.id, locationId));
         }
     });
     tx();

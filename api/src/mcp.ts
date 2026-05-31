@@ -328,7 +328,8 @@ const TOOL_DEFINITIONS = [
                 lng: { type: 'number' },
                 durationMinutes: { type: 'number', description: 'Thời gian tham quan (phút)' },
                 scheduledDate: { type: 'string', description: 'Ngày tham quan dạng YYYY-MM-DD' },
-                scheduledPeriod: { type: 'string', enum: ['morning', 'afternoon'], description: 'Buổi tham quan' },
+                scheduledTime: { type: 'string', description: 'Giờ bắt đầu dạng HH:mm. UI sẽ tự nhóm thành sáng/chiều/tối.' },
+                scheduledPeriod: { type: 'string', enum: ['morning', 'afternoon', 'evening', ''], description: 'Buổi phụ trợ cho UI cũ; ưu tiên scheduledTime nếu có.' },
                 description: { type: 'string' },
                 activityType: { type: 'string', enum: ['sightseeing', 'accommodation', 'food', 'transport', 'other'] },
                 transportType: { type: 'string', enum: ['car', 'bus', 'train', 'flight', 'motorbike', 'ferry', 'walking', 'other', ''] },
@@ -361,7 +362,8 @@ const TOOL_DEFINITIONS = [
                 durationMinutes: { type: 'number' },
                 durationDays: { type: 'number' },
                 scheduledDate: { type: 'string' },
-                scheduledPeriod: { type: 'string', enum: ['morning', 'afternoon', ''] },
+                scheduledTime: { type: 'string', description: 'Giờ bắt đầu dạng HH:mm' },
+                scheduledPeriod: { type: 'string', enum: ['morning', 'afternoon', 'evening', ''] },
                 description: { type: 'string' },
                 activityType: { type: 'string', enum: ['sightseeing', 'accommodation', 'food', 'transport', 'other'] },
                 transportType: { type: 'string', enum: ['car', 'bus', 'train', 'flight', 'motorbike', 'ferry', 'walking', 'other', ''] },
@@ -390,11 +392,12 @@ const TOOL_DEFINITIONS = [
                     type: 'array',
                     items: {
                         type: 'object',
-                        required: ['id', 'scheduledDate', 'scheduledPeriod'],
+                        required: ['id', 'scheduledDate'],
                         properties: {
                             id: { type: 'number' },
                             scheduledDate: { type: 'string', description: 'YYYY-MM-DD' },
-                            scheduledPeriod: { type: 'string', enum: ['morning', 'afternoon'] },
+                            scheduledTime: { type: 'string', description: 'HH:mm' },
+                            scheduledPeriod: { type: 'string', enum: ['morning', 'afternoon', 'evening', ''] },
                         },
                     },
                 },
@@ -624,8 +627,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 const db = L.getDb();
                 const maxOrder = (db.prepare('SELECT MAX(sort_order) as m FROM sub_locations WHERE location_id = ?').get(args.locationId) as { m: number | null }).m ?? 0;
                 const result = db.prepare(
-                    'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, duration_days, scheduled_date, scheduled_period, description, activity_type, transport_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price, participant_adults, participant_children) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-                ).run(args.locationId, args.sortOrder ?? maxOrder + 1, args.name, args.lat ?? 0, args.lng ?? 0, args.durationMinutes ?? 60, args.durationDays ?? 0, args.scheduledDate ?? '', args.scheduledPeriod ?? '', args.description ?? '', args.activityType ?? 'sightseeing', args.transportType ?? '', args.pricingMode ?? 'per_person', args.unitPrice ?? 0, args.quantity ?? 1, args.surcharge ?? 0, args.adultPrice ?? 0, args.childPrice ?? 0, args.participantAdults ?? null, args.participantChildren ?? null);
+                    'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, duration_days, scheduled_date, scheduled_period, scheduled_time, description, activity_type, transport_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price, participant_adults, participant_children) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                ).run(args.locationId, args.sortOrder ?? maxOrder + 1, args.name, args.lat ?? 0, args.lng ?? 0, args.durationMinutes ?? 60, args.durationDays ?? 0, args.scheduledDate ?? '', args.scheduledPeriod ?? '', args.scheduledTime ?? '', args.description ?? '', args.activityType ?? 'sightseeing', args.transportType ?? '', args.pricingMode ?? 'per_person', args.unitPrice ?? 0, args.quantity ?? 1, args.surcharge ?? 0, args.adultPrice ?? 0, args.childPrice ?? 0, args.participantAdults ?? null, args.participantChildren ?? null);
                 return ok({ id: result.lastInsertRowid });
             }
 
@@ -637,7 +640,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 if (!db.prepare('SELECT id FROM sub_locations WHERE id = ? AND location_id = ?').get(args.subLocationId, args.locationId)) return err('Sub-location not found');
                 const fields: string[] = [];
                 const values: unknown[] = [];
-                const map: Record<string, unknown> = { name: args.name, lat: args.lat, lng: args.lng, sort_order: args.sortOrder, duration_minutes: args.durationMinutes, duration_days: args.durationDays, scheduled_date: args.scheduledDate, scheduled_period: args.scheduledPeriod, description: args.description, activity_type: args.activityType, transport_type: args.transportType, pricing_mode: args.pricingMode, unit_price: args.unitPrice, quantity: args.quantity, surcharge: args.surcharge, adult_price: args.adultPrice, child_price: args.childPrice, participant_adults: args.participantAdults, participant_children: args.participantChildren };
+                const map: Record<string, unknown> = { name: args.name, lat: args.lat, lng: args.lng, sort_order: args.sortOrder, duration_minutes: args.durationMinutes, duration_days: args.durationDays, scheduled_date: args.scheduledDate, scheduled_period: args.scheduledPeriod, scheduled_time: args.scheduledTime, description: args.description, activity_type: args.activityType, transport_type: args.transportType, pricing_mode: args.pricingMode, unit_price: args.unitPrice, quantity: args.quantity, surcharge: args.surcharge, adult_price: args.adultPrice, child_price: args.childPrice, participant_adults: args.participantAdults, participant_children: args.participantChildren };
                 for (const [k, v] of Object.entries(map)) {
                     if (v !== undefined) { fields.push(`${k} = ?`); values.push(v); }
                 }
@@ -652,11 +655,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 if (!Array.isArray(args.orderedIds)) return err('orderedIds must be an array');
                 const db = L.getDb();
                 const update = db.prepare('UPDATE sub_locations SET sort_order = ? WHERE id = ? AND location_id = ?');
-                const updateSchedule = db.prepare('UPDATE sub_locations SET scheduled_date = ?, scheduled_period = ? WHERE id = ? AND location_id = ?');
+                const updateSchedule = db.prepare('UPDATE sub_locations SET scheduled_date = ?, scheduled_period = ?, scheduled_time = ? WHERE id = ? AND location_id = ?');
                 const tx = db.transaction(() => {
                     (args.orderedIds as number[]).forEach((id, idx) => update.run(idx, id, args.locationId));
                     if (Array.isArray(args.schedules)) {
-                        (args.schedules as Array<{ id: number; scheduledDate: string; scheduledPeriod: string }>).forEach(item => updateSchedule.run(item.scheduledDate || '', item.scheduledPeriod || '', item.id, args.locationId));
+                        (args.schedules as Array<{ id: number; scheduledDate: string; scheduledPeriod?: string; scheduledTime?: string }>).forEach(item => updateSchedule.run(item.scheduledDate || '', item.scheduledPeriod || '', item.scheduledTime || '', item.id, args.locationId));
                     }
                 });
                 tx();

@@ -6,7 +6,8 @@ export interface SubLocation {
     durationMinutes: number;
     durationDays: number;
     scheduledDate: string;
-    scheduledPeriod: 'morning' | 'afternoon' | '';
+    scheduledPeriod: string;
+    scheduledTime: string;
     description: string;
     activityType: 'sightseeing' | 'accommodation' | 'food' | 'transport' | 'other';
     transportType?: 'car' | 'bus' | 'train' | 'flight' | 'motorbike' | 'ferry' | 'walking' | 'other' | '';

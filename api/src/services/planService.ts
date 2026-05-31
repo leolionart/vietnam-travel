@@ -13,6 +13,7 @@ interface DbSubLocation {
     duration_days: number;
     scheduled_date: string;
     scheduled_period: string;
+    scheduled_time: string;
     description: string;
     activity_type: string;
     transport_type: string;
@@ -65,6 +66,7 @@ function subToPublic(sub: DbSubLocation) {
         durationDays: sub.duration_days || 0,
         scheduledDate: sub.scheduled_date,
         scheduledPeriod: sub.scheduled_period,
+        scheduledTime: sub.scheduled_time || '',
         description: sub.description,
         activityType: sub.activity_type || 'sightseeing',
         transportType: sub.transport_type || '',

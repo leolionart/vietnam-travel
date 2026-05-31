@@ -78,7 +78,7 @@ Ví dụ sửa prod:
 export TRAVEL_ADMIN_PASSWORD='...'
 npm --prefix api run cli -- update-activity <slug> <locationId> <activityId> \
   --api-url https://trips.naai.studio \
-  --json '{"scheduledPeriod":"morning"}'
+  --json '{"scheduledDate":"2026-07-03","scheduledTime":"09:30"}'
 ```
 
 ---

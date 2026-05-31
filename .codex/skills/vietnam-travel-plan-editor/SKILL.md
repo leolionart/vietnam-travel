@@ -121,7 +121,7 @@ npm --prefix api run cli -- update-activity <slug> <locationId> <activityId> \
 
 npm --prefix api run cli -- reorder-activities <slug> <locationId> \
   --api-url https://trips.naai.studio \
-  --json '{"orderedIds":[12,10,11],"schedules":[{"id":12,"scheduledDate":"2026-07-03","scheduledPeriod":"morning"}]}'
+  --json '{"orderedIds":[12,10,11],"schedules":[{"id":12,"scheduledDate":"2026-07-03","scheduledTime":"09:30"}]}'
 ```
 
 `add-sub-location`, `update-sub-location`, `delete-sub-location`, and
@@ -222,6 +222,10 @@ Cost details belong on activities (`sub_locations`), not fixed location fields.
   `participantChildren` on that activity. Location-level headcount is legacy
   storage and is not used for cost calculation.
 - Location-level cost fields are legacy storage only. Configure costs as activities.
+- Scheduling belongs on each activity. Use `scheduledDate` plus `scheduledTime`
+  (`HH:mm`) for exact calendar placement. `scheduledPeriod` is legacy/UI helper
+  metadata only; when both exist, UIs should trust `scheduledTime` and infer
+  morning/afternoon/evening themselves.
 
 ## Activity JSON Cheat Sheet
 
@@ -236,7 +240,8 @@ Accommodation per room/night or stay unit:
   "quantity": 1,
   "surcharge": 0,
   "durationDays": 2,
-  "scheduledDate": "2026-07-03"
+  "scheduledDate": "2026-07-03",
+  "scheduledTime": "15:00"
 }
 ```
 
@@ -251,7 +256,7 @@ Sightseeing ticket:
   "childPrice": 150000,
   "durationMinutes": 90,
   "scheduledDate": "2026-07-03",
-  "scheduledPeriod": "morning"
+  "scheduledTime": "09:30"
 }
 ```
 
@@ -269,7 +274,7 @@ Transport:
   "participantChildren": 2,
   "durationMinutes": 360,
   "scheduledDate": "2026-06-18",
-  "scheduledPeriod": "morning"
+  "scheduledTime": "07:00"
 }
 ```
 

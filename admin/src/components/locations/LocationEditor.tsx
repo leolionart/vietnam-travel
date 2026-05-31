@@ -74,6 +74,15 @@ function activityDurationLabel(sub: Pick<SubLocation, 'durationDays' | 'duration
     return `${sub.durationMinutes} phút`;
 }
 
+function periodFromTime(time: string): string {
+    const match = String(time || '').match(/^(\d{1,2})(?::(\d{2}))?$/);
+    if (!match) return '';
+    const hour = Math.min(Math.max(Number(match[1]) || 0, 0), 23);
+    if (hour >= 18) return 'evening';
+    if (hour >= 12) return 'afternoon';
+    return 'morning';
+}
+
 function costSummary(subLocations: SubLocation[]) {
     return subLocations.reduce((sum, sub) => {
         const type = sub.activityType || 'sightseeing';
@@ -152,6 +161,8 @@ export function LocationEditor({ location, planSlug, onSave, onClose }: Props) {
             lng: String(sub.lng),
             durationMinutes: String(sub.durationMinutes),
             durationDays: String(sub.durationDays ?? 0),
+            scheduledDate: sub.scheduledDate ?? '',
+            scheduledTime: sub.scheduledTime ?? '',
             description: sub.description,
             activityType: sub.activityType ?? 'sightseeing',
             transportType: sub.transportType ?? '',
@@ -208,6 +219,9 @@ export function LocationEditor({ location, planSlug, onSave, onClose }: Props) {
             lng: Number(subForm.lng) || 0,
             durationMinutes: Number(subForm.durationMinutes) || 60,
             durationDays: Number(subForm.durationDays) || 0,
+            scheduledDate: subForm.scheduledDate,
+            scheduledTime: subForm.scheduledTime,
+            scheduledPeriod: periodFromTime(subForm.scheduledTime),
             description: subForm.description,
             activityType: subForm.activityType,
             transportType: subForm.activityType === 'transport' ? subForm.transportType : '',
@@ -223,7 +237,7 @@ export function LocationEditor({ location, planSlug, onSave, onClose }: Props) {
         try {
             if (expandedSubId === 'new') {
                 const { id } = await api.addSubLocation(planSlug, location.id, payload);
-                setSubLocations(prev => [...prev, { id, scheduledDate: '', scheduledPeriod: '', ...payload }]);
+                setSubLocations(prev => [...prev, { id, ...payload }]);
             } else if (typeof expandedSubId === 'number') {
                 await api.updateSubLocation(planSlug, location.id, expandedSubId, payload);
                 setSubLocations(prev => prev.map(s => s.id === expandedSubId ? { ...s, ...payload } : s));
@@ -264,7 +278,7 @@ export function LocationEditor({ location, planSlug, onSave, onClose }: Props) {
                 const scheduleById = new Map((pendingCalendarSchedules ?? []).map(item => [item.id, item]));
                 setSubLocations(prev => [...prev].map(sub => {
                     const schedule = scheduleById.get(sub.id);
-                    return schedule ? { ...sub, scheduledDate: schedule.scheduledDate, scheduledPeriod: schedule.scheduledPeriod } : sub;
+                    return schedule ? { ...sub, scheduledDate: schedule.scheduledDate, scheduledPeriod: schedule.scheduledPeriod, scheduledTime: schedule.scheduledTime ?? sub.scheduledTime } : sub;
                 }).sort((a, b) => (order.get(a.id) ?? 9999) - (order.get(b.id) ?? 9999)));
                 setPendingCalendarOrder(null);
                 setPendingCalendarSchedules(null);
@@ -649,6 +663,8 @@ interface SubFormState {
     lng: string;
     durationMinutes: string;
     durationDays: string;
+    scheduledDate: string;
+    scheduledTime: string;
     description: string;
     activityType: 'sightseeing' | 'accommodation' | 'food' | 'transport' | 'other';
     transportType: 'car' | 'bus' | 'train' | 'flight' | 'motorbike' | 'ferry' | 'walking' | 'other' | '';
@@ -669,6 +685,8 @@ function emptySubFormState(): SubFormState {
         lng: '',
         durationMinutes: '60',
         durationDays: '0',
+        scheduledDate: '',
+        scheduledTime: '',
         description: '',
         activityType: 'sightseeing',
         transportType: '',
@@ -713,6 +731,16 @@ function SubForm({ form, setForm }: { form: SubFormState; setForm: React.Dispatc
             <div>
                 <label className="block text-[10px] text-slate-500 mb-1">Kéo dài nhiều ngày</label>
                 <input type="number" min="0" step="0.5" value={form.durationDays} onChange={e => setForm(f => ({ ...f, durationDays: e.target.value }))} className="input-field" placeholder="0 nếu chỉ trong ngày" />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+                <div>
+                    <label className="block text-[10px] text-slate-500 mb-1">Ngày diễn ra</label>
+                    <input type="date" value={form.scheduledDate} onChange={e => setForm(f => ({ ...f, scheduledDate: e.target.value }))} className="input-field" />
+                </div>
+                <div>
+                    <label className="block text-[10px] text-slate-500 mb-1">Giờ bắt đầu</label>
+                    <input type="time" value={form.scheduledTime} onChange={e => setForm(f => ({ ...f, scheduledTime: e.target.value }))} className="input-field" />
+                </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
                 <div>

@@ -19,7 +19,8 @@ interface Props {
 export interface SubLocationSchedule {
     id: number;
     scheduledDate: string;
-    scheduledPeriod: 'morning' | 'afternoon';
+    scheduledPeriod: string;
+    scheduledTime?: string;
 }
 
 interface VisitSlot {
@@ -135,7 +136,7 @@ function buildInitialAssignments(slots: VisitSlot[], subLocations: SubLocation[]
     const slotIds = new Set(slots.map(slot => slot.id));
     const unassigned: SubLocation[] = [];
     subLocations.forEach(sub => {
-        const scheduledSlot = scheduleToSlotId(sub.scheduledDate, sub.scheduledPeriod);
+        const scheduledSlot = scheduleToSlotId(sub.scheduledDate, sub.scheduledPeriod || periodFromTime(sub.scheduledTime));
         if (scheduledSlot && slotIds.has(scheduledSlot)) assignments[scheduledSlot].push(sub.id);
         else unassigned.push(sub);
     });
@@ -148,8 +149,23 @@ function buildInitialAssignments(slots: VisitSlot[], subLocations: SubLocation[]
 }
 
 function scheduleToSlotId(date: string, period: string): string {
-    if (!date || (period !== 'morning' && period !== 'afternoon')) return '';
+    if (!date || (period !== 'morning' && period !== 'afternoon' && period !== 'evening')) return '';
+    if (period === 'evening') return `${date}-afternoon`;
     return `${date}-${period}`;
+}
+
+function periodFromTime(time: string): string {
+    const match = String(time || '').match(/^(\d{1,2})(?::(\d{2}))?$/);
+    if (!match) return '';
+    const hour = Math.min(Math.max(Number(match[1]) || 0, 0), 23);
+    if (hour >= 18) return 'evening';
+    if (hour >= 12) return 'afternoon';
+    return 'morning';
+}
+
+function defaultTimeForPeriod(period: string): string {
+    if (period === 'afternoon') return '13:00';
+    return '08:00';
 }
 
 function findContainer(assignments: Assignments, subId: number): string | null {
@@ -163,7 +179,12 @@ function buildOrderedSchedule(assignments: Assignments, slots: VisitSlot[], subL
         const [date, period] = slot.id.endsWith('-morning')
             ? [slot.id.slice(0, -8), 'morning' as const]
             : [slot.id.slice(0, -10), 'afternoon' as const];
-        return (assignments[slot.id] || []).map(id => ({ id, scheduledDate: date, scheduledPeriod: period }));
+        return (assignments[slot.id] || []).map(id => {
+            const sub = subLocations.find(item => item.id === id);
+            const currentPeriod = periodFromTime(sub?.scheduledTime || '');
+            const scheduledTime = currentPeriod === period ? (sub?.scheduledTime || defaultTimeForPeriod(period)) : defaultTimeForPeriod(period);
+            return { id, scheduledDate: date, scheduledPeriod: periodFromTime(scheduledTime) || period, scheduledTime };
+        });
     });
     return { orderedIds: [...orderedIds, ...missingIds], schedules };
 }

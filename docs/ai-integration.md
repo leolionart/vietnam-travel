@@ -122,6 +122,9 @@ npm --prefix api run cli -- search-vexere-trips "Hà Nội" "Nghệ An" 2026-06-
   each activity. Do not rely on location-level headcount for cost calculation.
 - Use `activityType="transport"` and `transportType="bus"` for coach/bus
   transport activities that should show transport icons and duration.
+- Schedule activities with `scheduledDate` and exact `scheduledTime` (`HH:mm`).
+  Treat `scheduledPeriod` as optional compatibility metadata; UI can infer
+  morning, afternoon, or evening from the time.
 - Use `analyze_activity_proximity` before adding or moving activities so close
   activities can be grouped into the same day or same period.
 - Do not move local SQLite data to production through deploy. Edit the target

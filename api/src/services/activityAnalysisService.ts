@@ -10,6 +10,7 @@ interface PublicActivity {
     durationMinutes?: number;
     scheduledDate?: string;
     scheduledPeriod?: string;
+    scheduledTime?: string;
     activityType?: string;
     transportType?: TransportType;
     description?: string;
@@ -45,6 +46,7 @@ interface ActivityPoint {
     lng: number;
     scheduledDate: string;
     scheduledPeriod: string;
+    scheduledTime: string;
     activityType: string;
     transportType: TransportType;
     durationMinutes: number;
@@ -115,6 +117,7 @@ function toActivityPoints(plan: PublicPlan, locationId?: number): ActivityPoint[
                 lng: activity.lng,
                 scheduledDate: activity.scheduledDate || '',
                 scheduledPeriod: activity.scheduledPeriod || '',
+                scheduledTime: activity.scheduledTime || '',
                 activityType: activity.activityType || 'sightseeing',
                 transportType: activity.transportType || '',
                 durationMinutes: Number(activity.durationMinutes || 60),
@@ -134,6 +137,7 @@ function toActivities(plan: PublicPlan, locationId?: number): ActivityPoint[] {
                 lng: Number(activity.lng || 0),
                 scheduledDate: activity.scheduledDate || '',
                 scheduledPeriod: activity.scheduledPeriod || '',
+                scheduledTime: activity.scheduledTime || '',
                 activityType: activity.activityType || 'sightseeing',
                 transportType: activity.transportType || '',
                 durationMinutes: Number(activity.durationMinutes || 60),
@@ -188,6 +192,7 @@ export function analyzePlanPayload(plan: PublicPlan, options: AnalysisOptions = 
             locationName: group[0].locationName,
             scheduledDate: group[0].scheduledDate,
             scheduledPeriod: bestPeriodLabel(group),
+            scheduledTime: group.map(point => point.scheduledTime).filter(Boolean).sort()[0] || '',
             activityIds: group.map(point => point.id),
             activities: group.map(point => point.name),
             note: 'Các hoạt động cùng điểm dừng/ngày; dùng cặp khoảng cách gần để quyết định gom cùng buổi.',
@@ -202,6 +207,7 @@ export function analyzePlanPayload(plan: PublicPlan, options: AnalysisOptions = 
             locationName: point.locationName,
             scheduledDate: point.scheduledDate,
             scheduledPeriod: point.scheduledPeriod,
+            scheduledTime: point.scheduledTime,
             transportType: point.transportType || transportType,
             durationMinutes: point.durationMinutes,
             durationLabel: formatDurationMinutes(point.durationMinutes),
