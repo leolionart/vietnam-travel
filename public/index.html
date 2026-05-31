@@ -369,7 +369,7 @@
                     <div x-show="calendarEditingEnabled() || calendarScheduleDirty || scheduleSaveStatus"
                          class="flex flex-wrap items-center justify-start lg:justify-end gap-1.5 text-[10px]">
                         <span x-show="calendarScheduleDirty" class="rounded-md border border-amber-400/25 bg-amber-400/10 px-2 py-1 font-bold text-amber-200">Chưa lưu thay đổi lịch</span>
-                        <span x-show="scheduleSaveStatus && !calendarScheduleDirty" class="rounded-md border border-emerald-400/20 bg-emerald-400/10 px-2 py-1 font-bold text-emerald-200" x-text="scheduleSaveStatus"></span>
+                        <span x-show="scheduleSaveStatus" class="rounded-md border px-2 py-1 font-bold" :class="calendarScheduleDirty ? 'border-rose-400/25 bg-rose-400/10 text-rose-200' : 'border-emerald-400/20 bg-emerald-400/10 text-emerald-200'" x-text="scheduleSaveStatus"></span>
                         <button type="button"
                                 x-show="calendarScheduleDirty"
                                 @click="discardCalendarScheduleChanges()"
@@ -531,6 +531,12 @@
                                                                 <p x-show="calendarEventDetail(event)" class="mt-0.5 text-[8px] font-semibold leading-snug opacity-80 whitespace-normal break-words" x-text="calendarEventDetail(event)"></p>
                                                             </div>
                                                         </div>
+                                                        <span x-show="calendarEditingEnabled(event)"
+                                                              @pointerdown.stop.prevent="handleCalendarResizeStart($event, event)"
+                                                              @click.stop
+                                                              class="absolute inset-x-0 bottom-0 flex h-3 cursor-ns-resize items-end justify-center bg-gradient-to-t from-black/20 to-transparent">
+                                                            <span class="mb-0.5 h-0.5 w-8 rounded-full bg-current opacity-45"></span>
+                                                        </span>
                                                     </button>
                                                 </template>
                                             </article>
@@ -579,7 +585,7 @@
                     <div x-show="calendarEditingEnabled() || calendarScheduleDirty || scheduleSaveStatus"
                          class="flex flex-wrap items-center justify-start lg:justify-end gap-1.5 text-[10px]">
                         <span x-show="calendarScheduleDirty" class="rounded-md border border-amber-400/25 bg-amber-400/10 px-2 py-1 font-bold text-amber-200">Chưa lưu thay đổi lịch</span>
-                        <span x-show="scheduleSaveStatus && !calendarScheduleDirty" class="rounded-md border border-emerald-400/20 bg-emerald-400/10 px-2 py-1 font-bold text-emerald-200" x-text="scheduleSaveStatus"></span>
+                        <span x-show="scheduleSaveStatus" class="rounded-md border px-2 py-1 font-bold" :class="calendarScheduleDirty ? 'border-rose-400/25 bg-rose-400/10 text-rose-200' : 'border-emerald-400/20 bg-emerald-400/10 text-emerald-200'" x-text="scheduleSaveStatus"></span>
                         <button type="button"
                                 x-show="calendarScheduleDirty"
                                 @click="discardCalendarScheduleChanges()"
@@ -867,10 +873,27 @@
 
                 <!-- Activity-derived summary -->
                 <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-3.5">
-                    <p class="text-[8px] lg:text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-2">Summary từ activity</p>
+                    <div class="mb-2 flex items-center justify-between gap-2">
+                        <p class="text-[8px] lg:text-[9px] font-bold text-slate-500 uppercase tracking-wider">Tổng quan từ activity</p>
+                        <span class="text-[10px] font-bold text-amber-300" x-text="formatCurrency(calculateLocationCost(activeLocation))"></span>
+                    </div>
                     <p class="text-xs lg:text-sm text-slate-300 leading-relaxed" x-text="locationActivitySummary(activeLocation)"></p>
-                    <div class="mt-3 grid grid-cols-2 gap-2 text-[10px]">
-                        <template x-for="item in locationActivityTypeStats(activeLocation)" :key="item.type">
+                    <div class="mt-3 grid grid-cols-3 gap-2 text-[10px]">
+                        <div class="rounded-xl border border-white/5 bg-white/5 px-3 py-2">
+                            <p class="font-bold text-white" x-text="visibleActivities(activeLocation).length"></p>
+                            <p class="mt-0.5 text-slate-500">Activity</p>
+                        </div>
+                        <div class="rounded-xl border border-white/5 bg-white/5 px-3 py-2">
+                            <p class="font-bold text-white" x-text="locationActivityCostStats(activeLocation).length"></p>
+                            <p class="mt-0.5 text-slate-500">Có chi phí</p>
+                        </div>
+                        <div class="rounded-xl border border-white/5 bg-white/5 px-3 py-2">
+                            <p class="font-bold text-white" x-text="locationUnpricedActivityCount(activeLocation)"></p>
+                            <p class="mt-0.5 text-slate-500">Chưa giá</p>
+                        </div>
+                    </div>
+                    <div x-show="locationActivityCostStats(activeLocation).length" class="mt-3 grid grid-cols-2 gap-2 text-[10px]">
+                        <template x-for="item in locationActivityCostStats(activeLocation)" :key="item.type">
                             <div class="rounded-xl border border-white/5 bg-white/5 px-3 py-2">
                                 <p class="font-bold text-white" x-text="item.count + ' ' + item.label"></p>
                                 <p class="mt-0.5 text-slate-500" x-text="formatCurrency(item.total)"></p>
@@ -952,66 +975,6 @@
                         <p class="text-[8px] lg:text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-2">Lưu trú</p>
                         <p class="text-xs lg:text-sm font-bold text-white leading-snug line-clamp-2" x-text="activityNames(activeLocation, 'accommodation') || '—'"></p>
                         <p class="text-[10px] mt-1 text-slate-400 truncate" x-text="subActivityTotal(activeLocation, ['accommodation']) > 0 ? formatCurrency(subActivityTotal(activeLocation, ['accommodation'])) : 'Nhập ở activity lưu trú'"></p>
-                    </div>
-                </div>
-
-                <!-- Cost Calculator -->
-                <div class="bg-blue-600/10 rounded-2xl lg:rounded-3xl p-5 lg:p-6 border border-blue-500/20">
-                    <div class="flex items-center justify-between mb-4">
-                        <h4 class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Dự toán chi phí</h4>
-                        <i data-lucide="calculator" class="w-4 h-4 text-blue-400"></i>
-                    </div>
-
-                    <div class="rounded-xl border border-white/10 bg-white/5 p-3 mb-4">
-                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Số người theo activity</p>
-                        <p class="mt-1 text-[10px] leading-snug text-slate-500">Chi phí theo người dùng số người nhập trên từng activity, không dùng cấu hình theo địa điểm.</p>
-                    </div>
-
-                    <!-- Chi tiết từng khoản -->
-                    <div class="space-y-2 text-[10px]">
-
-                        <!-- Vé tham quan người lớn -->
-                        <template x-if="subActivityTotal(activeLocation, ['sightseeing']) > 0">
-                            <div class="flex items-center gap-2 text-slate-300">
-                                <span class="text-slate-400 flex-1 min-w-0 truncate">Vé tham quan</span>
-                                <span class="flex-none whitespace-nowrap">Theo activity</span>
-                                <span class="flex-none whitespace-nowrap font-bold text-white" x-text="formatCurrency(subActivityTotal(activeLocation, ['sightseeing']))"></span>
-                            </div>
-                        </template>
-
-                        <!-- Lưu trú -->
-                        <template x-if="subActivityTotal(activeLocation, ['accommodation']) > 0">
-                            <div class="flex items-center gap-2 text-slate-300">
-                                <span class="text-slate-400 flex-1 min-w-0 truncate">Lưu trú</span>
-                                <span class="flex-none whitespace-nowrap">Theo activity</span>
-                                <span class="flex-none whitespace-nowrap font-bold text-white" x-text="formatCurrency(subActivityTotal(activeLocation, ['accommodation']))"></span>
-                            </div>
-                        </template>
-
-                        <!-- Ăn uống -->
-                        <template x-if="subActivityTotal(activeLocation, ['food']) > 0">
-                            <div class="flex items-center gap-2 text-slate-300">
-                                <span class="text-slate-400 flex-1 min-w-0 truncate">Ăn uống</span>
-                                <span class="flex-none whitespace-nowrap">Theo activity</span>
-                                <span class="flex-none whitespace-nowrap font-bold text-white" x-text="formatCurrency(subActivityTotal(activeLocation, ['food']))"></span>
-                            </div>
-                        </template>
-
-                        <template x-if="subActivityTotal(activeLocation, ['transport', 'other']) > 0">
-                            <div class="flex items-center gap-2 text-slate-300">
-                                <span class="text-slate-400 flex-1 min-w-0 truncate">Di chuyển/khác</span>
-                                <span class="flex-none whitespace-nowrap">Theo activity</span>
-                                <span class="flex-none whitespace-nowrap font-bold text-white" x-text="formatCurrency(subActivityTotal(activeLocation, ['transport', 'other']))"></span>
-                            </div>
-                        </template>
-
-                    </div>
-
-                    <div class="mt-4 pt-4 border-t border-white/10 space-y-2">
-                        <div class="flex justify-between items-center">
-                            <span class="text-[10px] font-bold text-slate-400">Tổng cộng</span>
-                            <span class="text-lg lg:text-xl font-bold text-white font-display" x-text="formatCurrency(calculateLocationCost(activeLocation))"></span>
-                        </div>
                     </div>
                 </div>
 
@@ -1255,6 +1218,8 @@
                 shareUrlCopied: false,
                 adminMode: false,
                 calendarDragEvent: null,
+                calendarResizeEvent: null,
+                _calendarResizeMoveHandler: null,
                 scheduleOverrides: {},
                 savedScheduleSnapshot: {},
                 pendingScheduleChanges: {},
@@ -1817,6 +1782,7 @@
                                 scheduledDate: sub.scheduledDate || '',
                                 scheduledPeriod: sub.scheduledPeriod || '',
                                 scheduledTime: sub.scheduledTime || '',
+                                durationMinutes: Number(sub.durationMinutes || 60),
                             };
                         });
                     });
@@ -1830,6 +1796,7 @@
                             sub.scheduledDate = schedule.scheduledDate || '';
                             sub.scheduledPeriod = schedule.scheduledPeriod || '';
                             sub.scheduledTime = schedule.scheduledTime || '';
+                            if (schedule.durationMinutes !== undefined) sub.durationMinutes = Number(schedule.durationMinutes || 60);
                         });
                     });
                     this.scheduleOverrides = { ...schedules };
@@ -2115,7 +2082,17 @@
                     if (!stats.length) return 'Chưa có activity chi tiết cho địa điểm này.';
                     const total = this.calculateLocationCost(loc);
                     const parts = stats.map(item => `${item.count} ${item.label.toLowerCase()}`);
-                    return `${loc.name} có ${parts.join(', ')} trong lịch trình. Tổng chi phí theo activity: ${this.formatCurrency(total)}.`;
+                    const unpriced = this.locationUnpricedActivityCount(loc);
+                    const suffix = unpriced > 0 ? ` ${unpriced} activity chưa khai báo chi phí.` : '';
+                    return `${loc.name} có ${parts.join(', ')} trong lịch trình. Tổng chi phí đã khai báo theo activity: ${this.formatCurrency(total)}.${suffix}`;
+                },
+
+                locationActivityCostStats(loc) {
+                    return this.locationActivityTypeStats(loc).filter(item => item.total > 0);
+                },
+
+                locationUnpricedActivityCount(loc) {
+                    return this.visibleActivities(loc).filter(item => this.subActivityCost(item, loc) <= 0).length;
                 },
 
                 summaryActivityMeta(activity, loc) {
@@ -2667,6 +2644,19 @@
                     return token ? { Authorization: `Bearer ${token}` } : {};
                 },
 
+                async calendarSaveErrorMessage(res) {
+                    const prefix = `Server ${res.status}`;
+                    const contentType = res.headers.get('content-type') || '';
+                    if (contentType.includes('application/json')) {
+                        const body = await res.json().catch(() => ({}));
+                        return body?.error ? `${prefix}: ${body.error}` : prefix;
+                    }
+                    const text = await res.text().catch(() => '');
+                    const title = text.match(/<title>(.*?)<\/title>/i)?.[1] || '';
+                    if (title) return `${prefix}: ${title.replace(/\s+/g, ' ').trim()}`;
+                    return `${prefix}: không lưu được, vui lòng thử lại`;
+                },
+
                 async saveCalendarScheduleChanges() {
                     if (!this.calendarScheduleDirty || this.calendarScheduleSaving) return;
                     this.calendarScheduleSaving = true;
@@ -2683,13 +2673,14 @@
                                         scheduledDate: change.scheduledDate,
                                         scheduledPeriod: change.scheduledPeriod,
                                         scheduledTime: change.scheduledTime,
+                                        durationMinutes: change.durationMinutes,
                                     }),
                                 });
                                 if (res.status === 401) {
                                     window.location.href = `/admin/login?return=${encodeURIComponent(window.location.pathname + window.location.search)}`;
                                     return;
                                 }
-                                if (!res.ok) throw new Error(await res.text());
+                                if (!res.ok) throw new Error(await this.calendarSaveErrorMessage(res));
                             }
                         } else {
                             await this.flushSession();
@@ -2700,7 +2691,8 @@
                             if (!this.calendarScheduleDirty) this.scheduleSaveStatus = '';
                         }, 2500);
                     } catch (e) {
-                        alert('Không thể lưu lịch: ' + (e instanceof Error ? e.message : String(e)));
+                        this.scheduleSaveStatus = `Không lưu được: ${e instanceof Error ? e.message : String(e)}`;
+                        console.error('[calendar] save failed:', e);
                     } finally {
                         this.calendarScheduleSaving = false;
                     }
@@ -2726,6 +2718,45 @@
                     };
                     event.dataTransfer.effectAllowed = 'move';
                     event.dataTransfer.setData('application/json', JSON.stringify(this.calendarDragEvent));
+                },
+
+                calendarScheduleChangeForSub(subLocationId, locationId, values = {}) {
+                    let nextChange = null;
+                    (this.currentPlan.locations || []).forEach(loc => {
+                        (loc.subLocations || []).forEach(sub => {
+                            if (sub.id === subLocationId) {
+                                if (values.scheduledDate !== undefined) sub.scheduledDate = values.scheduledDate;
+                                if (values.scheduledPeriod !== undefined) sub.scheduledPeriod = values.scheduledPeriod;
+                                if (values.scheduledTime !== undefined) sub.scheduledTime = values.scheduledTime;
+                                if (values.durationMinutes !== undefined) sub.durationMinutes = values.durationMinutes;
+                                nextChange = {
+                                    subLocationId,
+                                    locationId: locationId || loc.id,
+                                    scheduledDate: sub.scheduledDate || '',
+                                    scheduledPeriod: sub.scheduledPeriod || '',
+                                    scheduledTime: sub.scheduledTime || '',
+                                    durationMinutes: Number(sub.durationMinutes || 60),
+                                };
+                            }
+                        });
+                    });
+                    if (!nextChange) return null;
+                    this.scheduleOverrides = {
+                        ...this.scheduleOverrides,
+                        [subLocationId]: {
+                            scheduledDate: nextChange.scheduledDate,
+                            scheduledPeriod: nextChange.scheduledPeriod,
+                            scheduledTime: nextChange.scheduledTime,
+                            durationMinutes: nextChange.durationMinutes,
+                        },
+                    };
+                    this.pendingScheduleChanges = {
+                        ...this.pendingScheduleChanges,
+                        [subLocationId]: nextChange,
+                    };
+                    this.calendarScheduleDirty = true;
+                    this.scheduleSaveStatus = '';
+                    return nextChange;
                 },
 
                 calendarDropPeriod(event) {
@@ -2769,26 +2800,50 @@
                     const scheduledTime = this.calendarDropScheduledTime(event, period);
                     const scheduledPeriod = this.calendarPeriodFromMinutes(this.calendarEventStartMinutes({ scheduledTime }));
 
-                    (this.currentPlan.locations || []).forEach(loc => {
-                        (loc.subLocations || []).forEach(sub => {
-                            if (sub.id === subLocationId) {
-                                sub.scheduledDate = scheduledDate;
-                                sub.scheduledPeriod = scheduledPeriod;
-                                sub.scheduledTime = scheduledTime;
-                            }
-                        });
-                    });
-                    this.scheduleOverrides = {
-                        ...this.scheduleOverrides,
-                        [subLocationId]: { scheduledDate, scheduledPeriod, scheduledTime },
-                    };
-                    this.pendingScheduleChanges = {
-                        ...this.pendingScheduleChanges,
-                        [subLocationId]: { subLocationId, locationId, scheduledDate, scheduledPeriod, scheduledTime },
-                    };
-                    this.calendarScheduleDirty = true;
-                    this.scheduleSaveStatus = '';
+                    this.calendarScheduleChangeForSub(subLocationId, locationId, { scheduledDate, scheduledPeriod, scheduledTime });
                     this.calendarDragEvent = null;
+                    this.$nextTick(() => lucide.createIcons());
+                },
+
+                handleCalendarResizeStart(event, calendarEvent) {
+                    if (!this.calendarEditingEnabled(calendarEvent) || !calendarEvent.subLocationId) return;
+                    const column = event.currentTarget.closest('article');
+                    const rect = column?.getBoundingClientRect();
+                    if (!rect) return;
+                    this.calendarResizeEvent = {
+                        subLocationId: calendarEvent.subLocationId,
+                        locationId: calendarEvent.locationId,
+                        startMinutes: this.calendarEventStartMinutes(calendarEvent),
+                        initialDuration: this.calendarEventDurationMinutes(calendarEvent),
+                        columnTop: rect.top,
+                        columnHeight: rect.height,
+                    };
+                    this._calendarResizeMoveHandler = (moveEvent) => this.handleCalendarResizeMove(moveEvent);
+                    window.addEventListener('pointermove', this._calendarResizeMoveHandler);
+                    window.addEventListener('pointerup', () => this.handleCalendarResizeEnd(), { once: true });
+                },
+
+                handleCalendarResizeMove(event) {
+                    const active = this.calendarResizeEvent;
+                    if (!active) return;
+                    const startMinutes = 6 * 60;
+                    const endMinutes = 22 * 60;
+                    const ratio = Math.min(Math.max((event.clientY - active.columnTop) / Math.max(active.columnHeight, 1), 0), 1);
+                    const pointerMinutes = startMinutes + (ratio * (endMinutes - startMinutes));
+                    const snappedEnd = Math.round(pointerMinutes / 15) * 15;
+                    const durationMinutes = Math.min(
+                        Math.max(snappedEnd - active.startMinutes, 30),
+                        endMinutes - active.startMinutes
+                    );
+                    this.calendarScheduleChangeForSub(active.subLocationId, active.locationId, { durationMinutes });
+                },
+
+                handleCalendarResizeEnd() {
+                    if (this._calendarResizeMoveHandler) {
+                        window.removeEventListener('pointermove', this._calendarResizeMoveHandler);
+                        this._calendarResizeMoveHandler = null;
+                    }
+                    this.calendarResizeEvent = null;
                     this.$nextTick(() => lucide.createIcons());
                 },
 
@@ -2801,6 +2856,7 @@
                                 sub.scheduledDate = schedule.scheduledDate || '';
                                 sub.scheduledPeriod = schedule.scheduledPeriod || '';
                                 sub.scheduledTime = schedule.scheduledTime || '';
+                                if (schedule.durationMinutes !== undefined) sub.durationMinutes = Number(schedule.durationMinutes || 60);
                             }
                         });
                     });
@@ -2900,6 +2956,17 @@
                 },
 
                 calendarWeekEventTimeLabel(event) {
+                    const minutes = this.calendarEventStartMinutes(event);
+                    const endMinutes = Math.min(minutes + this.calendarEventDurationMinutes(event), 22 * 60);
+                    const format = (value) => {
+                        const hour = Math.floor(value / 60);
+                        const minute = value % 60;
+                        return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                    };
+                    return `${format(minutes)}-${format(endMinutes)}`;
+                },
+
+                calendarWeekEventStartLabel(event) {
                     const minutes = this.calendarEventStartMinutes(event);
                     const hour = Math.floor(minutes / 60);
                     const minute = minutes % 60;
@@ -3080,6 +3147,7 @@
                                     durationMinutes,
                                     travelNote,
                                     metaCost: costLabel,
+                                    scheduledDate: this.localDateKey(day),
                                     scheduledTime: sub.scheduledTime || '',
                                     time: sub.scheduledTime || (scheduledPeriod === 'evening' ? 'Tối' : slot.label),
                                     order: slot.order + Math.floor(subIndex / visitSlots.length) * 0.01 + (dayIndex * 0.001),
