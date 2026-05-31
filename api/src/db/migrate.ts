@@ -4,9 +4,6 @@ export function runMigration(): void {
     const db = getDb();
 
     const addColumns = [
-        'ALTER TABLE locations ADD COLUMN transport_fare_adult INTEGER NOT NULL DEFAULT 0',
-        'ALTER TABLE locations ADD COLUMN transport_fare_child INTEGER NOT NULL DEFAULT 0',
-        'ALTER TABLE locations ADD COLUMN accommodation_address TEXT NOT NULL DEFAULT \'\'',
         'ALTER TABLE plans ADD COLUMN session_id TEXT',
         'ALTER TABLE sub_locations ADD COLUMN scheduled_date TEXT NOT NULL DEFAULT \'\'',
         'ALTER TABLE sub_locations ADD COLUMN scheduled_period TEXT NOT NULL DEFAULT \'\'',

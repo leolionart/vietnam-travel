@@ -118,6 +118,9 @@ npm --prefix api run cli -- search-vexere-trips "Hà Nội" "Nghệ An" 2026-06-
 
 - Costs belong on activities (`sub_locations`), not location-level legacy cost
   columns.
+- Location overview content is generated from activities. Do not write
+  location-level `description`, `highlight`, `activities`, or `food` fields for
+  new plans.
 - Per-person activities use `participantAdults` and `participantChildren` on
   each activity. Do not rely on location-level headcount for cost calculation.
 - Use `activityType="transport"` and `transportType="bus"` for coach/bus

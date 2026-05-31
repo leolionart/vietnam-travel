@@ -256,7 +256,6 @@ function formatPlan(plan: any, format: Format): string {
 
     for (const loc of plan.locations) {
         lines.push(`## ${loc.name}${loc.dateRange ? ` (${loc.dateRange})` : ''}`);
-        if (loc.highlight) lines.push(loc.highlight);
         const activities = Array.isArray(loc.subLocations) ? loc.subLocations : [];
         for (const activity of activities) {
             const parts = [

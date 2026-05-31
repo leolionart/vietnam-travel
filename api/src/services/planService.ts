@@ -40,10 +40,6 @@ interface DbLocation {
     duration_days: number;
     transport_type: string;
     transport_label: string;
-    highlight: string;
-    description: string;
-    activities: string;
-    food: string;
 }
 
 interface DbPlan {
@@ -108,10 +104,6 @@ function locationToPublic(loc: DbLocation, prevProvince?: string) {
         duration: loc.duration_days,
         transport: loc.transport_label,
         transportType: loc.transport_type,
-        highlight: loc.highlight,
-        description: loc.description,
-        activities: JSON.parse(loc.activities || '[]') as string[],
-        food: JSON.parse(loc.food || '[]') as string[],
         vexereUrl,
         subLocations: subs.map(subToPublic),
     };

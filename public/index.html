@@ -835,9 +835,18 @@
                 <template x-if="detailMode === 'overview' || !activeLocation.subLocations?.length">
                 <div class="space-y-3 lg:space-y-4">
 
-                <!-- Description -->
-                <div>
-                    <p class="text-xs lg:text-sm text-slate-400 leading-relaxed" x-text="activeLocation.description"></p>
+                <!-- Activity-derived summary -->
+                <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-3.5">
+                    <p class="text-[8px] lg:text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-2">Summary từ activity</p>
+                    <p class="text-xs lg:text-sm text-slate-300 leading-relaxed" x-text="locationActivitySummary(activeLocation)"></p>
+                    <div class="mt-3 grid grid-cols-2 gap-2 text-[10px]">
+                        <template x-for="item in locationActivityTypeStats(activeLocation)" :key="item.type">
+                            <div class="rounded-xl border border-white/5 bg-white/5 px-3 py-2">
+                                <p class="font-bold text-white" x-text="item.count + ' ' + item.label"></p>
+                                <p class="mt-0.5 text-slate-500" x-text="formatCurrency(item.total)"></p>
+                            </div>
+                        </template>
+                    </div>
                 </div>
 
                 <!-- Vexere booking CTA -->
@@ -976,25 +985,30 @@
                     </div>
                 </div>
 
-                <!-- Activities -->
-                <div>
-                    <h4 class="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 lg:mb-4">Hoạt động nổi bật</h4>
+                <!-- Activities from schedule -->
+                <div x-show="summaryActivitiesByType(activeLocation, ['sightseeing', 'transport', 'other']).length">
+                    <h4 class="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 lg:mb-4">Hoạt động từ lịch trình</h4>
                     <div class="space-y-2 lg:space-y-3">
-                        <template x-for="act in activeLocation.activities" :key="act">
+                        <template x-for="act in summaryActivitiesByType(activeLocation, ['sightseeing', 'transport', 'other'])" :key="act.id">
                             <div class="flex items-center gap-3 text-xs lg:text-sm text-slate-300">
                                 <div class="w-1.5 h-1.5 rounded-full bg-blue-500 flex-none"></div>
-                                <span x-text="act"></span>
+                                <div class="min-w-0">
+                                    <p class="font-bold text-slate-200 truncate" x-text="act.name"></p>
+                                    <p class="text-[10px] text-slate-500 truncate" x-text="summaryActivityMeta(act, activeLocation)"></p>
+                                </div>
                             </div>
                         </template>
                     </div>
                 </div>
 
-                <!-- Food -->
-                <div>
-                    <h4 class="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 lg:mb-4">Ẩm thực nên thử</h4>
+                <!-- Food from schedule -->
+                <div x-show="summaryActivitiesByType(activeLocation, ['food']).length">
+                    <h4 class="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 lg:mb-4">Ăn uống trong lịch trình</h4>
                     <div class="flex flex-wrap gap-2">
-                        <template x-for="food in activeLocation.food" :key="food">
-                            <span class="px-3 py-1.5 bg-white/5 rounded-full text-[9px] lg:text-[10px] font-bold text-slate-300 border border-white/5" x-text="food"></span>
+                        <template x-for="food in summaryActivitiesByType(activeLocation, ['food'])" :key="food.id">
+                            <span class="px-3 py-1.5 bg-white/5 rounded-full text-[9px] lg:text-[10px] font-bold text-slate-300 border border-white/5"
+                                  :title="summaryActivityMeta(food, activeLocation)"
+                                  x-text="food.name"></span>
                         </template>
                     </div>
                 </div>
@@ -1995,6 +2009,50 @@
                         .filter(s => !this.excludedSubs[s.id] && this.subActivityType(s) === type)
                         .map(s => s.name)
                         .join(' · ');
+                },
+
+                visibleActivities(loc) {
+                    return (loc?.subLocations || []).filter(s => !this.excludedSubs[s.id]);
+                },
+
+                summaryActivitiesByType(loc, types) {
+                    const allowed = new Set(types);
+                    return this.visibleActivities(loc).filter(s => allowed.has(this.subActivityType(s)));
+                },
+
+                locationActivityTypeStats(loc) {
+                    const types = ['sightseeing', 'accommodation', 'food', 'transport', 'other'];
+                    return types
+                        .map(type => {
+                            const items = this.summaryActivitiesByType(loc, [type]);
+                            return {
+                                type,
+                                label: this.activityTypeLabel(type),
+                                count: items.length,
+                                total: items.reduce((sum, item) => sum + this.subActivityCost(item, loc), 0),
+                            };
+                        })
+                        .filter(item => item.count > 0 || item.total > 0);
+                },
+
+                locationActivitySummary(loc) {
+                    const stats = this.locationActivityTypeStats(loc);
+                    if (!stats.length) return 'Chưa có activity chi tiết cho địa điểm này.';
+                    const total = this.calculateLocationCost(loc);
+                    const parts = stats.map(item => `${item.count} ${item.label.toLowerCase()}`);
+                    return `${loc.name} có ${parts.join(', ')} trong lịch trình. Tổng chi phí theo activity: ${this.formatCurrency(total)}.`;
+                },
+
+                summaryActivityMeta(activity, loc) {
+                    const parts = [
+                        this.activityTypeLabel(this.subActivityType(activity)),
+                        activity.scheduledDate || '',
+                        activity.scheduledTime || activity.scheduledPeriod || '',
+                        this.activityDurationLabel(activity),
+                    ];
+                    const cost = this.subActivityCost(activity, loc);
+                    if (cost > 0) parts.push(this.formatCurrency(cost));
+                    return parts.filter(Boolean).join(' · ');
                 },
 
                 subActivityCost(sub, loc) {
@@ -3197,12 +3255,12 @@
                                 <td>${escapeHtml(loc.dateRange || '')}</td>
                                 <td>${escapeHtml(stayDays)}</td>
                                 <td>${escapeHtml(loc.transport)}</td>
-                                <td>${escapeHtml(loc.highlight)}</td>
+                                <td>${escapeHtml(this.locationActivitySummary(loc))}</td>
                                 <td class="money">${formatMoney(this.subActivityTotal(loc, ['transport']))}</td>
                                 <td class="money">${formatMoney(this.subActivityTotal(loc, ['accommodation']))}</td>
                                 <td class="money">${formatMoney(this.subActivityTotal(loc, ['food']))}</td>
-                                <td>${escapeHtml((loc.activities || []).join(', '))}</td>
-                                <td>${escapeHtml((loc.food || []).join(', '))}</td>
+                                <td>${escapeHtml(this.summaryActivitiesByType(loc, ['sightseeing', 'transport', 'other']).map(item => item.name).join(', '))}</td>
+                                <td>${escapeHtml(this.summaryActivitiesByType(loc, ['food']).map(item => item.name).join(', '))}</td>
                                 <td class="money">${formatMoney(cost)}</td>
                             </tr>
                         `;
@@ -3336,7 +3394,7 @@
           <th style="width:95px">Ngày tháng</th>
           <th style="width:60px">Số ngày</th>
           <th style="width:70px">Di chuyển</th>
-          <th style="width:55px">Nổi bật</th>
+          <th style="width:90px">Summary activity</th>
           <th style="width:70px">Phí di chuyển</th>
           <th style="width:72px">Lưu trú activity</th>
           <th style="width:72px">Ăn uống activity</th>
@@ -3380,9 +3438,8 @@
                     };
 
                     const details = [
-                        loc.description || '',
                         `Di chuyển: ${loc.transport || 'N/A'}`,
-                        `Điểm nổi bật: ${loc.highlight || 'N/A'}`,
+                        this.locationActivitySummary(loc),
                     ].join('\n');
 
                     const calendarUrl = new URL('https://calendar.google.com/calendar/render');

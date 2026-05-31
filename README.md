@@ -226,10 +226,9 @@ editing, prefer `shareUrl` because it points to the exact session plan.
 Each stop on your itinerary gets its own card on a vertical timeline, connected by transport info. Click any stop to expand:
 
 - **Map** — all attractions pinned with geographic coordinates
-- **Attractions** — name, recommended visit time, adult/child ticket prices
-- **Food** — local dishes worth trying at that stop
-- **Stay** — accommodation name and nightly budget
-- **Cost overview** — running total across the whole trip (transport + attractions + food + stay)
+- **Activities** — attractions, food, stays, transport, timing, duration, and prices
+- **Location overview** — generated from the detailed activities in that stop
+- **Cost overview** — running total from activity costs only
 
 ---
 
@@ -240,8 +239,8 @@ Each stop on your itinerary gets its own card on a vertical timeline, connected 
 | `list_plans` | List available sample plans and their slugs |
 | `create_plan` | Create a new public session trip → returns `shareUrl`; slug is optional and safely de-duped |
 | `get_plan` | Read a trip by `shareUrl`, `sessionId`, or slug |
-| `add_location` | Add a stop with dates, transport type/fares, accommodation, food, cost details |
-| `update_location` | Edit any field on a stop |
+| `add_location` | Add a stop with dates and province/map metadata |
+| `update_location` | Edit stop timing or map metadata |
 | `delete_location` | Remove a stop |
 | `reorder_locations` | Reorder stops and cascade dates |
 | `add_sub_location` | Add an attraction inside a stop, including visit duration, map pin, ticket prices, and sort order |
@@ -277,7 +276,7 @@ Do not store the admin password in checked-in MCP config. For local stdio MCP, p
 }
 ```
 
-Activity cost data belongs in `sub_locations`: use `activityType` (`sightseeing`, `accommodation`, `food`, `transport`, `other`) plus `pricingMode` (`per_person`, `per_room`, `per_group`), `unitPrice`, `quantity`, `surcharge`, `adultPrice`, `childPrice`, and `durationDays`. Location-level cost fields are legacy storage only and should not be used for new edits.
+Activity detail and cost data belongs in `sub_locations`: use `activityType` (`sightseeing`, `accommodation`, `food`, `transport`, `other`) plus `pricingMode` (`per_person`, `per_room`, `per_group`), `unitPrice`, `quantity`, `surcharge`, `adultPrice`, `childPrice`, participant counts, `scheduledDate`, `scheduledTime`, and `durationDays`. Location-level description, food, activity list, and cost fields are legacy storage only and should not be used for new edits.
 
 Deploy does not move data between environments. Prod, local, and other deployments each keep their own SQLite DB; use Admin/CLI/MCP against the target environment when editing plan data.
 

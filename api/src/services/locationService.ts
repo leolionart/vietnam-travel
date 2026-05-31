@@ -20,10 +20,6 @@ export interface CreateLocationInput {
     durationDays?: number;
     transportType?: string;
     transportLabel?: string;
-    highlight?: string;
-    description?: string;
-    activities?: string[];
-    food?: string[];
 }
 
 export function addLocation(planId: number, input: CreateLocationInput): number {
@@ -37,12 +33,8 @@ export function addLocation(planId: number, input: CreateLocationInput): number 
         INSERT INTO locations (
             plan_id, sort_order, name, province, lat, lng,
             arrive_at, depart_at, duration_days,
-            transport_type, transport_label, transport_fare,
-            transport_fare_adult, transport_fare_child,
-            accommodation_name, accommodation_url, accommodation_address,
-            adult_price, child_price, stay_cost_per_night, food_budget_per_day,
-            adults, children, highlight, description, activities, food
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            transport_type, transport_label
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
         planId,
         maxOrder + 1,
@@ -54,23 +46,7 @@ export function addLocation(planId: number, input: CreateLocationInput): number 
         input.departAt ?? null,
         input.durationDays ?? 0,
         input.transportType ?? 'car',
-        input.transportLabel ?? '',
-        0,
-        0,
-        0,
-        '',
-        '',
-        '',
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        input.highlight ?? '',
-        input.description ?? '',
-        JSON.stringify(input.activities ?? []),
-        JSON.stringify(input.food ?? [])
+        input.transportLabel ?? ''
     );
 
     updatePlanDateRange(planId);
@@ -98,10 +74,6 @@ export function updateLocation(
         duration_days: input.durationDays,
         transport_type: input.transportType,
         transport_label: input.transportLabel,
-        highlight: input.highlight,
-        description: input.description,
-        activities: input.activities !== undefined ? JSON.stringify(input.activities) : undefined,
-        food: input.food !== undefined ? JSON.stringify(input.food) : undefined,
     };
 
     for (const [k, v] of Object.entries(map)) {

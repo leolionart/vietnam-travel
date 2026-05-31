@@ -221,7 +221,9 @@ Cost details belong on activities (`sub_locations`), not fixed location fields.
 - For per-person activities, always set `participantAdults` and
   `participantChildren` on that activity. Location-level headcount is legacy
   storage and is not used for cost calculation.
-- Location-level cost fields are legacy storage only. Configure costs as activities.
+- Location-level description, highlight, activities, food, headcount, and cost
+  fields are legacy storage only. Configure itinerary detail and overview inputs
+  as activities.
 - Scheduling belongs on each activity. Use `scheduledDate` plus `scheduledTime`
   (`HH:mm`) for exact calendar placement. `scheduledPeriod` is legacy/UI helper
   metadata only; when both exist, UIs should trust `scheduledTime` and infer
