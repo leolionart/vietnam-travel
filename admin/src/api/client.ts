@@ -51,6 +51,8 @@ export const api = {
     logout: () =>
         request<{ ok: boolean }>('/auth/logout', { method: 'POST' }),
 
+    me: () => request<{ ok: boolean }>('/auth/me'),
+
     listPlans: () => request<Plan[]>('/plans'),
 
     getPlan: (slug: string) => request<Plan>(`/plans/${slug}`),

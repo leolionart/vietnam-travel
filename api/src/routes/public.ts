@@ -21,6 +21,15 @@ function getLocationForPlan(planId: number, locationId: number): boolean {
     return !!getDb().prepare('SELECT id FROM locations WHERE id = ? AND plan_id = ?').get(locationId, planId);
 }
 
+function getSubLocationForPlan(planId: number, subId: number): boolean {
+    return !!getDb().prepare(`
+        SELECT s.id
+        FROM sub_locations s
+        JOIN locations l ON l.id = s.location_id
+        WHERE s.id = ? AND l.plan_id = ?
+    `).get(subId, planId);
+}
+
 // POST /api/public/plans — tạo session plan (không có trong admin list, chỉ truy cập qua sessionId)
 router.post('/plans', (req, res) => {
     const { slug, name, dateRange } = req.body as { slug?: string; name?: string; dateRange?: string };
@@ -131,7 +140,7 @@ router.put('/plans/:slug/locations/:id/sub-locations/:subId', (req, res) => {
 
     const subId = Number(req.params.subId);
     const db = getDb();
-    if (!db.prepare('SELECT id FROM sub_locations WHERE id = ? AND location_id = ?').get(subId, locationId)) {
+    if (!getSubLocationForPlan(planId, subId)) {
         res.status(404).json({ error: 'Sub-location not found' }); return;
     }
 

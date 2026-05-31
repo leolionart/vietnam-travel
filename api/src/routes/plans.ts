@@ -192,6 +192,17 @@ function getLocationForPlan(planId: number, locationId: number): { id: number } 
     return loc ?? null;
 }
 
+function getSubLocationForPlan(planId: number, subId: number): { id: number } | null {
+    const db = getDb();
+    const sub = db.prepare(`
+        SELECT s.id
+        FROM sub_locations s
+        JOIN locations l ON l.id = s.location_id
+        WHERE s.id = ? AND l.plan_id = ?
+    `).get(subId, planId) as { id: number } | undefined;
+    return sub ?? null;
+}
+
 // POST /api/plans/:slug/locations/:id/sub-locations
 router.post('/:slug/locations/:id/sub-locations', requireAuth, (req, res) => {
     const planId = getPlanIdBySlug(req.params.slug);
@@ -222,7 +233,7 @@ router.put('/:slug/locations/:id/sub-locations/:subId', requireAuth, (req, res) 
 
     const subId = Number(req.params.subId);
     const db = getDb();
-    const existing = db.prepare('SELECT id FROM sub_locations WHERE id = ? AND location_id = ?').get(subId, locationId) as { id: number } | undefined;
+    const existing = getSubLocationForPlan(planId, subId);
     if (!existing) { res.status(404).json({ error: 'Sub-location not found' }); return; }
 
     const { name, lat, lng, durationMinutes, durationDays, scheduledDate, scheduledPeriod, description, sortOrder, activityType, transportType, pricingMode, unitPrice, quantity, surcharge, adultPrice, childPrice, participantAdults, participantChildren } = req.body as {
@@ -268,7 +279,7 @@ router.patch('/:slug/locations/:id/sub-locations/:subId', requireAuth, (req, res
 
     const subId = Number(req.params.subId);
     const db = getDb();
-    const existing = db.prepare('SELECT id FROM sub_locations WHERE id = ? AND location_id = ?').get(subId, locationId) as { id: number } | undefined;
+    const existing = getSubLocationForPlan(planId, subId);
     if (!existing) { res.status(404).json({ error: 'Sub-location not found' }); return; }
 
     const { name, lat, lng, durationMinutes, durationDays, scheduledDate, scheduledPeriod, description, sortOrder, activityType, transportType, pricingMode, unitPrice, quantity, surcharge, adultPrice, childPrice, participantAdults, participantChildren } = req.body as {

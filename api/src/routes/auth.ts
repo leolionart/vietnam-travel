@@ -33,4 +33,8 @@ router.post('/logout', requireAuth, (req, res) => {
     res.json({ ok: true });
 });
 
+router.get('/me', requireAuth, (_req, res) => {
+    res.json({ ok: true });
+});
+
 export default router;
