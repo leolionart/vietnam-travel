@@ -351,25 +351,37 @@
                         <p class="text-[10px] text-slate-400" x-text="currentPlan.dateRange || 'Chưa có ngày'"></p>
                     </div>
                 </div>
-                <div class="flex flex-wrap gap-1.5 text-[9px] font-bold">
-                    <span class="inline-flex items-center gap-1 rounded-md bg-sky-500/10 text-sky-300 border border-sky-500/20 px-2 py-0.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-sky-300"></span> Di chuyển
-                    </span>
-                    <span class="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-2 py-0.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-300"></span> Tham quan
-                    </span>
-                    <span class="inline-flex items-center gap-1 rounded-md bg-white/5 text-slate-300 border border-white/10 px-2 py-0.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Lưu trú
-                    </span>
-                    <span class="inline-flex items-center gap-1 rounded-md bg-cyan-400/10 text-cyan-200 border border-cyan-400/25 px-2 py-0.5">
-                        Check-in
-                    </span>
-                    <span class="inline-flex items-center gap-1 rounded-md bg-rose-400/10 text-rose-200 border border-rose-400/25 px-2 py-0.5">
-                        Check-out
-                    </span>
-                    <span class="inline-flex items-center gap-1 rounded-md bg-amber-400/10 text-amber-300 border border-amber-400/20 px-2 py-0.5">
-                        Cuối tuần
-                    </span>
+                <div class="flex flex-col items-start lg:items-end gap-2">
+                    <div class="flex flex-wrap justify-start lg:justify-end gap-1.5 text-[9px] font-bold">
+                        <span class="inline-flex items-center gap-1 rounded-md bg-sky-500/10 text-sky-300 border border-sky-500/20 px-2 py-0.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-sky-300"></span> Di chuyển
+                        </span>
+                        <span class="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-2 py-0.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-300"></span> Tham quan
+                        </span>
+                        <span class="inline-flex items-center gap-1 rounded-md bg-white/5 text-slate-300 border border-white/10 px-2 py-0.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Lưu trú
+                        </span>
+                        <span class="inline-flex items-center gap-1 rounded-md bg-cyan-400/10 text-cyan-200 border border-cyan-400/25 px-2 py-0.5">Check-in</span>
+                        <span class="inline-flex items-center gap-1 rounded-md bg-rose-400/10 text-rose-200 border border-rose-400/25 px-2 py-0.5">Check-out</span>
+                        <span class="inline-flex items-center gap-1 rounded-md bg-amber-400/10 text-amber-300 border border-amber-400/20 px-2 py-0.5">Cuối tuần</span>
+                    </div>
+                    <div x-show="calendarEditingEnabled() || calendarScheduleDirty || scheduleSaveStatus"
+                         class="flex flex-wrap items-center justify-start lg:justify-end gap-1.5 text-[10px]">
+                        <span x-show="calendarScheduleDirty" class="rounded-md border border-amber-400/25 bg-amber-400/10 px-2 py-1 font-bold text-amber-200">Chưa lưu thay đổi lịch</span>
+                        <span x-show="scheduleSaveStatus && !calendarScheduleDirty" class="rounded-md border border-emerald-400/20 bg-emerald-400/10 px-2 py-1 font-bold text-emerald-200" x-text="scheduleSaveStatus"></span>
+                        <button type="button"
+                                x-show="calendarScheduleDirty"
+                                @click="discardCalendarScheduleChanges()"
+                                :disabled="calendarScheduleSaving"
+                                class="rounded-md border border-white/10 bg-white/5 px-2.5 py-1 font-bold text-slate-300 hover:bg-white/10 disabled:opacity-50">Bỏ đổi</button>
+                        <button type="button"
+                                x-show="calendarEditingEnabled()"
+                                @click="saveCalendarScheduleChanges()"
+                                :disabled="!calendarScheduleDirty || calendarScheduleSaving"
+                                class="rounded-md bg-blue-600 px-3 py-1 font-bold text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-45"
+                                x-text="calendarScheduleSaving ? 'Đang lưu...' : 'Save lịch'"></button>
+                    </div>
                 </div>
             </div>
 
@@ -550,18 +562,36 @@
                         <p class="text-[10px] text-slate-400" x-text="currentPlan.dateRange || 'Chưa có ngày'"></p>
                     </div>
                 </div>
-                <div class="flex flex-wrap gap-1.5 text-[9px] font-bold">
-                    <span class="inline-flex items-center gap-1 rounded-md bg-white/5 text-slate-300 border border-white/10 px-2 py-0.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Cả ngày / nhiều ngày
-                    </span>
-                    <span class="inline-flex items-center gap-1 rounded-md bg-sky-500/10 text-sky-300 border border-sky-500/20 px-2 py-0.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-sky-300"></span> Sáng / di chuyển
-                    </span>
-                    <span class="inline-flex items-center gap-1 rounded-md bg-orange-400/10 text-orange-200 border border-orange-300/20 px-2 py-0.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-orange-200"></span> Chiều
-                    </span>
-                    <span class="inline-flex items-center gap-1 rounded-md bg-cyan-400/10 text-cyan-200 border border-cyan-400/25 px-2 py-0.5">Check-in</span>
-                    <span class="inline-flex items-center gap-1 rounded-md bg-rose-400/10 text-rose-200 border border-rose-400/25 px-2 py-0.5">Check-out</span>
+                <div class="flex flex-col items-start lg:items-end gap-2">
+                    <div class="flex flex-wrap justify-start lg:justify-end gap-1.5 text-[9px] font-bold">
+                        <span class="inline-flex items-center gap-1 rounded-md bg-white/5 text-slate-300 border border-white/10 px-2 py-0.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Cả ngày / nhiều ngày
+                        </span>
+                        <span class="inline-flex items-center gap-1 rounded-md bg-sky-500/10 text-sky-300 border border-sky-500/20 px-2 py-0.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-sky-300"></span> Sáng / di chuyển
+                        </span>
+                        <span class="inline-flex items-center gap-1 rounded-md bg-orange-400/10 text-orange-200 border border-orange-300/20 px-2 py-0.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-orange-200"></span> Chiều
+                        </span>
+                        <span class="inline-flex items-center gap-1 rounded-md bg-cyan-400/10 text-cyan-200 border border-cyan-400/25 px-2 py-0.5">Check-in</span>
+                        <span class="inline-flex items-center gap-1 rounded-md bg-rose-400/10 text-rose-200 border border-rose-400/25 px-2 py-0.5">Check-out</span>
+                    </div>
+                    <div x-show="calendarEditingEnabled() || calendarScheduleDirty || scheduleSaveStatus"
+                         class="flex flex-wrap items-center justify-start lg:justify-end gap-1.5 text-[10px]">
+                        <span x-show="calendarScheduleDirty" class="rounded-md border border-amber-400/25 bg-amber-400/10 px-2 py-1 font-bold text-amber-200">Chưa lưu thay đổi lịch</span>
+                        <span x-show="scheduleSaveStatus && !calendarScheduleDirty" class="rounded-md border border-emerald-400/20 bg-emerald-400/10 px-2 py-1 font-bold text-emerald-200" x-text="scheduleSaveStatus"></span>
+                        <button type="button"
+                                x-show="calendarScheduleDirty"
+                                @click="discardCalendarScheduleChanges()"
+                                :disabled="calendarScheduleSaving"
+                                class="rounded-md border border-white/10 bg-white/5 px-2.5 py-1 font-bold text-slate-300 hover:bg-white/10 disabled:opacity-50">Bỏ đổi</button>
+                        <button type="button"
+                                x-show="calendarEditingEnabled()"
+                                @click="saveCalendarScheduleChanges()"
+                                :disabled="!calendarScheduleDirty || calendarScheduleSaving"
+                                class="rounded-md bg-blue-600 px-3 py-1 font-bold text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-45"
+                                x-text="calendarScheduleSaving ? 'Đang lưu...' : 'Save lịch'"></button>
+                    </div>
                 </div>
             </div>
 
@@ -1226,6 +1256,11 @@
                 adminMode: false,
                 calendarDragEvent: null,
                 scheduleOverrides: {},
+                savedScheduleSnapshot: {},
+                pendingScheduleChanges: {},
+                calendarScheduleDirty: false,
+                calendarScheduleSaving: false,
+                scheduleSaveStatus: '',
                 _sessionTimer: null,
                 plans: {},       // cache: slug/sessionId → full plan data
                 planList: [],    // lightweight list: [{slug, name, dateRange}]
@@ -1774,6 +1809,40 @@
                     return { excludedSubs: this.excludedSubs, excludedLocations: this.excludedLocations, schedules: this.scheduleOverrides };
                 },
 
+                captureCurrentSchedules() {
+                    const schedules = {};
+                    (this.currentPlan.locations || []).forEach(loc => {
+                        (loc.subLocations || []).forEach(sub => {
+                            schedules[sub.id] = {
+                                scheduledDate: sub.scheduledDate || '',
+                                scheduledPeriod: sub.scheduledPeriod || '',
+                                scheduledTime: sub.scheduledTime || '',
+                            };
+                        });
+                    });
+                    return schedules;
+                },
+
+                restoreSchedules(schedules = {}) {
+                    (this.currentPlan.locations || []).forEach(loc => {
+                        (loc.subLocations || []).forEach(sub => {
+                            const schedule = schedules[sub.id] || {};
+                            sub.scheduledDate = schedule.scheduledDate || '';
+                            sub.scheduledPeriod = schedule.scheduledPeriod || '';
+                            sub.scheduledTime = schedule.scheduledTime || '';
+                        });
+                    });
+                    this.scheduleOverrides = { ...schedules };
+                },
+
+                resetScheduleEditState() {
+                    this.savedScheduleSnapshot = this.captureCurrentSchedules();
+                    this.pendingScheduleChanges = {};
+                    this.calendarScheduleDirty = false;
+                    this.calendarScheduleSaving = false;
+                    this.scheduleSaveStatus = '';
+                },
+
                 async loadSession(id) {
                     try {
                         const res = await fetch(`/api/sessions/${id}`);
@@ -1787,6 +1856,7 @@
                         this.excludedLocations = sess.custom?.excludedLocations || {};
                         this.scheduleOverrides = sess.custom?.schedules || {};
                         this.applyScheduleOverrides();
+                        this.resetScheduleEditState();
                     } catch (e) {}
                 },
 
@@ -1837,6 +1907,7 @@
                 async saveAndShare() {
                     try {
                         await this.flushSession(); // tạo session nếu chưa có, update nếu đã có
+                        if (this.calendarScheduleDirty) this.resetScheduleEditState();
                         if (!this.mySessionId) throw new Error('Session not created');
                         const url = new URL(window.location.href);
                         url.searchParams.set('session', this.mySessionId);
@@ -1898,10 +1969,14 @@
                     this.excludedSubs = {};
                     this.excludedLocations = {};
                     this.scheduleOverrides = {};
+                    this.pendingScheduleChanges = {};
+                    this.calendarScheduleDirty = false;
+                    this.scheduleSaveStatus = '';
                     this.restoreExcluded(planId);
                     this.restoreExcludedLocations(planId);
                     const firstLoc = this.currentPlan.locations?.[0];
                     this.activeId = firstLoc?.id ?? null;
+                    this.resetScheduleEditState();
                     this.$nextTick(() => {
                         if (!this.map) this.initMap();
                         else this.updateMap(true);
@@ -2584,12 +2659,63 @@
 
                 calendarEditingEnabled(event = null) {
                     if (event && !event.subLocationId) return false;
-                    return this.viewMode === 'calendar';
+                    return this.viewMode === 'calendar' || this.viewMode === 'month';
                 },
 
                 adminHeaders() {
                     const token = localStorage.getItem('admin_token');
                     return token ? { Authorization: `Bearer ${token}` } : {};
+                },
+
+                async saveCalendarScheduleChanges() {
+                    if (!this.calendarScheduleDirty || this.calendarScheduleSaving) return;
+                    this.calendarScheduleSaving = true;
+                    this.scheduleSaveStatus = '';
+                    try {
+                        if (this.adminMode) {
+                            const slug = this.currentPlan.slug || this.currentPlanId;
+                            const changes = Object.values(this.pendingScheduleChanges || {});
+                            for (const change of changes) {
+                                const res = await fetch(`/api/plans/${encodeURIComponent(slug)}/locations/${change.locationId}/sub-locations/${change.subLocationId}`, {
+                                    method: 'PATCH',
+                                    headers: { 'Content-Type': 'application/json', ...this.adminHeaders() },
+                                    body: JSON.stringify({
+                                        scheduledDate: change.scheduledDate,
+                                        scheduledPeriod: change.scheduledPeriod,
+                                        scheduledTime: change.scheduledTime,
+                                    }),
+                                });
+                                if (res.status === 401) {
+                                    window.location.href = `/admin/login?return=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+                                    return;
+                                }
+                                if (!res.ok) throw new Error(await res.text());
+                            }
+                        } else {
+                            await this.flushSession();
+                        }
+                        this.resetScheduleEditState();
+                        this.scheduleSaveStatus = 'Đã lưu lịch';
+                        setTimeout(() => {
+                            if (!this.calendarScheduleDirty) this.scheduleSaveStatus = '';
+                        }, 2500);
+                    } catch (e) {
+                        alert('Không thể lưu lịch: ' + (e instanceof Error ? e.message : String(e)));
+                    } finally {
+                        this.calendarScheduleSaving = false;
+                    }
+                },
+
+                discardCalendarScheduleChanges() {
+                    if (this.calendarScheduleSaving) return;
+                    this.restoreSchedules(this.savedScheduleSnapshot || {});
+                    this.pendingScheduleChanges = {};
+                    this.calendarScheduleDirty = false;
+                    this.scheduleSaveStatus = 'Đã bỏ thay đổi';
+                    this.$nextTick(() => lucide.createIcons());
+                    setTimeout(() => {
+                        if (!this.calendarScheduleDirty) this.scheduleSaveStatus = '';
+                    }, 2000);
                 },
 
                 handleCalendarDragStart(event, calendarEvent) {
@@ -2633,7 +2759,7 @@
                     return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
                 },
 
-                async handleCalendarDrop(event, day, period) {
+                handleCalendarDrop(event, day, period) {
                     if (!day || day.isBlank || !this.calendarEditingEnabled()) return;
                     const payload = this.calendarDragEvent || JSON.parse(event.dataTransfer.getData('application/json') || '{}');
                     const subLocationId = Number(payload.subLocationId);
@@ -2643,44 +2769,27 @@
                     const scheduledTime = this.calendarDropScheduledTime(event, period);
                     const scheduledPeriod = this.calendarPeriodFromMinutes(this.calendarEventStartMinutes({ scheduledTime }));
 
-                    const applyLocal = () => {
-                        (this.currentPlan.locations || []).forEach(loc => {
-                            (loc.subLocations || []).forEach(sub => {
-                                if (sub.id === subLocationId) {
-                                    sub.scheduledDate = scheduledDate;
-                                    sub.scheduledPeriod = scheduledPeriod;
-                                    sub.scheduledTime = scheduledTime;
-                                }
-                            });
-                        });
-                        this.scheduleOverrides = {
-                            ...this.scheduleOverrides,
-                            [subLocationId]: { scheduledDate, scheduledPeriod, scheduledTime },
-                        };
-                    };
-
-                    try {
-                        if (this.adminMode) {
-                            const slug = this.currentPlan.slug || this.currentPlanId;
-                            const res = await fetch(`/api/plans/${encodeURIComponent(slug)}/locations/${locationId}/sub-locations/${subLocationId}`, {
-                                method: 'PATCH',
-                                headers: { 'Content-Type': 'application/json', ...this.adminHeaders() },
-                                body: JSON.stringify({ scheduledDate, scheduledPeriod, scheduledTime }),
-                            });
-                            if (res.status === 401) {
-                                window.location.href = `/admin/login?return=${encodeURIComponent(window.location.pathname + window.location.search)}`;
-                                return;
+                    (this.currentPlan.locations || []).forEach(loc => {
+                        (loc.subLocations || []).forEach(sub => {
+                            if (sub.id === subLocationId) {
+                                sub.scheduledDate = scheduledDate;
+                                sub.scheduledPeriod = scheduledPeriod;
+                                sub.scheduledTime = scheduledTime;
                             }
-                            if (!res.ok) throw new Error(await res.text());
-                        }
-                        applyLocal();
-                        if (!this.adminMode) this.scheduleSessionSave();
-                        this.$nextTick(() => lucide.createIcons());
-                    } catch (e) {
-                        alert('Không thể lưu lịch: ' + (e instanceof Error ? e.message : String(e)));
-                    } finally {
-                        this.calendarDragEvent = null;
-                    }
+                        });
+                    });
+                    this.scheduleOverrides = {
+                        ...this.scheduleOverrides,
+                        [subLocationId]: { scheduledDate, scheduledPeriod, scheduledTime },
+                    };
+                    this.pendingScheduleChanges = {
+                        ...this.pendingScheduleChanges,
+                        [subLocationId]: { subLocationId, locationId, scheduledDate, scheduledPeriod, scheduledTime },
+                    };
+                    this.calendarScheduleDirty = true;
+                    this.scheduleSaveStatus = '';
+                    this.calendarDragEvent = null;
+                    this.$nextTick(() => lucide.createIcons());
                 },
 
                 applyScheduleOverrides() {
