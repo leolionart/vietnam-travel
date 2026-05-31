@@ -776,7 +776,7 @@
     </section>
 
     <!-- Right Detail Panel -->
-    <main x-show="viewMode === 'map'" class="fixed right-6 top-28 bottom-28 w-[450px] z-40 pointer-events-none detail-panel" :class="activeId ? 'block' : 'hidden'">
+    <main x-show="(viewMode === 'map' && activeId) || ((viewMode === 'calendar' || viewMode === 'month') && calendarSidebarOpen && activeId)" class="fixed right-6 top-28 bottom-28 w-[450px] z-40 pointer-events-none detail-panel" :class="activeId ? 'block' : 'hidden'">
         <div class="glass rounded-[2rem] lg:rounded-[2.5rem] h-full flex flex-col overflow-hidden pointer-events-auto shadow-2xl border-white/5 slide-up relative">
             
             <!-- Close Button -->
@@ -810,6 +810,137 @@
                     class="px-4 py-2.5 text-[11px] font-bold transition-colors border-b-2 -mb-px"
                     :class="detailMode === 'detail' ? 'text-white border-emerald-400' : 'text-slate-500 border-transparent hover:text-slate-300'"
                 >Lịch trình</button>
+            </div>
+
+            <!-- Calendar/Admin CRUD controls -->
+            <div x-show="canCrudPlan()" class="border-b border-white/10 px-4 py-3 flex-none space-y-3">
+                <div class="flex items-center justify-between gap-2">
+                    <div>
+                        <p class="text-[9px] font-bold uppercase tracking-widest text-slate-500">Quản lý kế hoạch</p>
+                        <p class="text-[10px] text-slate-400" x-text="crudStatus || 'Thêm/sửa/xoá trực tiếp từ sidebar này'"></p>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button type="button"
+                                @click="startCreateLocation()"
+                                class="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-bold text-slate-200 hover:bg-white/10">
+                            <i data-lucide="map-pin" class="h-3 w-3"></i>
+                            Địa điểm
+                        </button>
+                        <button type="button"
+                                @click="startCreateActivity()"
+                                class="inline-flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-emerald-500">
+                            <i data-lucide="plus" class="h-3 w-3"></i>
+                            Activity
+                        </button>
+                    </div>
+                </div>
+
+                <form x-show="showLocationForm" @submit.prevent="saveLocationDraft()" class="rounded-2xl border border-white/10 bg-white/[0.03] p-3 space-y-2">
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="space-y-1 col-span-2">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Tên địa điểm</span>
+                            <input x-model="locationDraft.name" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-blue-400" placeholder="Ví dụ: Đà Nẵng">
+                        </label>
+                        <label class="space-y-1">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Tỉnh/thành</span>
+                            <input x-model="locationDraft.province" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-blue-400" placeholder="Đà Nẵng">
+                        </label>
+                        <label class="space-y-1">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Số ngày</span>
+                            <input type="number" min="0" step="1" x-model="locationDraft.durationDays" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-blue-400">
+                        </label>
+                        <label class="space-y-1">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Đến</span>
+                            <input type="datetime-local" x-model="locationDraft.arriveAt" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-blue-400">
+                        </label>
+                        <label class="space-y-1">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Đi</span>
+                            <input type="datetime-local" x-model="locationDraft.departAt" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-blue-400">
+                        </label>
+                    </div>
+                    <div class="flex justify-end gap-1.5">
+                        <button type="button" @click="cancelLocationForm()" class="rounded-md border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-bold text-slate-300">Huỷ</button>
+                        <button type="submit" :disabled="crudSaving" class="rounded-md bg-blue-600 px-3 py-1 text-[10px] font-bold text-white disabled:opacity-50" x-text="crudSaving ? 'Đang lưu...' : 'Tạo địa điểm'"></button>
+                    </div>
+                </form>
+
+                <form x-show="showActivityForm" @submit.prevent="saveActivityDraft()" class="rounded-2xl border border-white/10 bg-white/[0.03] p-3 space-y-2">
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="space-y-1 col-span-2">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Tên activity</span>
+                            <input x-model="activityDraft.name" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400" placeholder="Ví dụ: Tham quan phố cổ">
+                        </label>
+                        <label class="space-y-1">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Loại</span>
+                            <select x-model="activityDraft.activityType" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400">
+                                <option value="sightseeing">Tham quan</option>
+                                <option value="transport">Di chuyển</option>
+                                <option value="food">Ăn uống</option>
+                                <option value="accommodation">Lưu trú</option>
+                                <option value="other">Khác</option>
+                            </select>
+                        </label>
+                        <label class="space-y-1">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Giá</span>
+                            <select x-model="activityDraft.pricingMode" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400">
+                                <option value="per_person">Theo người</option>
+                                <option value="per_room">Theo phòng/đơn vị</option>
+                                <option value="per_group">Theo nhóm</option>
+                            </select>
+                        </label>
+                        <label class="space-y-1">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Ngày</span>
+                            <input type="date" x-model="activityDraft.scheduledDate" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400">
+                        </label>
+                        <label class="space-y-1">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Giờ</span>
+                            <input type="time" step="900" x-model="activityDraft.scheduledTime" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400">
+                        </label>
+                        <label class="space-y-1">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Phút</span>
+                            <input type="number" min="15" step="15" x-model="activityDraft.durationMinutes" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400">
+                        </label>
+                        <label class="space-y-1">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Số ngày</span>
+                            <input type="number" min="0" step="0.5" x-model="activityDraft.durationDays" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400">
+                        </label>
+                        <label class="space-y-1">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Người lớn</span>
+                            <input type="number" min="0" step="1" x-model="activityDraft.participantAdults" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400">
+                        </label>
+                        <label class="space-y-1">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Trẻ em</span>
+                            <input type="number" min="0" step="1" x-model="activityDraft.participantChildren" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400">
+                        </label>
+                        <label class="space-y-1">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Giá NL</span>
+                            <input type="number" min="0" step="1000" x-model="activityDraft.adultPrice" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400">
+                        </label>
+                        <label class="space-y-1">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Giá TE</span>
+                            <input type="number" min="0" step="1000" x-model="activityDraft.childPrice" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400">
+                        </label>
+                        <label class="space-y-1">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Đơn giá</span>
+                            <input type="number" min="0" step="1000" x-model="activityDraft.unitPrice" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400">
+                        </label>
+                        <label class="space-y-1">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">SL</span>
+                            <input type="number" min="0" step="1" x-model="activityDraft.quantity" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400">
+                        </label>
+                        <label class="space-y-1 col-span-2">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Mô tả</span>
+                            <textarea rows="2" x-model="activityDraft.description" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400"></textarea>
+                        </label>
+                    </div>
+                    <div class="flex justify-between gap-1.5">
+                        <button type="button" x-show="editingActivityId" @click="deleteActivityDraft()" :disabled="crudSaving" class="rounded-md border border-rose-400/20 bg-rose-400/10 px-2.5 py-1 text-[10px] font-bold text-rose-200 disabled:opacity-50">Xoá</button>
+                        <div class="ml-auto flex gap-1.5">
+                            <button type="button" @click="cancelActivityForm()" class="rounded-md border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-bold text-slate-300">Huỷ</button>
+                            <button type="submit" :disabled="crudSaving" class="rounded-md bg-emerald-600 px-3 py-1 text-[10px] font-bold text-white disabled:opacity-50" x-text="crudSaving ? 'Đang lưu...' : (editingActivityId ? 'Lưu activity' : 'Tạo activity')"></button>
+                        </div>
+                    </div>
+                </form>
             </div>
 
             <!-- Content -->
@@ -856,15 +987,22 @@
                                     </div>
                                     <p x-show="sub.description && !excludedSubs[sub.id]" class="text-[11px] text-slate-400 mt-1 leading-relaxed" x-text="sub.description"></p>
                                 </div>
-                                <!-- Toggle button -->
-                                <button @click="toggleSub(sub.id)"
-                                        class="flex-none w-7 h-7 rounded-full flex items-center justify-center transition-all text-sm mt-0.5"
-                                        :class="excludedSubs[sub.id]
-                                            ? 'bg-slate-700 text-slate-400 hover:bg-emerald-500/20 hover:text-emerald-400'
-                                            : 'bg-white/8 text-slate-400 hover:bg-red-500/20 hover:text-red-400'"
-                                        :title="excludedSubs[sub.id] ? 'Thêm lại vào lịch trình' : 'Bỏ khỏi lịch trình'">
-                                    <span x-text="excludedSubs[sub.id] ? '+' : '×'"></span>
-                                </button>
+                                <div class="flex flex-none items-center gap-1">
+                                    <button x-show="canCrudPlan()"
+                                            @click="startEditActivity(sub)"
+                                            class="mt-0.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/8 text-slate-400 transition-all hover:bg-blue-500/20 hover:text-blue-300"
+                                            title="Sửa activity">
+                                        <i data-lucide="pencil" class="h-3 w-3"></i>
+                                    </button>
+                                    <button @click="toggleSub(sub.id)"
+                                            class="mt-0.5 flex h-7 w-7 items-center justify-center rounded-full text-sm transition-all"
+                                            :class="excludedSubs[sub.id]
+                                                ? 'bg-slate-700 text-slate-400 hover:bg-emerald-500/20 hover:text-emerald-400'
+                                                : 'bg-white/8 text-slate-400 hover:bg-red-500/20 hover:text-red-400'"
+                                            :title="excludedSubs[sub.id] ? 'Thêm lại vào lịch trình' : 'Bỏ khỏi lịch trình'">
+                                        <span x-text="excludedSubs[sub.id] ? '+' : '×'"></span>
+                                    </button>
+                                </div>
                             </div>
                         </template>
 
@@ -1216,6 +1354,7 @@
                 planDropdownOpen: false,
                 detailScrolled: false,
                 detailMode: 'overview',
+                calendarSidebarOpen: false,
                 map: null,
                 markers: {},
                 polyline: null,
@@ -1233,6 +1372,13 @@
                 shareUrl: '',
                 shareUrlCopied: false,
                 adminMode: false,
+                crudSaving: false,
+                crudStatus: '',
+                showActivityForm: false,
+                showLocationForm: false,
+                editingActivityId: null,
+                activityDraft: {},
+                locationDraft: {},
                 calendarDragEvent: null,
                 calendarResizeEvent: null,
                 _calendarResizeMoveHandler: null,
@@ -1722,6 +1868,7 @@
                 },
 
                 closeDetailPanel() {
+                    this.calendarSidebarOpen = false;
                     this.activeId = null;
                     this.detailMode = 'overview';
                     this.detailScrolled = false;
@@ -1994,6 +2141,258 @@
                     if (!url.searchParams.get('slug') && this.currentPlan?.slug) url.searchParams.set('slug', this.currentPlan.slug);
                     const returnTo = `${url.pathname}${url.search}`;
                     return localStorage.getItem('admin_token') ? returnTo : `/admin/login?return=${encodeURIComponent(returnTo)}`;
+                },
+
+                canCrudPlan() {
+                    return this.adminMode || this.isSessionPlan;
+                },
+
+                planWriteBase() {
+                    const slug = this.currentPlan.slug || this.currentPlanId;
+                    if (!slug) return '';
+                    const encoded = encodeURIComponent(slug);
+                    return this.adminMode ? `/api/plans/${encoded}` : `/api/public/plans/${encoded}`;
+                },
+
+                crudHeaders() {
+                    return { 'Content-Type': 'application/json', ...this.adminHeaders() };
+                },
+
+                async handleCrudResponse(res) {
+                    if (res.status === 401) {
+                        window.location.href = `/admin/login?return=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+                        return false;
+                    }
+                    if (!res.ok) throw new Error(await this.calendarSaveErrorMessage(res));
+                    return true;
+                },
+
+                async reloadCurrentPlan() {
+                    const activeId = this.activeId;
+                    const sessionId = this.isSessionPlan ? this.currentPlanId : null;
+                    const slug = this.currentPlan.slug || this.currentPlanId;
+                    const res = this.isSessionPlan
+                        ? await fetch(`/api/sessions/plan/${encodeURIComponent(sessionId)}`)
+                        : await fetch(`/api/plans/${encodeURIComponent(slug)}`);
+                    if (!res.ok) throw new Error(await this.calendarSaveErrorMessage(res));
+                    const full = await res.json();
+                    this.plans[this.currentPlanId] = {
+                        name: full.name,
+                        slug: full.slug,
+                        dateRange: full.dateRange,
+                        locations: full.locations,
+                    };
+                    const sameLocation = this.currentPlan.locations.find(loc => loc.id === activeId);
+                    this.activeId = sameLocation?.id ?? this.currentPlan.locations?.[0]?.id ?? null;
+                    this.resetScheduleEditState();
+                    this.$nextTick(() => {
+                        lucide.createIcons();
+                        if (this.map) this.updateMap(false, true);
+                    });
+                },
+
+                defaultScheduledDate() {
+                    const { start } = this.parseDateRange(this.activeLocation?.dateRange || this.currentPlan.dateRange || '');
+                    return start ? this.localDateKey(start) : '';
+                },
+
+                dateTimeLocalToMillis(value) {
+                    const parsed = this.parseDateTimeLocal(value);
+                    return parsed ? parsed.getTime() : null;
+                },
+
+                startCreateLocation() {
+                    if (!this.canCrudPlan()) return;
+                    this.showActivityForm = false;
+                    this.locationDraft = {
+                        name: '',
+                        province: '',
+                        durationDays: 1,
+                        arriveAt: '',
+                        departAt: '',
+                    };
+                    this.showLocationForm = true;
+                    this.crudStatus = '';
+                    this.$nextTick(() => lucide.createIcons());
+                },
+
+                cancelLocationForm() {
+                    this.showLocationForm = false;
+                    this.locationDraft = {};
+                },
+
+                async saveLocationDraft() {
+                    if (!this.canCrudPlan() || this.crudSaving) return;
+                    const name = String(this.locationDraft.name || '').trim();
+                    if (!name) {
+                        this.crudStatus = 'Nhập tên địa điểm trước khi lưu';
+                        return;
+                    }
+                    this.crudSaving = true;
+                    this.crudStatus = '';
+                    try {
+                        const payload = {
+                            name,
+                            province: String(this.locationDraft.province || '').trim(),
+                            durationDays: Number(this.locationDraft.durationDays || 0),
+                            arriveAt: this.locationDraft.arriveAt ? this.dateTimeLocalToMillis(this.locationDraft.arriveAt) : null,
+                            departAt: this.locationDraft.departAt ? this.dateTimeLocalToMillis(this.locationDraft.departAt) : null,
+                            transportType: 'car',
+                            transportLabel: '',
+                        };
+                        const res = await fetch(`${this.planWriteBase()}/locations`, {
+                            method: 'POST',
+                            headers: this.crudHeaders(),
+                            body: JSON.stringify(payload),
+                        });
+                        if (!await this.handleCrudResponse(res)) return;
+                        const data = await res.json().catch(() => ({}));
+                        await this.reloadCurrentPlan();
+                        if (data.id) this.activeId = Number(data.id);
+                        this.showLocationForm = false;
+                        this.crudStatus = 'Đã tạo địa điểm';
+                    } catch (e) {
+                        this.crudStatus = `Không lưu được: ${e instanceof Error ? e.message : String(e)}`;
+                    } finally {
+                        this.crudSaving = false;
+                    }
+                },
+
+                startCreateActivity() {
+                    if (!this.canCrudPlan() || !this.activeLocation?.id) return;
+                    this.showLocationForm = false;
+                    this.editingActivityId = null;
+                    this.activityDraft = {
+                        name: '',
+                        activityType: 'sightseeing',
+                        pricingMode: 'per_person',
+                        scheduledDate: this.defaultScheduledDate(),
+                        scheduledTime: '08:00',
+                        durationMinutes: 60,
+                        durationDays: 0,
+                        participantAdults: 0,
+                        participantChildren: 0,
+                        adultPrice: 0,
+                        childPrice: 0,
+                        unitPrice: 0,
+                        quantity: 1,
+                        surcharge: 0,
+                        description: '',
+                    };
+                    this.showActivityForm = true;
+                    this.detailMode = 'detail';
+                    this.crudStatus = '';
+                    this.$nextTick(() => lucide.createIcons());
+                },
+
+                startEditActivity(sub) {
+                    if (!this.canCrudPlan() || !sub) return;
+                    this.showLocationForm = false;
+                    this.editingActivityId = sub.id;
+                    this.activityDraft = {
+                        name: sub.name || '',
+                        activityType: sub.activityType || 'sightseeing',
+                        transportType: sub.transportType || '',
+                        pricingMode: sub.pricingMode || 'per_person',
+                        scheduledDate: sub.scheduledDate || this.defaultScheduledDate(),
+                        scheduledTime: sub.scheduledTime || '',
+                        durationMinutes: Number(sub.durationMinutes || 60),
+                        durationDays: Number(sub.durationDays || 0),
+                        participantAdults: Number(sub.participantAdults ?? 0),
+                        participantChildren: Number(sub.participantChildren ?? 0),
+                        adultPrice: Number(sub.adultPrice || 0),
+                        childPrice: Number(sub.childPrice || 0),
+                        unitPrice: Number(sub.unitPrice || 0),
+                        quantity: Number(sub.quantity ?? 1),
+                        surcharge: Number(sub.surcharge || 0),
+                        description: sub.description || '',
+                    };
+                    this.showActivityForm = true;
+                    this.detailMode = 'detail';
+                    this.crudStatus = '';
+                    this.$nextTick(() => lucide.createIcons());
+                },
+
+                cancelActivityForm() {
+                    this.showActivityForm = false;
+                    this.editingActivityId = null;
+                    this.activityDraft = {};
+                },
+
+                activityPayloadFromDraft() {
+                    const scheduledTime = String(this.activityDraft.scheduledTime || '').trim();
+                    return {
+                        name: String(this.activityDraft.name || '').trim(),
+                        activityType: this.activityDraft.activityType || 'sightseeing',
+                        transportType: this.activityDraft.transportType || '',
+                        pricingMode: this.activityDraft.pricingMode || 'per_person',
+                        scheduledDate: this.activityDraft.scheduledDate || '',
+                        scheduledTime,
+                        scheduledPeriod: scheduledTime ? this.calendarPeriodFromMinutes(this.calendarEventStartMinutes({ scheduledTime })) : '',
+                        durationMinutes: Number(this.activityDraft.durationMinutes || 60),
+                        durationDays: Number(this.activityDraft.durationDays || 0),
+                        participantAdults: Number(this.activityDraft.participantAdults || 0),
+                        participantChildren: Number(this.activityDraft.participantChildren || 0),
+                        adultPrice: Number(this.activityDraft.adultPrice || 0),
+                        childPrice: Number(this.activityDraft.childPrice || 0),
+                        unitPrice: Number(this.activityDraft.unitPrice || 0),
+                        quantity: Number(this.activityDraft.quantity ?? 1),
+                        surcharge: Number(this.activityDraft.surcharge || 0),
+                        description: this.activityDraft.description || '',
+                        lat: Number(this.activeLocation.lat || 0),
+                        lng: Number(this.activeLocation.lng || 0),
+                    };
+                },
+
+                async saveActivityDraft() {
+                    if (!this.canCrudPlan() || !this.activeLocation?.id || this.crudSaving) return;
+                    const payload = this.activityPayloadFromDraft();
+                    if (!payload.name) {
+                        this.crudStatus = 'Nhập tên activity trước khi lưu';
+                        return;
+                    }
+                    this.crudSaving = true;
+                    this.crudStatus = '';
+                    try {
+                        const base = `${this.planWriteBase()}/locations/${this.activeLocation.id}/sub-locations`;
+                        const editingId = this.editingActivityId;
+                        const res = await fetch(editingId ? `${base}/${editingId}` : base, {
+                            method: editingId ? 'PATCH' : 'POST',
+                            headers: this.crudHeaders(),
+                            body: JSON.stringify(payload),
+                        });
+                        if (!await this.handleCrudResponse(res)) return;
+                        await this.reloadCurrentPlan();
+                        this.showActivityForm = false;
+                        this.editingActivityId = null;
+                        this.crudStatus = editingId ? 'Đã lưu activity' : 'Đã tạo activity';
+                    } catch (e) {
+                        this.crudStatus = `Không lưu được: ${e instanceof Error ? e.message : String(e)}`;
+                    } finally {
+                        this.crudSaving = false;
+                    }
+                },
+
+                async deleteActivityDraft() {
+                    if (!this.canCrudPlan() || !this.activeLocation?.id || !this.editingActivityId || this.crudSaving) return;
+                    if (!window.confirm('Xoá activity này khỏi kế hoạch?')) return;
+                    this.crudSaving = true;
+                    this.crudStatus = '';
+                    try {
+                        const res = await fetch(`${this.planWriteBase()}/locations/${this.activeLocation.id}/sub-locations/${this.editingActivityId}`, {
+                            method: 'DELETE',
+                            headers: this.crudHeaders(),
+                        });
+                        if (!await this.handleCrudResponse(res)) return;
+                        await this.reloadCurrentPlan();
+                        this.showActivityForm = false;
+                        this.editingActivityId = null;
+                        this.crudStatus = 'Đã xoá activity';
+                    } catch (e) {
+                        this.crudStatus = `Không xoá được: ${e instanceof Error ? e.message : String(e)}`;
+                    } finally {
+                        this.crudSaving = false;
+                    }
                 },
 
                 formatCurrency(value) {
@@ -3345,8 +3744,9 @@
                 openCalendarEvent(event) {
                     if (!event?.locationId) return;
                     this.activeId = event.locationId;
-                    this.detailMode = event.type === 'visit' ? 'detail' : 'overview';
-                    this.setViewMode('map');
+                    this.detailMode = event.subLocationId ? 'detail' : 'overview';
+                    this.calendarSidebarOpen = true;
+                    this.$nextTick(() => lucide.createIcons());
                 },
 
                 calculateLocationCost(loc) {
