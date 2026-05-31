@@ -26,6 +26,11 @@
             overflow-x: hidden;
         }
 
+        body.theme-light {
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+
         .font-display { font-family: var(--font-display); }
         .font-serif { font-family: var(--font-serif); }
 
@@ -39,6 +44,52 @@
             background: rgba(15, 23, 42, 0.7);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        body.theme-light .glass {
+            background: rgba(255, 255, 255, 0.84);
+            border-color: rgba(15, 23, 42, 0.12);
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+        }
+
+        body.theme-light .text-white,
+        body.theme-light .text-slate-100,
+        body.theme-light .text-slate-200,
+        body.theme-light .text-slate-300 {
+            color: #0f172a !important;
+        }
+
+        body.theme-light .text-slate-400,
+        body.theme-light .text-slate-500 {
+            color: #64748b !important;
+        }
+
+        body.theme-light .border-white\/10,
+        body.theme-light .border-white\/5 {
+            border-color: rgba(15, 23, 42, 0.12) !important;
+        }
+
+        body.theme-light .bg-white\/5,
+        body.theme-light .bg-white\/\[0\.025\] {
+            background-color: rgba(255, 255, 255, 0.55) !important;
+        }
+
+        body.theme-light header.fixed {
+            background: rgba(248, 250, 252, 0.9);
+            backdrop-filter: blur(18px);
+        }
+
+        body.theme-light .calendar-view button {
+            color: #0f172a !important;
+        }
+
+        body.theme-light .calendar-view article,
+        body.theme-light .calendar-view .rounded-md {
+            color: #0f172a;
+        }
+
+        body.theme-light .leaflet-container {
+            background: #f8fafc !important;
         }
 
         #map {
@@ -87,6 +138,7 @@
             #map.map-full { height: 100vh; height: 100dvh; }
             aside.fixed, main.fixed, footer.fixed { position: relative !important; top: auto !important; left: auto !important; right: auto !important; bottom: auto !important; width: 100% !important; }
             header.fixed { position: sticky !important; top: 0; z-index: 60; background: #0f172a; padding: 0.75rem !important; }
+            body.theme-light header.fixed { background: rgba(248, 250, 252, 0.94); }
             .timeline-rail { display: none !important; }
             .calendar-view { position: relative !important; top: auto !important; left: auto !important; right: auto !important; bottom: auto !important; padding: 0 0.75rem 5rem !important; }
             .calendar-week-grid { min-width: 720px; }
@@ -112,7 +164,7 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body x-data="travelApp()" x-cloak>
+<body x-data="travelApp()" :class="theme === 'light' ? 'theme-light' : 'theme-dark'" x-cloak>
 
     <!-- Plan loading overlay -->
     <div x-show="planLoading"
@@ -162,23 +214,45 @@
 
     <!-- Top Navigation -->
     <header class="fixed top-0 left-0 w-full z-50 p-4 lg:p-6 flex flex-col lg:flex-row justify-between items-center gap-4 pointer-events-none">
-        <div class="flex items-center gap-4 pointer-events-auto w-full lg:w-auto cursor-pointer" @click="closeDetailPanel()">
-            <div class="w-10 h-10 lg:w-12 lg:h-12 bg-white rounded-2xl flex items-center justify-center text-slate-900 shadow-2xl">
+        <div class="glass px-3 py-2 rounded-2xl flex items-center gap-3 pointer-events-auto w-full lg:w-auto cursor-pointer" @click="closeDetailPanel()">
+            <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-900 shadow-lg flex-none">
                 <i data-lucide="compass" class="w-5 h-5 lg:w-6 lg:h-6"></i>
             </div>
-            <div class="glass px-4 py-2 rounded-2xl flex-1 lg:flex-none">
-                <h1 class="text-base lg:text-lg font-bold font-display tracking-tight">Viet Roadtrips</h1>
-                <p class="text-[8px] lg:text-[10px] font-bold text-blue-400 uppercase tracking-widest">Premium Planner</p>
+            <div class="min-w-0 flex-1 lg:flex-none">
+                <h1 class="text-base lg:text-lg font-bold font-display tracking-tight leading-tight">Viet Roadtrips</h1>
+                <p class="text-[8px] lg:text-[10px] font-bold text-blue-400 uppercase tracking-widest">Plan Viewer</p>
             </div>
         </div>
 
-        <div x-show="!isSessionPlan" class="flex items-center gap-3 pointer-events-auto w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0 no-scrollbar">
-            <div class="glass p-1 rounded-2xl flex gap-1 whitespace-nowrap">
+        <div x-show="!isSessionPlan" class="relative pointer-events-auto w-full lg:w-[420px]" @click.outside="planDropdownOpen = false">
+            <button type="button"
+                    @click="planDropdownOpen = !planDropdownOpen"
+                    class="glass w-full rounded-2xl px-3 py-2 flex items-center gap-2 text-left transition-all hover:border-white/20">
+                <i data-lucide="route" class="w-4 h-4 text-slate-400 flex-none"></i>
+                <span class="min-w-0 flex-1 truncate text-xs lg:text-sm font-bold text-white" x-text="selectedPlanName()"></span>
+                <i data-lucide="chevron-down"
+                   class="w-4 h-4 text-slate-400 flex-none transition-transform"
+                   :class="planDropdownOpen ? 'rotate-180' : ''"></i>
+            </button>
+            <div x-show="planDropdownOpen"
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0 translate-y-1 scale-[0.98]"
+                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave="transition ease-in duration-100"
+                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-1 scale-[0.98]"
+                 class="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-[90] glass rounded-2xl p-1.5 shadow-2xl max-h-72 overflow-y-auto">
                 <template x-for="plan in planList" :key="plan.slug">
-                    <button @click="changePlan(plan.slug)"
-                            class="px-3 lg:px-4 py-2 rounded-xl text-[10px] lg:text-xs font-bold transition-all"
-                            :class="currentPlanId === plan.slug ? 'bg-white text-slate-900' : 'text-slate-400 hover:text-white'">
-                        <span x-text="plan.name"></span>
+                    <button type="button"
+                            @click="selectPlan(plan.slug)"
+                            class="w-full rounded-xl px-3 py-2.5 text-left transition-all flex items-start gap-2"
+                            :class="currentPlanId === plan.slug ? 'bg-white text-slate-900' : 'text-slate-300 hover:bg-white/10 hover:text-white'">
+                        <i :data-lucide="currentPlanId === plan.slug ? 'check-circle-2' : 'route'"
+                           class="w-4 h-4 mt-0.5 flex-none"></i>
+                        <span class="min-w-0">
+                            <span class="block text-xs font-bold leading-snug" x-text="plan.name"></span>
+                            <span class="block text-[9px] font-semibold opacity-70 mt-0.5" x-text="plan.dateRange || plan.slug"></span>
+                        </span>
                     </button>
                 </template>
             </div>
@@ -202,6 +276,13 @@
                     :class="viewMode === 'month' ? 'bg-white text-slate-900' : 'text-slate-400 hover:text-white'">
                 <i data-lucide="calendar-range" class="w-3.5 h-3.5"></i>
                 <span>Tháng</span>
+            </button>
+            <button @click="toggleTheme()"
+                    class="w-9 h-9 rounded-xl transition-all inline-flex items-center justify-center text-slate-400 hover:text-white"
+                    :class="theme === 'light' ? 'bg-slate-900 text-white' : 'bg-white/5'"
+                    :title="theme === 'light' ? 'Chuyển sang dark mode' : 'Chuyển sang light mode'">
+                <i x-show="theme !== 'light'" data-lucide="sun" class="w-3.5 h-3.5"></i>
+                <i x-show="theme === 'light'" data-lucide="moon" class="w-3.5 h-3.5"></i>
             </button>
         </div>
     </header>
@@ -370,7 +451,9 @@
                                     <div class="grid grid-cols-[48px_repeat(7,minmax(92px,1fr))] gap-1.5">
                                         <div class="rounded-lg border border-white/5 bg-white/[0.02] px-1.5 py-2 text-[9px] font-bold text-slate-500 flex items-center justify-center">Cả ngày</div>
                                         <template x-for="day in week.days" :key="`all-${day.key}`">
-                                            <article class="relative rounded-lg border p-1.5 min-h-[82px]" :class="calendarDayClass(day)">
+                                            <article class="relative rounded-lg border p-1.5 min-h-[82px]"
+                                                     :class="calendarDayClass(day)"
+                                                     :style="calendarDayAccentStyle(day)">
                                                 <div x-show="!day.isBlank" class="flex items-start justify-between gap-1 mb-1.5">
                                                     <h4 class="text-sm font-bold text-white leading-tight" x-text="day.dayOfMonth"></h4>
                                                     <div class="flex flex-wrap items-start justify-end gap-1">
@@ -402,7 +485,8 @@
 
                                         <div class="rounded-lg border border-sky-300/20 bg-sky-400/10 px-1.5 py-2 text-[9px] font-bold text-sky-200 flex items-center justify-center">Sáng</div>
                                         <template x-for="day in week.days" :key="`morning-${day.key}`">
-                                            <article class="rounded-lg border border-sky-300/20 bg-sky-400/10 p-1.5 min-h-[118px]">
+                                            <article class="rounded-lg border border-sky-300/20 bg-sky-400/10 p-1.5 min-h-[118px]"
+                                                     :style="calendarDayAccentStyle(day, 'morning')">
                                                 <div x-show="!day.isBlank" class="space-y-1">
                                                     <template x-for="event in calendarPartEvents(day, 'morning')" :key="event.id">
                                                         <button @click="openCalendarEvent(event)"
@@ -422,7 +506,8 @@
 
                                         <div class="rounded-lg border border-orange-300/20 bg-orange-400/10 px-1.5 py-2 text-[9px] font-bold text-orange-200 flex items-center justify-center">Chiều</div>
                                         <template x-for="day in week.days" :key="`afternoon-${day.key}`">
-                                            <article class="rounded-lg border border-orange-300/20 bg-orange-400/10 p-1.5 min-h-[118px]">
+                                            <article class="rounded-lg border border-orange-300/20 bg-orange-400/10 p-1.5 min-h-[118px]"
+                                                     :style="calendarDayAccentStyle(day, 'afternoon')">
                                                 <div x-show="!day.isBlank" class="space-y-1">
                                                     <template x-for="event in calendarPartEvents(day, 'afternoon')" :key="event.id">
                                                         <button @click="openCalendarEvent(event)"
@@ -553,7 +638,8 @@
                                                 <div class="relative grid grid-cols-7 gap-1.5">
                                                     <template x-for="day in week.days" :key="day.key">
                                                         <article class="rounded-lg border p-1.5 min-h-[136px]"
-                                                                 :class="calendarDayClass(day)">
+                                                                 :class="calendarDayClass(day)"
+                                                                 :style="calendarDayAccentStyle(day)">
                                                             <div x-show="!day.isBlank" class="flex items-start justify-between gap-1 mb-2">
                                                                 <div class="min-w-0">
                                                                     <p class="text-[8px] font-bold uppercase tracking-wider"
@@ -589,7 +675,8 @@
                                                                 <div class="grid grid-cols-2 gap-1">
                                                                     <template x-for="part in ['morning', 'afternoon']" :key="part">
                                                                         <div class="rounded-md border min-h-[44px] p-1"
-                                                                             :class="part === 'morning' ? 'bg-sky-400/10 border-sky-300/20' : 'bg-orange-400/10 border-orange-300/20'">
+                                                                             :class="part === 'morning' ? 'bg-sky-400/10 border-sky-300/20' : 'bg-orange-400/10 border-orange-300/20'"
+                                                                             :style="calendarDayAccentStyle(day, part)">
                                                                             <div class="text-[8px] font-bold uppercase leading-none mb-1"
                                                                                  :class="part === 'morning' ? 'text-sky-200' : 'text-orange-200'"
                                                                                  x-text="part === 'morning' ? 'Sáng' : 'Chiều'"></div>
@@ -1126,7 +1213,9 @@
                 currentPlanId: null,
                 activeId: null,
                 viewMode: 'map',
+                theme: 'dark',
                 calendarWeekIndex: 0,
+                planDropdownOpen: false,
                 detailScrolled: false,
                 detailMode: 'overview',
                 map: null,
@@ -1174,6 +1263,23 @@
                     }
                 },
 
+                toggleTheme() {
+                    this.theme = this.theme === 'light' ? 'dark' : 'light';
+                    localStorage.setItem('vt_theme', this.theme);
+                    this.$nextTick(() => lucide.createIcons());
+                },
+
+                selectedPlanName() {
+                    const plan = this.planList.find(item => item.slug === this.currentPlanId);
+                    return plan?.name || this.currentPlan.name || 'Chọn kế hoạch';
+                },
+
+                async selectPlan(planId) {
+                    this.planDropdownOpen = false;
+                    await this.changePlan(planId);
+                    this.$nextTick(() => lucide.createIcons());
+                },
+
                 locationImg(name) {
                     if (!name) return 'https://loremflickr.com/800/600/vietnam,travel/all?lock=7';
                     // Strip dấu tiếng Việt → ASCII để loremflickr tìm đúng ảnh theo tên địa điểm
@@ -1200,6 +1306,8 @@
                 },
 
                 async init() {
+                    const savedTheme = localStorage.getItem('vt_theme');
+                    if (savedTheme === 'light' || savedTheme === 'dark') this.theme = savedTheme;
                     lucide.createIcons();
 
                     try {
@@ -2347,6 +2455,49 @@
                         visit: 'bg-emerald-300/10 border-emerald-300/25 text-emerald-100',
                     };
                     return classes[type] || 'bg-white/10 border-white/10 text-slate-100';
+                },
+
+                locationPalette(code) {
+                    const palettes = {
+                        HN: {
+                            dark: { bg: 'rgba(59,130,246,0.16)', soft: 'rgba(59,130,246,0.11)', border: 'rgba(147,197,253,0.35)', shadow: 'rgba(59,130,246,0.10)' },
+                            light: { bg: 'rgba(219,234,254,0.86)', soft: 'rgba(219,234,254,0.62)', border: 'rgba(59,130,246,0.30)', shadow: 'rgba(59,130,246,0.08)' },
+                        },
+                        NA: {
+                            dark: { bg: 'rgba(20,184,166,0.16)', soft: 'rgba(20,184,166,0.11)', border: 'rgba(94,234,212,0.35)', shadow: 'rgba(20,184,166,0.10)' },
+                            light: { bg: 'rgba(204,251,241,0.86)', soft: 'rgba(204,251,241,0.62)', border: 'rgba(20,184,166,0.30)', shadow: 'rgba(20,184,166,0.08)' },
+                        },
+                        NB: {
+                            dark: { bg: 'rgba(168,85,247,0.16)', soft: 'rgba(168,85,247,0.11)', border: 'rgba(216,180,254,0.35)', shadow: 'rgba(168,85,247,0.10)' },
+                            light: { bg: 'rgba(243,232,255,0.86)', soft: 'rgba(243,232,255,0.62)', border: 'rgba(168,85,247,0.30)', shadow: 'rgba(168,85,247,0.08)' },
+                        },
+                        HL: {
+                            dark: { bg: 'rgba(245,158,11,0.15)', soft: 'rgba(245,158,11,0.10)', border: 'rgba(252,211,77,0.36)', shadow: 'rgba(245,158,11,0.10)' },
+                            light: { bg: 'rgba(254,243,199,0.88)', soft: 'rgba(254,243,199,0.62)', border: 'rgba(245,158,11,0.34)', shadow: 'rgba(245,158,11,0.08)' },
+                        },
+                    };
+                    const fallback = {
+                        dark: { bg: 'rgba(148,163,184,0.14)', soft: 'rgba(148,163,184,0.09)', border: 'rgba(203,213,225,0.28)', shadow: 'rgba(148,163,184,0.08)' },
+                        light: { bg: 'rgba(241,245,249,0.9)', soft: 'rgba(241,245,249,0.65)', border: 'rgba(100,116,139,0.22)', shadow: 'rgba(100,116,139,0.06)' },
+                    };
+                    return palettes[code] || fallback;
+                },
+
+                calendarDayLocationCode(day) {
+                    const locationEvent = (day?.events || []).find(event => event.activityType === 'location' && event.locationCode);
+                    if (locationEvent?.locationCode) return locationEvent.locationCode;
+                    const locationId = (day?.events || []).find(event => event.locationId)?.locationId;
+                    const loc = (this.currentPlan.locations || []).find(item => item.id === locationId);
+                    return loc ? this.locationCode(loc) : '';
+                },
+
+                calendarDayAccentStyle(day, part = 'day') {
+                    if (!day || day.isBlank) return '';
+                    const code = this.calendarDayLocationCode(day);
+                    if (!code) return '';
+                    const palette = this.locationPalette(code)[this.theme === 'light' ? 'light' : 'dark'];
+                    const bg = part === 'day' ? palette.bg : palette.soft;
+                    return `background:${bg};border-color:${palette.border};box-shadow:inset 0 0 0 1px ${palette.shadow}`;
                 },
 
                 calendarDayClass(day) {
