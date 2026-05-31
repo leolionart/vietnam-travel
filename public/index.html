@@ -469,7 +469,10 @@
                                                                 :title="`${event.title} - ${event.meta}`">
                                                             <div class="flex items-start gap-1 min-w-0">
                                                                 <span class="w-3.5 flex-none text-[11px] leading-none mt-0.5" x-text="calendarEventGlyph(event)"></span>
-                                                                <p class="text-[9px] font-bold leading-snug whitespace-normal break-words min-w-0" x-text="event.title"></p>
+                                                                <div class="min-w-0">
+                                                                    <p class="text-[9px] font-bold leading-snug whitespace-normal break-words min-w-0" x-text="event.title"></p>
+                                                                    <p x-show="calendarEventDetail(event)" class="mt-0.5 text-[8px] font-semibold leading-snug opacity-80 whitespace-normal break-words" x-text="calendarEventDetail(event)"></p>
+                                                                </div>
                                                             </div>
                                                         </button>
                                                     </template>
@@ -487,10 +490,15 @@
                                                                 class="w-full text-left rounded border px-1.5 py-1 transition-colors"
                                                                 :class="calendarEventClass(event.type)"
                                                                 :title="`${event.time ? event.time + ' · ' : ''}${event.title} - ${event.meta}`">
-                                                            <div class="flex items-center gap-1 min-w-0">
+                                                            <div class="flex items-start gap-1 min-w-0">
                                                                 <span class="w-3.5 flex-none text-[11px] leading-none mt-0.5" x-text="calendarEventGlyph(event)"></span>
-                                                                <p class="text-[9px] font-bold leading-snug whitespace-normal break-words min-w-0" x-text="event.title"></p>
-                                                                <span class="text-[7px] font-bold opacity-80 flex-none leading-none mt-0.5" x-show="event.time && !['Sáng', 'Chiều'].includes(event.time)" x-text="event.time"></span>
+                                                                <div class="min-w-0 flex-1">
+                                                                    <div class="flex items-start gap-1 min-w-0">
+                                                                        <p class="text-[9px] font-bold leading-snug whitespace-normal break-words min-w-0" x-text="event.title"></p>
+                                                                        <span class="text-[7px] font-bold opacity-80 flex-none leading-none mt-0.5" x-show="event.time && !['Sáng', 'Chiều'].includes(event.time)" x-text="event.time"></span>
+                                                                    </div>
+                                                                    <p x-show="calendarEventDetail(event)" class="mt-0.5 text-[8px] font-semibold leading-snug opacity-80 whitespace-normal break-words" x-text="calendarEventDetail(event)"></p>
+                                                                </div>
                                                             </div>
                                                         </button>
                                                     </template>
@@ -508,10 +516,15 @@
                                                                 class="w-full text-left rounded border px-1.5 py-1 transition-colors"
                                                                 :class="calendarEventClass(event.type)"
                                                                 :title="`${event.time ? event.time + ' · ' : ''}${event.title} - ${event.meta}`">
-                                                            <div class="flex items-center gap-1 min-w-0">
+                                                            <div class="flex items-start gap-1 min-w-0">
                                                                 <span class="w-3.5 flex-none text-[11px] leading-none mt-0.5" x-text="calendarEventGlyph(event)"></span>
-                                                                <p class="text-[9px] font-bold leading-snug whitespace-normal break-words min-w-0" x-text="event.title"></p>
-                                                                <span class="text-[7px] font-bold opacity-80 flex-none leading-none mt-0.5" x-show="event.time && !['Sáng', 'Chiều'].includes(event.time)" x-text="event.time"></span>
+                                                                <div class="min-w-0 flex-1">
+                                                                    <div class="flex items-start gap-1 min-w-0">
+                                                                        <p class="text-[9px] font-bold leading-snug whitespace-normal break-words min-w-0" x-text="event.title"></p>
+                                                                        <span class="text-[7px] font-bold opacity-80 flex-none leading-none mt-0.5" x-show="event.time && !['Sáng', 'Chiều'].includes(event.time)" x-text="event.time"></span>
+                                                                    </div>
+                                                                    <p x-show="calendarEventDetail(event)" class="mt-0.5 text-[8px] font-semibold leading-snug opacity-80 whitespace-normal break-words" x-text="calendarEventDetail(event)"></p>
+                                                                </div>
                                                             </div>
                                                         </button>
                                                     </template>
@@ -661,7 +674,10 @@
                                                                             :title="`${event.title} - ${event.meta}`">
                                                                         <div class="flex items-start gap-1 min-w-0">
                                                                             <span class="w-3.5 flex-none text-[11px] leading-none mt-0.5" x-text="calendarEventGlyph(event)"></span>
-                                                                            <p class="text-[9px] font-bold leading-snug whitespace-normal break-words min-w-0" x-text="event.title"></p>
+                                                                            <div class="min-w-0">
+                                                                                <p class="text-[9px] font-bold leading-snug whitespace-normal break-words min-w-0" x-text="event.title"></p>
+                                                                                <p x-show="calendarEventDetail(event)" class="mt-0.5 text-[8px] font-semibold leading-snug opacity-80 whitespace-normal break-words" x-text="calendarEventDetail(event)"></p>
+                                                                            </div>
                                                                         </div>
                                                                     </button>
                                                                 </template>
@@ -682,7 +698,10 @@
                                                                                             :title="`${event.time ? event.time + ' · ' : ''}${event.title} - ${event.meta}`">
                                                                                         <div class="flex items-start gap-1 min-w-0">
                                                                                             <span class="w-3.5 flex-none text-[11px] leading-none mt-0.5" x-text="calendarEventGlyph(event)"></span>
-                                                                                            <p class="text-[9px] font-bold leading-snug whitespace-normal break-words min-w-0" x-text="event.title"></p>
+                                                                                            <div class="min-w-0">
+                                                                                                <p class="text-[9px] font-bold leading-snug whitespace-normal break-words min-w-0" x-text="event.title"></p>
+                                                                                                <p x-show="calendarEventDetail(event)" class="mt-0.5 text-[8px] font-semibold leading-snug opacity-80 whitespace-normal break-words" x-text="calendarEventDetail(event)"></p>
+                                                                                            </div>
                                                                                         </div>
                                                                                     </button>
                                                                                 </template>
@@ -2010,7 +2029,28 @@
 
                 activityDurationLabel(sub) {
                     if (sub.durationDays && Number(sub.durationDays) > 0) return `${sub.durationDays} ngày`;
-                    return `${sub.durationMinutes || 60} phút`;
+                    const minutes = Number(sub.durationMinutes || 60);
+                    if (minutes < 60) return `${minutes} phút`;
+                    const hours = Math.floor(minutes / 60);
+                    const remainder = minutes % 60;
+                    return remainder ? `${hours} giờ ${remainder} phút` : `${hours} giờ`;
+                },
+
+                transportCalendarNote(sub) {
+                    const minutes = Number(sub?.durationMinutes || 0);
+                    if (minutes >= 360) return 'tuyến dài, gần như cả ngày';
+                    if (minutes >= 180) return 'tuyến dài, chặn 1 buổi';
+                    if (minutes >= 90) return 'cần buffer di chuyển';
+                    return '';
+                },
+
+                calendarEventDetail(event) {
+                    if (!event) return '';
+                    const parts = [];
+                    if (event.durationLabel && (event.activityType === 'transport' || event.activityType === 'accommodation')) parts.push(event.durationLabel);
+                    if (event.travelNote) parts.push(event.travelNote);
+                    if (event.activityType === 'transport' && event.metaCost) parts.push(event.metaCost);
+                    return parts.join(' · ');
                 },
 
                 activityNames(loc, type) {
@@ -2709,6 +2749,7 @@
                             const slot = savedSlot || visitSlots[subIndex % visitSlots.length];
                             const eventDays = this.calendarActivityDays(sub, slot.day);
                             if (activityType === 'accommodation') {
+                                const durationLabel = this.activityDurationLabel(sub);
                                 eventDays.forEach((day, dayIndex) => add(day, {
                                     id: `stay-activity-${sub.id}-${this.localDateKey(day)}`,
                                     groupId: `stay-activity-${sub.id}`,
@@ -2716,6 +2757,7 @@
                                     activityType,
                                     title: sub.name,
                                     meta: `${loc.name} · ${dayIndex === 0 ? 'Check-in' : 'Lưu trú'} ${dayIndex + 1}/${eventDays.length} · ${this.formatCurrency(this.subActivityCost(sub, loc))}`,
+                                    durationLabel,
                                     time: '',
                                     order: 1.2 + (subIndex * 0.01),
                                     span: eventDays.length,
@@ -2726,6 +2768,9 @@
                                 }));
                                 return;
                             }
+                            const durationLabel = this.activityDurationLabel(sub);
+                            const travelNote = activityType === 'transport' ? this.transportCalendarNote(sub) : '';
+                            const costLabel = this.formatCurrency(this.subActivityCost(sub, loc));
                             eventDays.forEach((day, dayIndex) => {
                                 const type = activityType === 'transport' ? 'transport' : 'visit';
                                 add(day, {
@@ -2735,7 +2780,10 @@
                                     activityType,
                                     transportType: sub.transportType || '',
                                     title: sub.name,
-                                    meta: `${loc.name} · ${this.activityTypeLabel(activityType)} · ${this.formatCurrency(this.subActivityCost(sub, loc))}`,
+                                    meta: `${loc.name} · ${this.activityTypeLabel(activityType)} · ${durationLabel} · ${costLabel}`,
+                                    durationLabel,
+                                    travelNote,
+                                    metaCost: costLabel,
                                     time: slot.label,
                                     order: slot.order + Math.floor(subIndex / visitSlots.length) * 0.01 + (dayIndex * 0.001),
                                     span: eventDays.length,

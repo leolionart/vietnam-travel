@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { analyzePlanPayload } from './services/activityAnalysisService.js';
 
 // ─── Remote HTTP client ───────────────────────────────────────────────────────
 
@@ -158,6 +159,20 @@ const TOOL_DEFINITIONS = [
             required: ['slug'],
             properties: {
                 slug: { type: 'string', description: 'Plan slug, vd: ha-noi-hue-da-nang' },
+            },
+        },
+    },
+    {
+        name: 'analyze_activity_proximity',
+        description: 'Read-only: kiểm tra khoảng cách các activity gần nhau, gợi ý gom cùng ngày/buổi, và liệt kê block di chuyển để AI sắp xếp plan hợp lý.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                slug: { type: 'string', description: 'Plan slug' },
+                planSlug: { type: 'string' },
+                locationId: { type: 'number', description: 'Chỉ phân tích một điểm dừng nếu cần' },
+                maxDistanceKm: { type: 'number', description: 'Ngưỡng xem là gần nhau, mặc định 5 km' },
+                transportType: { type: 'string', enum: ['car', 'bus', 'train', 'flight', 'motorbike', 'ferry', 'walking', 'other', ''] },
             },
         },
     },
@@ -420,6 +435,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 case 'get_plan':
                     return ok(await client.get(`/api/plans/${slug}`));
 
+                case 'analyze_activity_proximity': {
+                    const qs = new URLSearchParams();
+                    if (typeof args.locationId === 'number') qs.set('locationId', String(args.locationId));
+                    if (typeof args.maxDistanceKm === 'number') qs.set('maxDistanceKm', String(args.maxDistanceKm));
+                    if (typeof args.transportType === 'string') qs.set('transportType', args.transportType);
+                    const suffix = qs.toString() ? `?${qs.toString()}` : '';
+                    return ok(await client.get(`/api/plans/${slug}/activity-analysis${suffix}`));
+                }
+
                 case 'create_plan': {
                     const result = await client.post('/api/plans', stripMcpMeta({ slug: args.slug, name: args.name, dateRange: args.dateRange })) as { slug: string; sessionId?: string };
                     const shareUrl = result.sessionId
@@ -482,6 +506,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 const plan = L.getPlanBySlug(args.slug as string);
                 if (!plan) return err(`Plan "${args.slug}" not found`);
                 return ok(plan);
+            }
+
+            case 'analyze_activity_proximity': {
+                const slug = (args.slug || args.planSlug) as string;
+                const plan = L.getPlanBySlug(slug);
+                if (!plan) return err(`Plan "${slug}" not found`);
+                return ok(analyzePlanPayload(plan as never, {
+                    locationId: typeof args.locationId === 'number' ? args.locationId : undefined,
+                    maxDistanceKm: typeof args.maxDistanceKm === 'number' ? args.maxDistanceKm : undefined,
+                    transportType: typeof args.transportType === 'string' ? args.transportType as never : undefined,
+                }));
             }
 
             case 'create_plan':

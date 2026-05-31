@@ -6,6 +6,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { createPlan, createPublicSessionPlan, deletePlan, getPlanBySessionId, getPlanBySlug, listPlans, updatePlan } from '../services/planService.js';
 import { addLocation, updateLocation, deleteLocation, reorderLocations, type CreateLocationInput } from '../services/locationService.js';
+import { analyzePlanPayload } from '../services/activityAnalysisService.js';
 import { getDb } from '../db/connection.js';
 
 const router = Router();
@@ -139,6 +140,22 @@ const TOOL_DEFINITIONS = [
                 shareUrl: { type: 'string', description: 'Link share dạng https://trips.naai.studio/?session=...' },
                 sessionId: { type: 'string' },
                 slug: { type: 'string' },
+            },
+        },
+    },
+    {
+        name: 'analyze_activity_proximity',
+        description: 'Read-only: kiểm tra khoảng cách các activity gần nhau, gợi ý gom cùng ngày/buổi, và liệt kê block di chuyển để AI sắp xếp plan hợp lý.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                shareUrl: { type: 'string', description: 'Link share dạng https://trips.naai.studio/?session=...' },
+                sessionId: { type: 'string' },
+                slug: { type: 'string', description: 'Slug plan mẫu/admin để đọc' },
+                planSlug: { type: 'string' },
+                locationId: { type: 'number', description: 'Chỉ phân tích một điểm dừng nếu cần' },
+                maxDistanceKm: { type: 'number', description: 'Ngưỡng xem là gần nhau, mặc định 5 km' },
+                transportType: { type: 'string', enum: ['car', 'bus', 'train', 'flight', 'motorbike', 'ferry', 'walking', 'other', ''] },
             },
         },
     },
@@ -374,6 +391,18 @@ function buildServer(): Server {
                     const adminPlan = getPlanBySlug(a.slug as string);
                     if (!adminPlan) return err(`Plan "${a.slug}" not found`);
                     return ok({ ...adminPlan, shareUrl: `${APP_URL}/?slug=${adminPlan.slug}` });
+                }
+
+                case 'analyze_activity_proximity': {
+                    const sessionPlan = getSessionPlanRef(a);
+                    const slug = (a.slug || a.planSlug) as string | undefined;
+                    const plan = sessionPlan?.sessionId ? getPlanBySessionId(sessionPlan.sessionId) : slug ? getPlanBySlug(slug) : null;
+                    if (!plan) return err('Plan not found. Provide shareUrl/sessionId, slug, or planSlug.');
+                    return ok(analyzePlanPayload(plan as never, {
+                        locationId: typeof a.locationId === 'number' ? a.locationId : undefined,
+                        maxDistanceKm: typeof a.maxDistanceKm === 'number' ? a.maxDistanceKm : undefined,
+                        transportType: typeof a.transportType === 'string' ? a.transportType as never : undefined,
+                    }));
                 }
 
                 case 'update_plan': {

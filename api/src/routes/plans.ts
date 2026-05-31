@@ -14,6 +14,7 @@ import {
     deleteLocation,
     reorderLocations,
 } from '../services/locationService.js';
+import { analyzePlanBySlug } from '../services/activityAnalysisService.js';
 
 const router = Router();
 
@@ -30,6 +31,27 @@ router.get('/:slug', (req, res) => {
         return;
     }
     res.json(plan);
+});
+
+// GET /api/plans/:slug/activity-analysis
+router.get('/:slug/activity-analysis', (req, res) => {
+    const locationId = req.query.locationId !== undefined ? Number(req.query.locationId) : undefined;
+    const maxDistanceKm = req.query.maxDistanceKm !== undefined ? Number(req.query.maxDistanceKm) : undefined;
+    const transportType = typeof req.query.transportType === 'string' ? req.query.transportType : undefined;
+    if (locationId !== undefined && !Number.isFinite(locationId)) {
+        res.status(400).json({ error: 'locationId must be a number' });
+        return;
+    }
+    if (maxDistanceKm !== undefined && !Number.isFinite(maxDistanceKm)) {
+        res.status(400).json({ error: 'maxDistanceKm must be a number' });
+        return;
+    }
+    const analysis = analyzePlanBySlug(req.params.slug, { locationId, maxDistanceKm, transportType: transportType as never });
+    if (!analysis) {
+        res.status(404).json({ error: 'Plan not found' });
+        return;
+    }
+    res.json(analysis);
 });
 
 // POST /api/plans

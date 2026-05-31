@@ -40,6 +40,7 @@ Read commands:
   list-plans
   get-plan <slug>
   show-plan <slug>                 Same as get-plan --format markdown
+  analyze-activities <slug>         Nearby activity pairs and transport duration blocks
 
 Write commands require a password in TRAVEL_ADMIN_PASSWORD or ADMIN_PASSWORD:
   create-plan --json '{"slug":"trip","name":"Trip"}'
@@ -158,6 +159,8 @@ async function run(command: string, args: string[], options: Options): Promise<u
         case 'get-plan':
         case 'show-plan':
             return request(options, 'GET', `/api/plans/${encodeURIComponent(required(args, 0, 'slug'))}`);
+        case 'analyze-activities':
+            return request(options, 'GET', `/api/plans/${encodeURIComponent(required(args, 0, 'slug'))}/activity-analysis`);
         case 'create-plan':
             return request(options, 'POST', '/api/plans', options.json ?? {});
         case 'update-plan':
@@ -196,6 +199,9 @@ function money(value: unknown): string {
 
 function formatPlan(plan: any, format: Format): string {
     if (format === 'json') return JSON.stringify(plan, null, 2);
+    if (plan && Array.isArray(plan.nearbyPairs) && Array.isArray(plan.transportBlocks)) {
+        return formatActivityAnalysis(plan);
+    }
     if (!plan || typeof plan !== 'object' || !Array.isArray(plan.locations)) return JSON.stringify(plan, null, 2);
 
     const lines = [
@@ -223,6 +229,38 @@ function formatPlan(plan: any, format: Format): string {
             lines.push(`- ${activity.name}${parts.length ? `: ${parts.join(', ')}` : ''}`);
         }
         lines.push('');
+    }
+
+    return lines.join('\n').trim();
+}
+
+function formatActivityAnalysis(analysis: any): string {
+    const lines = [
+        `# Activity analysis: ${analysis.planName || analysis.planSlug}`,
+        '',
+        `Points checked: ${analysis.pointCount ?? 0}`,
+        `Nearby threshold: ${analysis.maxDistanceKm ?? 5} km`,
+        '',
+        '## Nearby pairs',
+    ];
+    const pairs = Array.isArray(analysis.nearbyPairs) ? analysis.nearbyPairs : [];
+    if (!pairs.length) {
+        lines.push('- No nearby pairs found.');
+    } else {
+        for (const pair of pairs.slice(0, 20)) {
+            lines.push(`- ${pair.from?.name} ↔ ${pair.to?.name}: ${pair.distanceLabel}, ~${pair.estimatedTravelLabel}. ${pair.suggestion}`);
+        }
+    }
+
+    lines.push('', '## Transport blocks');
+    const transports = Array.isArray(analysis.transportBlocks) ? analysis.transportBlocks : [];
+    if (!transports.length) {
+        lines.push('- No transport activities found.');
+    } else {
+        for (const block of transports) {
+            const when = [block.scheduledDate, block.scheduledPeriod].filter(Boolean).join(' ');
+            lines.push(`- ${block.name}${when ? ` (${when})` : ''}: ${block.durationLabel}. ${block.calendarNote}`);
+        }
     }
 
     return lines.join('\n').trim();
