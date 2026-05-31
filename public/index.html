@@ -366,22 +366,6 @@
                         <span class="inline-flex items-center gap-1 rounded-md bg-rose-400/10 text-rose-200 border border-rose-400/25 px-2 py-0.5">Check-out</span>
                         <span class="inline-flex items-center gap-1 rounded-md bg-amber-400/10 text-amber-300 border border-amber-400/20 px-2 py-0.5">Cuối tuần</span>
                     </div>
-                    <div x-show="calendarEditingEnabled() || calendarScheduleDirty || scheduleSaveStatus"
-                         class="flex flex-wrap items-center justify-start lg:justify-end gap-1.5 text-[10px]">
-                        <span x-show="calendarScheduleDirty" class="rounded-md border border-amber-400/25 bg-amber-400/10 px-2 py-1 font-bold text-amber-200">Chưa lưu thay đổi lịch</span>
-                        <span x-show="scheduleSaveStatus" class="rounded-md border px-2 py-1 font-bold" :class="calendarScheduleDirty ? 'border-rose-400/25 bg-rose-400/10 text-rose-200' : 'border-emerald-400/20 bg-emerald-400/10 text-emerald-200'" x-text="scheduleSaveStatus"></span>
-                        <button type="button"
-                                x-show="calendarScheduleDirty"
-                                @click="discardCalendarScheduleChanges()"
-                                :disabled="calendarScheduleSaving"
-                                class="rounded-md border border-white/10 bg-white/5 px-2.5 py-1 font-bold text-slate-300 hover:bg-white/10 disabled:opacity-50">Bỏ đổi</button>
-                        <button type="button"
-                                x-show="calendarEditingEnabled()"
-                                @click="saveCalendarScheduleChanges()"
-                                :disabled="!calendarScheduleDirty || calendarScheduleSaving"
-                                class="rounded-md bg-blue-600 px-3 py-1 font-bold text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-45"
-                                x-text="calendarScheduleSaving ? 'Đang lưu...' : 'Save lịch'"></button>
-                    </div>
                 </div>
             </div>
 
@@ -550,6 +534,27 @@
                     </div>
                 </template>
             </div>
+            <div x-show="calendarEditingEnabled() || calendarScheduleDirty || scheduleSaveStatus"
+                 class="flex flex-col gap-2 border-t border-white/10 bg-slate-950/55 px-3 py-2.5 backdrop-blur-xl lg:flex-row lg:items-center lg:justify-between lg:px-4">
+                <div class="flex flex-wrap items-center gap-1.5 text-[10px]">
+                    <span class="rounded-md border border-white/10 bg-white/5 px-2 py-1 font-bold text-slate-300">Chỉnh lịch thủ công</span>
+                    <span x-show="calendarScheduleDirty" class="rounded-md border border-amber-400/25 bg-amber-400/10 px-2 py-1 font-bold text-amber-200">Chưa lưu thay đổi</span>
+                    <span x-show="scheduleSaveStatus" class="rounded-md border px-2 py-1 font-bold" :class="calendarScheduleDirty ? 'border-rose-400/25 bg-rose-400/10 text-rose-200' : 'border-emerald-400/20 bg-emerald-400/10 text-emerald-200'" x-text="scheduleSaveStatus"></span>
+                </div>
+                <div class="flex items-center justify-end gap-1.5 text-[10px]">
+                    <button type="button"
+                            x-show="calendarScheduleDirty"
+                            @click="discardCalendarScheduleChanges()"
+                            :disabled="calendarScheduleSaving"
+                            class="rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 font-bold text-slate-300 hover:bg-white/10 disabled:opacity-50">Bỏ đổi</button>
+                    <button type="button"
+                            x-show="calendarEditingEnabled()"
+                            @click="saveCalendarScheduleChanges()"
+                            :disabled="!calendarScheduleDirty || calendarScheduleSaving"
+                            class="rounded-md bg-blue-600 px-3.5 py-1.5 font-bold text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-45"
+                            x-text="calendarScheduleSaving ? 'Đang lưu...' : 'Save lịch'"></button>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -581,22 +586,6 @@
                         </span>
                         <span class="inline-flex items-center gap-1 rounded-md bg-cyan-400/10 text-cyan-200 border border-cyan-400/25 px-2 py-0.5">Check-in</span>
                         <span class="inline-flex items-center gap-1 rounded-md bg-rose-400/10 text-rose-200 border border-rose-400/25 px-2 py-0.5">Check-out</span>
-                    </div>
-                    <div x-show="calendarEditingEnabled() || calendarScheduleDirty || scheduleSaveStatus"
-                         class="flex flex-wrap items-center justify-start lg:justify-end gap-1.5 text-[10px]">
-                        <span x-show="calendarScheduleDirty" class="rounded-md border border-amber-400/25 bg-amber-400/10 px-2 py-1 font-bold text-amber-200">Chưa lưu thay đổi lịch</span>
-                        <span x-show="scheduleSaveStatus" class="rounded-md border px-2 py-1 font-bold" :class="calendarScheduleDirty ? 'border-rose-400/25 bg-rose-400/10 text-rose-200' : 'border-emerald-400/20 bg-emerald-400/10 text-emerald-200'" x-text="scheduleSaveStatus"></span>
-                        <button type="button"
-                                x-show="calendarScheduleDirty"
-                                @click="discardCalendarScheduleChanges()"
-                                :disabled="calendarScheduleSaving"
-                                class="rounded-md border border-white/10 bg-white/5 px-2.5 py-1 font-bold text-slate-300 hover:bg-white/10 disabled:opacity-50">Bỏ đổi</button>
-                        <button type="button"
-                                x-show="calendarEditingEnabled()"
-                                @click="saveCalendarScheduleChanges()"
-                                :disabled="!calendarScheduleDirty || calendarScheduleSaving"
-                                class="rounded-md bg-blue-600 px-3 py-1 font-bold text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-45"
-                                x-text="calendarScheduleSaving ? 'Đang lưu...' : 'Save lịch'"></button>
                     </div>
                 </div>
             </div>
@@ -761,6 +750,27 @@
                         </template>
                     </div>
                 </template>
+            </div>
+            <div x-show="calendarEditingEnabled() || calendarScheduleDirty || scheduleSaveStatus"
+                 class="flex flex-col gap-2 border-t border-white/10 bg-slate-950/55 px-3 py-2.5 backdrop-blur-xl lg:flex-row lg:items-center lg:justify-between lg:px-4">
+                <div class="flex flex-wrap items-center gap-1.5 text-[10px]">
+                    <span class="rounded-md border border-white/10 bg-white/5 px-2 py-1 font-bold text-slate-300">Chỉnh lịch thủ công</span>
+                    <span x-show="calendarScheduleDirty" class="rounded-md border border-amber-400/25 bg-amber-400/10 px-2 py-1 font-bold text-amber-200">Chưa lưu thay đổi</span>
+                    <span x-show="scheduleSaveStatus" class="rounded-md border px-2 py-1 font-bold" :class="calendarScheduleDirty ? 'border-rose-400/25 bg-rose-400/10 text-rose-200' : 'border-emerald-400/20 bg-emerald-400/10 text-emerald-200'" x-text="scheduleSaveStatus"></span>
+                </div>
+                <div class="flex items-center justify-end gap-1.5 text-[10px]">
+                    <button type="button"
+                            x-show="calendarScheduleDirty"
+                            @click="discardCalendarScheduleChanges()"
+                            :disabled="calendarScheduleSaving"
+                            class="rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 font-bold text-slate-300 hover:bg-white/10 disabled:opacity-50">Bỏ đổi</button>
+                    <button type="button"
+                            x-show="calendarEditingEnabled()"
+                            @click="saveCalendarScheduleChanges()"
+                            :disabled="!calendarScheduleDirty || calendarScheduleSaving"
+                            class="rounded-md bg-blue-600 px-3.5 py-1.5 font-bold text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-45"
+                            x-text="calendarScheduleSaving ? 'Đang lưu...' : 'Save lịch'"></button>
+                </div>
             </div>
         </div>
     </section>
