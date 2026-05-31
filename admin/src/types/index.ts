@@ -16,6 +16,8 @@ export interface SubLocation {
     surcharge: number;
     adultPrice: number;
     childPrice: number;
+    participantAdults?: number | null;
+    participantChildren?: number | null;
 }
 
 export interface Plan {

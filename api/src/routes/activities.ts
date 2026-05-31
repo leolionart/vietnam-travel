@@ -36,6 +36,8 @@ type ActivityInput = {
     surcharge?: number;
     adultPrice?: number;
     childPrice?: number;
+    participantAdults?: number | null;
+    participantChildren?: number | null;
 };
 
 function getPlanIdBySlug(slug: string): number | null {
@@ -77,7 +79,9 @@ function listActivitiesForPlan(planId: number) {
             s.quantity,
             s.surcharge,
             s.adult_price as adultPrice,
-            s.child_price as childPrice
+            s.child_price as childPrice,
+            s.participant_adults as participantAdults,
+            s.participant_children as participantChildren
         FROM sub_locations s
         JOIN locations l ON l.id = s.location_id
         WHERE l.plan_id = ?
@@ -99,8 +103,8 @@ function insertActivity(locationId: number, input: ActivityInput) {
     const db = getDb();
     const maxOrder = (db.prepare('SELECT MAX(sort_order) as m FROM sub_locations WHERE location_id = ?').get(locationId) as { m: number | null }).m ?? 0;
     const result = db.prepare(
-        'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, duration_days, scheduled_date, scheduled_period, description, activity_type, transport_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(locationId, input.sortOrder ?? maxOrder + 1, input.name, input.lat ?? 0, input.lng ?? 0, input.durationMinutes ?? 60, input.durationDays ?? 0, input.scheduledDate ?? '', input.scheduledPeriod ?? '', input.description ?? '', input.activityType ?? 'sightseeing', input.transportType ?? '', input.pricingMode ?? 'per_person', input.unitPrice ?? 0, input.quantity ?? 1, input.surcharge ?? 0, input.adultPrice ?? 0, input.childPrice ?? 0);
+        'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, duration_days, scheduled_date, scheduled_period, description, activity_type, transport_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price, participant_adults, participant_children) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(locationId, input.sortOrder ?? maxOrder + 1, input.name, input.lat ?? 0, input.lng ?? 0, input.durationMinutes ?? 60, input.durationDays ?? 0, input.scheduledDate ?? '', input.scheduledPeriod ?? '', input.description ?? '', input.activityType ?? 'sightseeing', input.transportType ?? '', input.pricingMode ?? 'per_person', input.unitPrice ?? 0, input.quantity ?? 1, input.surcharge ?? 0, input.adultPrice ?? 0, input.childPrice ?? 0, input.participantAdults ?? null, input.participantChildren ?? null);
     return { id: result.lastInsertRowid };
 }
 
@@ -127,6 +131,8 @@ function updateActivity(activityId: number, input: ActivityInput): boolean {
         surcharge: input.surcharge,
         adult_price: input.adultPrice,
         child_price: input.childPrice,
+        participant_adults: input.participantAdults,
+        participant_children: input.participantChildren,
     };
     const fields: string[] = [];
     const values: unknown[] = [];

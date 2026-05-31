@@ -7,6 +7,7 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 import { createPlan, createPublicSessionPlan, deletePlan, getPlanBySessionId, getPlanBySlug, listPlans, updatePlan } from '../services/planService.js';
 import { addLocation, updateLocation, deleteLocation, reorderLocations, type CreateLocationInput } from '../services/locationService.js';
 import { analyzePlanPayload } from '../services/activityAnalysisService.js';
+import { searchTrips } from '../lib/vexere.js';
 import { getDb } from '../db/connection.js';
 
 const router = Router();
@@ -160,6 +161,22 @@ const TOOL_DEFINITIONS = [
         },
     },
     {
+        name: 'search_vexere_trips',
+        description: 'Read-only: tra cứu chuyến xe khách, giá vé, loại ghế, giờ chạy và số ghế trống qua Vexere. Credential Vexere nằm trong app server, không cần truyền vào tool.',
+        inputSchema: {
+            type: 'object',
+            required: ['from', 'to', 'date'],
+            properties: {
+                from: { type: 'string', description: 'Tỉnh/thành đi, vd: Hà Nội' },
+                to: { type: 'string', description: 'Tỉnh/thành đến, vd: Nghệ An' },
+                date: { type: 'string', description: 'Ngày đi dạng YYYY-MM-DD' },
+                page: { type: 'number' },
+                pageSize: { type: 'number' },
+                sort: { type: 'string', description: 'fare:asc, time:asc, rating:desc' },
+            },
+        },
+    },
+    {
         name: 'update_plan',
         description: 'Cập nhật tên hoặc slug của session plan. Dùng shareUrl/sessionId để chỉnh sửa tiếp plan cũ.',
         inputSchema: {
@@ -275,6 +292,8 @@ const TOOL_DEFINITIONS = [
                 surcharge: { type: 'number' },
                 adultPrice: { type: 'number', description: 'Giá vé người lớn (VND)' },
                 childPrice: { type: 'number' },
+                participantAdults: { type: 'number', description: 'Override số người lớn cho activity này; bỏ trống/null để dùng số người của chặng' },
+                participantChildren: { type: 'number', description: 'Override số trẻ em cho activity này; bỏ trống/null để dùng số người của chặng' },
                 durationDays: { type: 'number', description: 'Số ngày activity kéo dài, dùng cho lưu trú/tour nhiều ngày' },
                 adminPassword: { type: 'string', description: 'Admin password để chỉnh plan prod/admin thay vì chỉ session plan' },
             },
@@ -300,6 +319,8 @@ const TOOL_DEFINITIONS = [
                 pricingMode: { type: 'string', enum: ['per_person', 'per_room', 'per_group'] },
                 unitPrice: { type: 'number' }, surcharge: { type: 'number' }, quantity: { type: 'number' },
                 adultPrice: { type: 'number' }, childPrice: { type: 'number' },
+                participantAdults: { type: 'number' },
+                participantChildren: { type: 'number' },
             },
         },
     },
@@ -405,6 +426,16 @@ function buildServer(): Server {
                     }));
                 }
 
+                case 'search_vexere_trips':
+                    return ok(await searchTrips({
+                        fromProvince: a.from as string,
+                        toProvince: a.to as string,
+                        date: a.date as string,
+                        page: typeof a.page === 'number' ? a.page : undefined,
+                        pageSize: typeof a.pageSize === 'number' ? a.pageSize : undefined,
+                        sortBy: typeof a.sort === 'string' ? a.sort : undefined,
+                    }));
+
                 case 'update_plan': {
                     const ref = getEditablePlanRef(a);
                     if (!ref) return err('Plan not found or admin password missing. Provide session shareUrl/sessionId, or adminPassword with slug/planSlug.');
@@ -466,8 +497,8 @@ function buildServer(): Server {
                     const db = getDb();
                     const maxOrder = (db.prepare('SELECT MAX(sort_order) as m FROM sub_locations WHERE location_id = ?').get(a.locationId) as { m: number | null }).m ?? 0;
                     const result = db.prepare(
-                        'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, duration_days, scheduled_date, scheduled_period, description, activity_type, transport_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-                    ).run(a.locationId, a.sortOrder ?? maxOrder + 1, a.name, a.lat ?? 0, a.lng ?? 0, a.durationMinutes ?? 60, a.durationDays ?? 0, a.scheduledDate ?? '', a.scheduledPeriod ?? '', a.description ?? '', a.activityType ?? 'sightseeing', a.transportType ?? '', a.pricingMode ?? 'per_person', a.unitPrice ?? 0, a.quantity ?? 1, a.surcharge ?? 0, a.adultPrice ?? 0, a.childPrice ?? 0);
+                        'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, duration_days, scheduled_date, scheduled_period, description, activity_type, transport_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price, participant_adults, participant_children) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                    ).run(a.locationId, a.sortOrder ?? maxOrder + 1, a.name, a.lat ?? 0, a.lng ?? 0, a.durationMinutes ?? 60, a.durationDays ?? 0, a.scheduledDate ?? '', a.scheduledPeriod ?? '', a.description ?? '', a.activityType ?? 'sightseeing', a.transportType ?? '', a.pricingMode ?? 'per_person', a.unitPrice ?? 0, a.quantity ?? 1, a.surcharge ?? 0, a.adultPrice ?? 0, a.childPrice ?? 0, a.participantAdults ?? null, a.participantChildren ?? null);
                     return ok({ id: result.lastInsertRowid, planSlug: ref.slug, sessionId: ref.sessionId ?? undefined, shareUrl: ref.sessionId ? `${APP_URL}/?session=${ref.sessionId}` : `${APP_URL}/?slug=${ref.slug}` });
                 }
 
@@ -479,7 +510,7 @@ function buildServer(): Server {
                     if (!db.prepare('SELECT id FROM sub_locations WHERE id = ? AND location_id = ?').get(a.subLocationId, a.locationId)) return err('Sub-location not found');
                     const fields: string[] = [];
                     const values: unknown[] = [];
-                    const map: Record<string, unknown> = { name: a.name, lat: a.lat, lng: a.lng, sort_order: a.sortOrder, duration_minutes: a.durationMinutes, duration_days: a.durationDays, scheduled_date: a.scheduledDate, scheduled_period: a.scheduledPeriod, description: a.description, activity_type: a.activityType, transport_type: a.transportType, pricing_mode: a.pricingMode, unit_price: a.unitPrice, quantity: a.quantity, surcharge: a.surcharge, adult_price: a.adultPrice, child_price: a.childPrice };
+                    const map: Record<string, unknown> = { name: a.name, lat: a.lat, lng: a.lng, sort_order: a.sortOrder, duration_minutes: a.durationMinutes, duration_days: a.durationDays, scheduled_date: a.scheduledDate, scheduled_period: a.scheduledPeriod, description: a.description, activity_type: a.activityType, transport_type: a.transportType, pricing_mode: a.pricingMode, unit_price: a.unitPrice, quantity: a.quantity, surcharge: a.surcharge, adult_price: a.adultPrice, child_price: a.childPrice, participant_adults: a.participantAdults, participant_children: a.participantChildren };
                     for (const [k, v] of Object.entries(map)) {
                         if (v !== undefined) { fields.push(`${k} = ?`); values.push(v); }
                     }

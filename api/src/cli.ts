@@ -9,6 +9,7 @@ interface Options {
     passwordEnv: string;
     json?: Body;
     format: Format;
+    publicMode: boolean;
 }
 
 const WRITE_COMMANDS = new Set([
@@ -39,10 +40,13 @@ Usage:
 Read commands:
   list-plans
   get-plan <slug>
+  get-session-plan <sessionId>
   show-plan <slug>                 Same as get-plan --format markdown
   analyze-activities <slug>         Nearby activity pairs and transport duration blocks
+  search-vexere-trips <from> <to> <YYYY-MM-DD>
 
-Write commands require a password in TRAVEL_ADMIN_PASSWORD or ADMIN_PASSWORD:
+Write commands use TRAVEL_ADMIN_PASSWORD/ADMIN_PASSWORD when present.
+Without a password, or with --public, they write to a public session plan instead of admin plans:
   create-plan --json '{"slug":"trip","name":"Trip"}'
   update-plan <slug> --json '{"name":"New name","slug":"new-slug"}'
   delete-plan <slug>
@@ -58,6 +62,7 @@ Write commands require a password in TRAVEL_ADMIN_PASSWORD or ADMIN_PASSWORD:
 Options:
   --api-url <url>                  Default: TRAVEL_API_URL, REMOTE_API_URL, or http://localhost:7321
   --password-env <name>            Default: TRAVEL_ADMIN_PASSWORD, fallback ADMIN_PASSWORD
+  --public                         Force public session-plan writes even if an admin password is present locally
   --json <object>                  JSON request body for create/update/reorder commands
   --format json|summary|markdown   Default: json
 `;
@@ -71,6 +76,7 @@ function parseArgs(argv: string[]): { command: string; args: string[]; options: 
         apiUrl: (process.env.TRAVEL_API_URL || process.env.REMOTE_API_URL || 'http://localhost:7321').replace(/\/$/, ''),
         passwordEnv: process.env.TRAVEL_ADMIN_PASSWORD ? 'TRAVEL_ADMIN_PASSWORD' : 'ADMIN_PASSWORD',
         format: 'json',
+        publicMode: false,
     };
 
     for (let i = 0; i < argv.length; i += 1) {
@@ -80,6 +86,8 @@ function parseArgs(argv: string[]): { command: string; args: string[]; options: 
             options.apiUrl = requireValue(argv, ++i, '--api-url').replace(/\/$/, '');
         } else if (arg === '--password-env') {
             options.passwordEnv = requireValue(argv, ++i, '--password-env');
+        } else if (arg === '--public') {
+            options.publicMode = true;
         } else if (arg === '--json') {
             options.json = parseJson(requireValue(argv, ++i, '--json'));
         } else if (arg === '--format') {
@@ -111,7 +119,7 @@ function parseJson(value: string): Body {
 
 async function request(options: Options, method: string, path: string, body?: Body): Promise<unknown> {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    if (WRITE_COMMANDS.has(activeCommand)) headers.Authorization = `Bearer ${await token(options)}`;
+    if (WRITE_COMMANDS.has(activeCommand) && hasPassword(options)) headers.Authorization = `Bearer ${await token(options)}`;
     const res = await fetch(`${options.apiUrl}${path}`, {
         method,
         headers,
@@ -125,6 +133,11 @@ async function request(options: Options, method: string, path: string, body?: Bo
 let cachedToken: string | null = null;
 let activeCommand = '';
 
+function hasPassword(options: Options): boolean {
+    if (options.publicMode) return false;
+    return Boolean(process.env[options.passwordEnv] || process.env.ADMIN_PASSWORD);
+}
+
 async function token(options: Options): Promise<string> {
     if (cachedToken) return cachedToken;
     const password = process.env[options.passwordEnv] || process.env.ADMIN_PASSWORD;
@@ -137,6 +150,14 @@ async function token(options: Options): Promise<string> {
     if (!res.ok) throw new Error(`Admin login failed: ${res.status}`);
     cachedToken = ((await res.json()) as { token: string }).token;
     return cachedToken;
+}
+
+function plansBase(options: Options): string {
+    return WRITE_COMMANDS.has(activeCommand) && !hasPassword(options) ? '/api/public/plans' : '/api/plans';
+}
+
+function planWriteMethod(options: Options, adminMethod: string): string {
+    return !hasPassword(options) && activeCommand === 'update-plan' ? 'PATCH' : adminMethod;
 }
 
 function required(args: string[], index: number, label: string): string {
@@ -159,37 +180,55 @@ async function run(command: string, args: string[], options: Options): Promise<u
         case 'get-plan':
         case 'show-plan':
             return request(options, 'GET', `/api/plans/${encodeURIComponent(required(args, 0, 'slug'))}`);
+        case 'get-session-plan':
+            return request(options, 'GET', `/api/sessions/plan/${encodeURIComponent(required(args, 0, 'sessionId'))}`);
         case 'analyze-activities':
             return request(options, 'GET', `/api/plans/${encodeURIComponent(required(args, 0, 'slug'))}/activity-analysis`);
+        case 'search-vexere-trips':
+            return request(options, 'GET', vexereTripsPath(args, options.json));
         case 'create-plan':
-            return request(options, 'POST', '/api/plans', options.json ?? {});
+            return request(options, 'POST', plansBase(options), options.json ?? {});
         case 'update-plan':
-            return request(options, 'PUT', `/api/plans/${encodeURIComponent(required(args, 0, 'slug'))}`, options.json ?? {});
+            return request(options, planWriteMethod(options, 'PUT'), `${plansBase(options)}/${encodeURIComponent(required(args, 0, 'slug'))}`, options.json ?? {});
         case 'delete-plan':
-            return request(options, 'DELETE', `/api/plans/${encodeURIComponent(required(args, 0, 'slug'))}`);
+            return request(options, 'DELETE', `${plansBase(options)}/${encodeURIComponent(required(args, 0, 'slug'))}`);
         case 'add-location':
-            return request(options, 'POST', `/api/plans/${encodeURIComponent(required(args, 0, 'slug'))}/locations`, options.json ?? {});
+            return request(options, 'POST', `${plansBase(options)}/${encodeURIComponent(required(args, 0, 'slug'))}/locations`, options.json ?? {});
         case 'update-location':
-            return request(options, 'PUT', `/api/plans/${encodeURIComponent(required(args, 0, 'slug'))}/locations/${requiredNumber(args, 1, 'locationId')}`, options.json ?? {});
+            return request(options, 'PUT', `${plansBase(options)}/${encodeURIComponent(required(args, 0, 'slug'))}/locations/${requiredNumber(args, 1, 'locationId')}`, options.json ?? {});
         case 'delete-location':
-            return request(options, 'DELETE', `/api/plans/${encodeURIComponent(required(args, 0, 'slug'))}/locations/${requiredNumber(args, 1, 'locationId')}`);
+            return request(options, 'DELETE', `${plansBase(options)}/${encodeURIComponent(required(args, 0, 'slug'))}/locations/${requiredNumber(args, 1, 'locationId')}`);
         case 'reorder-locations':
-            return request(options, 'PATCH', `/api/plans/${encodeURIComponent(required(args, 0, 'slug'))}/locations/reorder`, options.json ?? {});
+            return request(options, 'PATCH', `${plansBase(options)}/${encodeURIComponent(required(args, 0, 'slug'))}/locations/reorder`, options.json ?? {});
         case 'add-activity':
         case 'add-sub-location':
-            return request(options, 'POST', `/api/plans/${encodeURIComponent(required(args, 0, 'slug'))}/locations/${requiredNumber(args, 1, 'locationId')}/sub-locations`, options.json ?? {});
+            return request(options, 'POST', `${plansBase(options)}/${encodeURIComponent(required(args, 0, 'slug'))}/locations/${requiredNumber(args, 1, 'locationId')}/sub-locations`, options.json ?? {});
         case 'update-activity':
         case 'update-sub-location':
-            return request(options, 'PUT', `/api/plans/${encodeURIComponent(required(args, 0, 'slug'))}/locations/${requiredNumber(args, 1, 'locationId')}/sub-locations/${requiredNumber(args, 2, 'activityId')}`, options.json ?? {});
+            return request(options, 'PUT', `${plansBase(options)}/${encodeURIComponent(required(args, 0, 'slug'))}/locations/${requiredNumber(args, 1, 'locationId')}/sub-locations/${requiredNumber(args, 2, 'activityId')}`, options.json ?? {});
         case 'delete-activity':
         case 'delete-sub-location':
-            return request(options, 'DELETE', `/api/plans/${encodeURIComponent(required(args, 0, 'slug'))}/locations/${requiredNumber(args, 1, 'locationId')}/sub-locations/${requiredNumber(args, 2, 'activityId')}`);
+            return request(options, 'DELETE', `${plansBase(options)}/${encodeURIComponent(required(args, 0, 'slug'))}/locations/${requiredNumber(args, 1, 'locationId')}/sub-locations/${requiredNumber(args, 2, 'activityId')}`);
         case 'reorder-activities':
         case 'reorder-sub-locations':
-            return request(options, 'PATCH', `/api/plans/${encodeURIComponent(required(args, 0, 'slug'))}/locations/${requiredNumber(args, 1, 'locationId')}/sub-locations/reorder`, options.json ?? {});
+            return request(options, 'PATCH', `${plansBase(options)}/${encodeURIComponent(required(args, 0, 'slug'))}/locations/${requiredNumber(args, 1, 'locationId')}/sub-locations/reorder`, options.json ?? {});
         default:
             throw new Error(`Unknown command: ${command}`);
     }
+}
+
+function vexereTripsPath(args: string[], body?: Body): string {
+    const from = String(body?.from || required(args, 0, 'from'));
+    const to = String(body?.to || required(args, 1, 'to'));
+    const date = String(body?.date || required(args, 2, 'date'));
+    const params = new URLSearchParams({ from, to, date });
+    const page = body?.page ?? args[3];
+    const pagesize = body?.pagesize ?? body?.pageSize ?? args[4];
+    const sort = body?.sort ?? body?.sortBy ?? args[5];
+    if (page !== undefined) params.set('page', String(page));
+    if (pagesize !== undefined) params.set('pagesize', String(pagesize));
+    if (sort !== undefined) params.set('sort', String(sort));
+    return `/api/vexere-link/trips?${params}`;
 }
 
 function money(value: unknown): string {
@@ -201,6 +240,9 @@ function formatPlan(plan: any, format: Format): string {
     if (format === 'json') return JSON.stringify(plan, null, 2);
     if (plan && Array.isArray(plan.nearbyPairs) && Array.isArray(plan.transportBlocks)) {
         return formatActivityAnalysis(plan);
+    }
+    if (plan && Array.isArray(plan.trips)) {
+        return formatVexereTrips(plan);
     }
     if (!plan || typeof plan !== 'object' || !Array.isArray(plan.locations)) return JSON.stringify(plan, null, 2);
 
@@ -224,6 +266,8 @@ function formatPlan(plan: any, format: Format): string {
                 activity.unitPrice ? `unit ${money(activity.unitPrice)}` : null,
                 activity.adultPrice ? `adult ${money(activity.adultPrice)}` : null,
                 activity.childPrice ? `child ${money(activity.childPrice)}` : null,
+                activity.participantAdults != null ? `${activity.participantAdults} adult(s)` : null,
+                activity.participantChildren != null ? `${activity.participantChildren} child(ren)` : null,
                 activity.surcharge ? `surcharge ${money(activity.surcharge)}` : null,
             ].filter(Boolean);
             lines.push(`- ${activity.name}${parts.length ? `: ${parts.join(', ')}` : ''}`);
@@ -231,6 +275,26 @@ function formatPlan(plan: any, format: Format): string {
         lines.push('');
     }
 
+    return lines.join('\n').trim();
+}
+
+function formatVexereTrips(result: any): string {
+    const trips = Array.isArray(result.trips) ? result.trips : [];
+    const lines = [
+        '# Vexere trips',
+        '',
+        `Total: ${result.total ?? trips.length}`,
+        '',
+    ];
+    if (!trips.length) {
+        lines.push('- No trips found.');
+    } else {
+        for (const trip of trips.slice(0, 20)) {
+            const price = money(trip.priceDiscount || trip.priceOriginal || 0);
+            const seats = trip.availableSeats !== undefined ? `${trip.availableSeats} seats` : 'unknown seats';
+            lines.push(`- ${trip.companyName || 'Unknown'} · ${trip.departureTime || 'unknown time'} · ${trip.seatTypeName || 'seat'} · ${price} · ${seats}`);
+        }
+    }
     return lines.join('\n').trim();
 }
 

@@ -64,6 +64,8 @@ CREATE TABLE IF NOT EXISTS sub_locations (
     surcharge        INTEGER NOT NULL DEFAULT 0,
     adult_price      INTEGER NOT NULL DEFAULT 0,
     child_price      INTEGER NOT NULL DEFAULT 0,
+    participant_adults INTEGER,
+    participant_children INTEGER,
     created_at       INTEGER NOT NULL DEFAULT (unixepoch('now') * 1000)
 );
 

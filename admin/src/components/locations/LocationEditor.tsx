@@ -64,7 +64,9 @@ function activityCost(sub: SubLocation, adults: number, children: number): numbe
     if (mode === 'per_group') {
         return (Number(sub.unitPrice || 0) * Math.max(quantity, 1)) + surcharge;
     }
-    return (Number(sub.adultPrice || 0) * adults) + (Number(sub.childPrice || 0) * children) + surcharge;
+    const participantAdults = sub.participantAdults ?? adults;
+    const participantChildren = sub.participantChildren ?? children;
+    return (Number(sub.adultPrice || 0) * participantAdults) + (Number(sub.childPrice || 0) * participantChildren) + surcharge;
 }
 
 function activityDurationLabel(sub: Pick<SubLocation, 'durationDays' | 'durationMinutes'>): string {
@@ -161,6 +163,8 @@ export function LocationEditor({ location, planSlug, onSave, onClose }: Props) {
             surcharge: String(sub.surcharge ?? 0),
             adultPrice: String(sub.adultPrice ?? 0),
             childPrice: String(sub.childPrice ?? 0),
+            participantAdults: sub.participantAdults == null ? '' : String(sub.participantAdults),
+            participantChildren: sub.participantChildren == null ? '' : String(sub.participantChildren),
         });
         setExpandedSubId(sub.id);
     }
@@ -215,6 +219,8 @@ export function LocationEditor({ location, planSlug, onSave, onClose }: Props) {
             surcharge: Number(subForm.surcharge) || 0,
             adultPrice: Number(subForm.adultPrice) || 0,
             childPrice: Number(subForm.childPrice) || 0,
+            participantAdults: subForm.participantAdults.trim() === '' ? null : Math.max(0, Number(subForm.participantAdults) || 0),
+            participantChildren: subForm.participantChildren.trim() === '' ? null : Math.max(0, Number(subForm.participantChildren) || 0),
         };
         try {
             if (expandedSubId === 'new') {
@@ -659,6 +665,8 @@ interface SubFormState {
     surcharge: string;
     adultPrice: string;
     childPrice: string;
+    participantAdults: string;
+    participantChildren: string;
 }
 
 function emptySubFormState(): SubFormState {
@@ -677,6 +685,8 @@ function emptySubFormState(): SubFormState {
         surcharge: '0',
         adultPrice: '0',
         childPrice: '0',
+        participantAdults: '',
+        participantChildren: '',
     };
 }
 
@@ -757,6 +767,18 @@ function SubForm({ form, setForm }: { form: SubFormState; setForm: React.Dispatc
                     <CurrencyInput value={Number(form.childPrice) || 0} onChange={v => setForm(f => ({ ...f, childPrice: String(v) }))} />
                 </div>
             </div>
+            {form.pricingMode === 'per_person' && (
+                <div className="grid grid-cols-2 gap-2">
+                    <div>
+                        <label className="block text-[10px] text-slate-500 mb-1">Override người lớn</label>
+                        <input type="number" min="0" value={form.participantAdults} onChange={e => setForm(f => ({ ...f, participantAdults: e.target.value }))} className="input-field" placeholder="Theo chặng" />
+                    </div>
+                    <div>
+                        <label className="block text-[10px] text-slate-500 mb-1">Override trẻ em</label>
+                        <input type="number" min="0" value={form.participantChildren} onChange={e => setForm(f => ({ ...f, participantChildren: e.target.value }))} className="input-field" placeholder="Theo chặng" />
+                    </div>
+                </div>
+            )}
             <div className="grid grid-cols-3 gap-2">
                 <div>
                     <label className="block text-[10px] text-slate-500 mb-1">Giá đơn vị</label>

@@ -17,6 +17,8 @@ export function runMigration(): void {
         'ALTER TABLE sub_locations ADD COLUMN unit_price INTEGER NOT NULL DEFAULT 0',
         'ALTER TABLE sub_locations ADD COLUMN quantity REAL NOT NULL DEFAULT 1',
         'ALTER TABLE sub_locations ADD COLUMN surcharge INTEGER NOT NULL DEFAULT 0',
+        'ALTER TABLE sub_locations ADD COLUMN participant_adults INTEGER',
+        'ALTER TABLE sub_locations ADD COLUMN participant_children INTEGER',
     ];
 
     for (const sql of addColumns) {
