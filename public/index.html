@@ -1954,7 +1954,7 @@
                     const parts = [];
                     if (event.durationLabel && (event.activityType === 'transport' || event.activityType === 'accommodation')) parts.push(event.durationLabel);
                     if (event.travelNote) parts.push(event.travelNote);
-                    if (event.activityType === 'transport' && event.metaCost) parts.push(event.metaCost);
+                    if (event.metaCost) parts.push(event.metaCost);
                     return parts.join(' · ');
                 },
 
@@ -2719,14 +2719,17 @@
                             const eventDays = this.calendarActivityDays(sub, slot.day);
                             if (activityType === 'accommodation') {
                                 const durationLabel = this.activityDurationLabel(sub);
+                                const costValue = this.subActivityCost(sub, loc);
+                                const costLabel = costValue > 0 ? this.formatCurrency(costValue) : '';
                                 eventDays.forEach((day, dayIndex) => add(day, {
                                     id: `stay-activity-${sub.id}-${this.localDateKey(day)}`,
                                     groupId: `stay-activity-${sub.id}`,
                                     type: 'stay',
                                     activityType,
                                     title: sub.name,
-                                    meta: `${loc.name} · ${dayIndex === 0 ? 'Check-in' : 'Lưu trú'} ${dayIndex + 1}/${eventDays.length} · ${this.formatCurrency(this.subActivityCost(sub, loc))}`,
+                                    meta: [loc.name, `${dayIndex === 0 ? 'Check-in' : 'Lưu trú'} ${dayIndex + 1}/${eventDays.length}`, costLabel].filter(Boolean).join(' · '),
                                     durationLabel,
+                                    metaCost: costLabel,
                                     time: '',
                                     order: 1.2 + (subIndex * 0.01),
                                     span: eventDays.length,
@@ -2740,7 +2743,8 @@
                             const durationLabel = this.activityDurationLabel(sub);
                             const durationMinutes = Number(sub.durationMinutes || 0);
                             const travelNote = activityType === 'transport' ? this.transportCalendarNote(sub) : '';
-                            const costLabel = this.formatCurrency(this.subActivityCost(sub, loc));
+                            const costValue = this.subActivityCost(sub, loc);
+                            const costLabel = costValue > 0 ? this.formatCurrency(costValue) : '';
                             eventDays.forEach((day, dayIndex) => {
                                 const type = activityType === 'transport' ? 'transport' : 'visit';
                                 add(day, {
@@ -2750,7 +2754,7 @@
                                     activityType,
                                     transportType: sub.transportType || '',
                                     title: sub.name,
-                                    meta: `${loc.name} · ${this.activityTypeLabel(activityType)} · ${durationLabel} · ${costLabel}`,
+                                    meta: [loc.name, this.activityTypeLabel(activityType), durationLabel, costLabel].filter(Boolean).join(' · '),
                                     durationLabel,
                                     durationMinutes,
                                     travelNote,
