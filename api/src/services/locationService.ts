@@ -20,16 +20,6 @@ export interface CreateLocationInput {
     durationDays?: number;
     transportType?: string;
     transportLabel?: string;
-    transportFare?: number;
-    transportFareAdult?: number;
-    transportFareChild?: number;
-    accommodationName?: string;
-    accommodationUrl?: string;
-    accommodationAddress?: string;
-    adultPrice?: number;
-    childPrice?: number;
-    stayCostPerNight?: number;
-    foodBudgetPerDay?: number;
     adults?: number;
     children?: number;
     highlight?: string;
@@ -67,16 +57,16 @@ export function addLocation(planId: number, input: CreateLocationInput): number 
         input.durationDays ?? 0,
         input.transportType ?? 'car',
         input.transportLabel ?? '',
-        input.transportFare ?? 0,
-        input.transportFareAdult ?? 0,
-        input.transportFareChild ?? 0,
-        input.accommodationName ?? '',
-        input.accommodationUrl ?? '',
-        input.accommodationAddress ?? '',
-        input.adultPrice ?? 0,
-        input.childPrice ?? 0,
-        input.stayCostPerNight ?? 0,
-        input.foodBudgetPerDay ?? 0,
+        0,
+        0,
+        0,
+        '',
+        '',
+        '',
+        0,
+        0,
+        0,
+        0,
         input.adults ?? 2,
         input.children ?? 0,
         input.highlight ?? '',
@@ -110,16 +100,6 @@ export function updateLocation(
         duration_days: input.durationDays,
         transport_type: input.transportType,
         transport_label: input.transportLabel,
-        transport_fare: input.transportFare,
-        transport_fare_adult: input.transportFareAdult,
-        transport_fare_child: input.transportFareChild,
-        accommodation_name: input.accommodationName,
-        accommodation_url: input.accommodationUrl,
-        accommodation_address: input.accommodationAddress,
-        adult_price: input.adultPrice,
-        child_price: input.childPrice,
-        stay_cost_per_night: input.stayCostPerNight,
-        food_budget_per_day: input.foodBudgetPerDay,
         adults: input.adults,
         children: input.children,
         highlight: input.highlight,

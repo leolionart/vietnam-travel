@@ -1,22 +1,42 @@
 # Quy trình Triển khai (Deploy Runbook)
 
-## Tổng quan luồng
+## Nguyên tắc
 
-```
-Local thay đổi code/data
-    → git push origin main
-    → GitHub Actions build Docker image
-    → Push image lên GHCR (ghcr.io/<owner>/vietnam-travel)
-    → SSH vào VPS
-    → docker compose pull && docker compose up -d
-```
+Deploy chỉ cập nhật **code + schema**. Không dùng deploy để reset DB, seed lại
+plan, hoặc chuyển dữ liệu từ dev/local lên prod.
 
-Nguồn dữ liệu duy nhất là **SQLite DB** (`/data/travel.db` trên VPS).
-`plans.json` ở root chỉ dùng để **seed DB khi fresh deploy** — không phục vụ frontend.
+Mỗi môi trường có SQLite DB riêng:
+
+- Prod: `/data/travel.db` trên VPS.
+- Dev/local: DB local theo `DB_PATH`.
+
+Muốn sửa dữ liệu môi trường nào thì dùng Admin/CLI/MCP trỏ trực tiếp vào môi
+trường đó. Không đưa dữ liệu plan vào migration hoặc deploy script.
 
 ---
 
-## 1. Cài đặt lần đầu trên VPS
+## Luồng deploy code
+
+```
+Local thay đổi code
+    → git push origin main
+    → GitHub Actions build Docker image
+    → Push image lên GHCR
+    → VPS chạy ./scripts/redeploy.sh
+```
+
+Trên VPS:
+
+```bash
+cd ~/vietnam-travel
+./scripts/redeploy.sh
+```
+
+`redeploy.sh` luôn giữ nguyên DB hiện tại.
+
+---
+
+## Cài đặt lần đầu
 
 ```bash
 git clone https://github.com/<owner>/vietnam-travel.git
@@ -32,129 +52,58 @@ docker compose pull
 docker compose up -d
 ```
 
-Khi DB còn trống, container tự động seed từ `plans.json` + `SUB_LOCATION_SEEDS` trong `migrate.ts`.
+Sau khi container chạy, tạo/import plan bằng Admin/CLI/MCP trên chính môi
+trường đó.
 
 ---
 
-## 2. Deploy khi chỉ thay đổi code
+## Thay đổi dữ liệu plan
+
+Không sửa dữ liệu bằng deploy. Dùng một trong các cách sau:
+
+- Admin UI của đúng môi trường.
+- CLI với `--api-url` trỏ đúng môi trường.
+- MCP với `adminPassword` cho đúng môi trường.
+- Backup/restore SQLite thủ công khi thật sự cần thay toàn bộ DB.
+
+Ví dụ đọc prod:
 
 ```bash
-git add .
-git commit -m "feat: ..."
-git push origin main
-# GitHub Actions build image → push lên GHCR
-
-# Sau khi CI xanh, trên VPS:
-cd ~/vietnam-travel
-docker compose pull && docker compose up -d
+npm --prefix api run cli -- show-plan <slug> --api-url https://trips.naai.studio
 ```
 
----
-
-## 3. Deploy khi có thay đổi dữ liệu
-
-### 3a. Thêm sub-location mới
-
-**Bước 1 — Thêm vào seed (để future fresh deploy có sẵn):**
-
-Mở `api/src/db/migrate.ts`, thêm vào `SUB_LOCATION_SEEDS`:
-
-```typescript
-{
-  planSlug: 'ten-slug-cua-plan',
-  locationName: 'Tên tỉnh',
-  sortOrder: 5,
-  name: 'Tên địa điểm',
-  lat: 15.880, lng: 108.338,
-  durationMinutes: 120,
-  description: 'Mô tả...',
-  adultPrice: 50000,
-  childPrice: 30000
-},
-```
-
-**Bước 2 — Cập nhật DB trực tiếp trên VPS (không cần reset):**
+Ví dụ sửa prod:
 
 ```bash
-sqlite3 ~/vietnam-travel/data/travel.db << 'SQL'
-INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, description, adult_price, child_price)
-SELECT l.id, 5, 'Tên địa điểm', 15.880, 108.338, 120, 'Mô tả...', 50000, 30000
-FROM locations l JOIN plans p ON l.plan_id = p.id
-WHERE p.slug = 'ten-slug-cua-plan' AND l.name = 'Tên tỉnh'
-ORDER BY l.id ASC LIMIT 1;
-SQL
-```
-
-**Bước 3 — Push code + pull image mới:**
-
-```bash
-git add api/src/db/migrate.ts
-git commit -m "data: add <tên địa điểm> sub-location seed"
-git push origin main
-# Sau CI: docker compose pull && docker compose up -d
+export TRAVEL_ADMIN_PASSWORD='...'
+npm --prefix api run cli -- update-activity <slug> <locationId> <activityId> \
+  --api-url https://trips.naai.studio \
+  --json '{"scheduledPeriod":"morning"}'
 ```
 
 ---
 
-### 3b. Thêm plan/location mới hoặc đổi cấu trúc lớn
+## Schema migration
 
-**Cách 1 — Reset DB (đơn giản, seed lại từ đầu):**
+`api/src/db/migrate.ts` chỉ nâng schema idempotent. Nó không seed plan, không
+reset DB, không patch dữ liệu cũ.
 
-```bash
-# Trên VPS
-docker compose down
-rm ~/vietnam-travel/data/travel.db
-docker compose pull
-docker compose up -d   # migration chạy lại, seed đầy đủ từ plans.json
-```
-
-**Cách 2 — Migration thủ công (giữ data hiện có):**
-
-```bash
-sqlite3 ~/vietnam-travel/data/travel.db "ALTER TABLE locations ADD COLUMN new_field TEXT DEFAULT '';"
-docker compose pull && docker compose up -d
-```
+Nếu cần thay đổi dữ liệu hàng loạt, tạo tool/CLI riêng và chạy có chủ đích trên
+môi trường cần sửa, sau khi backup DB.
 
 ---
 
-### 3c. Thay đổi plans.json (seed data)
-
-`plans.json` là nguồn seed cho DB khi fresh deploy. Sau khi sửa, chỉ cần push — image mới sẽ chứa file mới nhất để dùng khi reset DB.
-
-```bash
-git add plans.json api/src/db/migrate.ts
-git commit -m "data: ..."
-git push origin main
-# Trên VPS: ./scripts/redeploy.sh   (reset DB + seed lại)
-```
-
----
-
-## 4. Script redeploy.sh
-
-```bash
-# Reset DB + seed lại từ plans.json mới nhất
-./scripts/redeploy.sh
-
-# Chỉ deploy code mới, KHÔNG reset DB
-./scripts/redeploy.sh --keep-db
-```
-
-`FORCE_MIGRATE=true` khiến `migrate.ts` xóa data cũ trước khi seed lại.
-
----
-
-## 5. Kiểm tra sau deploy
+## Kiểm tra sau deploy
 
 ```bash
 curl https://yourdomain.com/api/health
 docker compose logs -f --tail=50
-sqlite3 ~/vietnam-travel/data/travel.db "SELECT COUNT(*) FROM sub_locations;"
+sqlite3 ~/vietnam-travel/data/travel.db "SELECT COUNT(*) FROM plans;"
 ```
 
 ---
 
-## 6. Rollback
+## Rollback code
 
 ```bash
 docker compose down
@@ -162,9 +111,11 @@ docker compose down
 docker compose up -d
 ```
 
+Rollback code không rollback DB. Nếu cần rollback dữ liệu, restore từ backup DB.
+
 ---
 
-## 7. Cấu hình Caddy
+## Cấu hình Caddy
 
 ```caddyfile
 yourdomain.com {
@@ -178,7 +129,7 @@ yourdomain.com {
 
 | Thay đổi | Cần làm gì trên VPS? |
 |----------|----------------------|
-| Chỉ code | `./scripts/redeploy.sh --keep-db` |
-| Sửa plans.json / data | `./scripts/redeploy.sh` (reset DB + seed lại) |
-| Thêm sub-location | Insert SQL trực tiếp + `./scripts/redeploy.sh --keep-db` |
-| Rollback | Sửa image tag + `docker compose up -d` |
+| Chỉ code/schema | `./scripts/redeploy.sh` |
+| Sửa dữ liệu plan | Admin/CLI/MCP trỏ đúng môi trường |
+| Thay toàn bộ DB | Backup/restore SQLite thủ công, ngoài deploy |
+| Rollback code | Sửa image tag + `docker compose up -d` |

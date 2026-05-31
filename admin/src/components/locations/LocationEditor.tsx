@@ -59,9 +59,7 @@ function activityCost(sub: SubLocation, adults: number, children: number): numbe
     const quantity = Number(sub.quantity ?? 1) || 0;
     const surcharge = Number(sub.surcharge || 0);
     if (mode === 'per_room') {
-        const capacity = Math.max(quantity || 2, 1);
-        const rooms = Math.max(Math.ceil(Math.max(adults + children, 1) / capacity), 1);
-        return (Number(sub.unitPrice || 0) * rooms) + (surcharge * children);
+        return (Number(sub.unitPrice || 0) * Math.max(quantity, 1)) + surcharge;
     }
     if (mode === 'per_group') {
         return (Number(sub.unitPrice || 0) * Math.max(quantity, 1)) + surcharge;
@@ -156,6 +154,7 @@ export function LocationEditor({ location, planSlug, onSave, onClose }: Props) {
             durationDays: String(sub.durationDays ?? 0),
             description: sub.description,
             activityType: sub.activityType ?? 'sightseeing',
+            transportType: sub.transportType ?? '',
             pricingMode: sub.pricingMode ?? 'per_person',
             unitPrice: String(sub.unitPrice ?? 0),
             quantity: String(sub.quantity ?? 1),
@@ -209,6 +208,7 @@ export function LocationEditor({ location, planSlug, onSave, onClose }: Props) {
             durationDays: Number(subForm.durationDays) || 0,
             description: subForm.description,
             activityType: subForm.activityType,
+            transportType: subForm.activityType === 'transport' ? subForm.transportType : '',
             pricingMode: subForm.pricingMode,
             unitPrice: Number(subForm.unitPrice) || 0,
             quantity: Number(subForm.quantity) || 1,
@@ -251,15 +251,6 @@ export function LocationEditor({ location, planSlug, onSave, onClose }: Props) {
             ...form,
             arriveAt: inputToMs(arriveInput),
             departAt: inputToMs(departInput),
-            transportFare: 0,
-            transportFareAdult: 0,
-            transportFareChild: 0,
-            accommodationName: '',
-            accommodationUrl: '',
-            adultPrice: 0,
-            childPrice: 0,
-            stayCostPerNight: 0,
-            foodBudgetPerDay: 0,
         };
 
         if (location && pendingCalendarOrder) {
@@ -661,6 +652,7 @@ interface SubFormState {
     durationDays: string;
     description: string;
     activityType: 'sightseeing' | 'accommodation' | 'food' | 'transport' | 'other';
+    transportType: 'car' | 'bus' | 'train' | 'flight' | 'motorbike' | 'ferry' | 'walking' | 'other' | '';
     pricingMode: 'per_person' | 'per_room' | 'per_group';
     unitPrice: string;
     quantity: string;
@@ -678,6 +670,7 @@ function emptySubFormState(): SubFormState {
         durationDays: '0',
         description: '',
         activityType: 'sightseeing',
+        transportType: '',
         pricingMode: 'per_person',
         unitPrice: '0',
         quantity: '1',
@@ -729,6 +722,22 @@ function SubForm({ form, setForm }: { form: SubFormState; setForm: React.Dispatc
                         <option value="other">Khác</option>
                     </select>
                 </div>
+                {form.activityType === 'transport' && (
+                    <div>
+                        <label className="block text-[10px] text-slate-500 mb-1">Loại di chuyển</label>
+                        <select value={form.transportType} onChange={e => setForm(f => ({ ...f, transportType: e.target.value as SubFormState['transportType'] }))} className="input-field">
+                            <option value="">Tự nhận diện</option>
+                            <option value="car">Ô tô</option>
+                            <option value="bus">Xe khách/bus</option>
+                            <option value="train">Tàu hỏa</option>
+                            <option value="flight">Máy bay</option>
+                            <option value="motorbike">Xe máy</option>
+                            <option value="ferry">Tàu/phà</option>
+                            <option value="walking">Đi bộ</option>
+                            <option value="other">Khác</option>
+                        </select>
+                    </div>
+                )}
                 <div>
                     <label className="block text-[10px] text-slate-500 mb-1">Cách tính</label>
                     <select value={form.pricingMode} onChange={e => setForm(f => ({ ...f, pricingMode: e.target.value as SubFormState['pricingMode'] }))} className="input-field">
@@ -754,11 +763,11 @@ function SubForm({ form, setForm }: { form: SubFormState; setForm: React.Dispatc
                     <CurrencyInput value={Number(form.unitPrice) || 0} onChange={v => setForm(f => ({ ...f, unitPrice: String(v) }))} />
                 </div>
                 <div>
-                    <label className="block text-[10px] text-slate-500 mb-1">{form.pricingMode === 'per_room' ? 'Sức chứa/phòng' : 'Số lượng'}</label>
+                    <label className="block text-[10px] text-slate-500 mb-1">{form.pricingMode === 'per_room' ? 'Số phòng/đơn vị' : 'Số lượng'}</label>
                     <input type="number" min="0" step="0.5" value={form.quantity} onChange={e => setForm(f => ({ ...f, quantity: e.target.value }))} className="input-field" />
                 </div>
                 <div>
-                    <label className="block text-[10px] text-slate-500 mb-1">{form.pricingMode === 'per_room' ? 'Phụ thu/TE' : 'Phụ thu'}</label>
+                    <label className="block text-[10px] text-slate-500 mb-1">Phụ thu</label>
                     <CurrencyInput value={Number(form.surcharge) || 0} onChange={v => setForm(f => ({ ...f, surcharge: String(v) }))} />
                 </div>
             </div>

@@ -277,7 +277,9 @@ Do not store the admin password in checked-in MCP config. For local stdio MCP, p
 }
 ```
 
-Activity cost data belongs in `sub_locations`: use `activityType` (`sightseeing`, `accommodation`, `food`, `transport`, `other`) plus `pricingMode` (`per_person`, `per_room`, `per_group`), `unitPrice`, `quantity`, `surcharge`, `adultPrice`, `childPrice`, and `durationDays`. Location-level cost fields are retained only as legacy/summary fields.
+Activity cost data belongs in `sub_locations`: use `activityType` (`sightseeing`, `accommodation`, `food`, `transport`, `other`) plus `pricingMode` (`per_person`, `per_room`, `per_group`), `unitPrice`, `quantity`, `surcharge`, `adultPrice`, `childPrice`, and `durationDays`. Location-level cost fields are legacy storage only and should not be used for new edits.
+
+Deploy does not move data between environments. Prod, local, and other deployments each keep their own SQLite DB; use Admin/CLI/MCP against the target environment when editing plan data.
 
 ## CLI
 

@@ -213,17 +213,7 @@ const TOOL_DEFINITIONS = [
                 departAt: { type: 'number', description: 'Unix timestamp ms' },
                 durationDays: { type: 'number' },
                 transportType: { type: 'string', description: 'car, bus, train, flight, motorbike, ferry, walking, other' },
-                transportLabel: { type: 'string', description: 'vd: Xe khách Hà Nội → Vinh (~5h)' },
-                transportFare: { type: 'number', description: 'Giá vé phương tiện (VND)' },
-                transportFareAdult: { type: 'number', description: 'Giá vé phương tiện/người lớn (VND)' },
-                transportFareChild: { type: 'number', description: 'Giá vé phương tiện/trẻ em (VND)' },
-                accommodationName: { type: 'string' },
-                accommodationUrl: { type: 'string' },
-                accommodationAddress: { type: 'string' },
-                adultPrice: { type: 'number', description: 'Tổng chi phí tham quan người lớn (VND)' },
-                childPrice: { type: 'number' },
-                stayCostPerNight: { type: 'number', description: 'Giá lưu trú mỗi đêm (VND)' },
-                foodBudgetPerDay: { type: 'number', description: 'Ngân sách ăn uống mỗi ngày (VND)' },
+                transportLabel: { type: 'string', description: 'Mô tả tuyến, không dùng để tính chi phí' },
                 adults: { type: 'number', description: 'Số người lớn, mặc định 2' },
                 children: { type: 'number', description: 'Số trẻ em, mặc định 0' },
                 highlight: { type: 'string', description: 'Mô tả ngắn gọn điểm nổi bật' },
@@ -251,16 +241,6 @@ const TOOL_DEFINITIONS = [
                 durationDays: { type: 'number' },
                 transportType: { type: 'string' },
                 transportLabel: { type: 'string' },
-                transportFare: { type: 'number' },
-                transportFareAdult: { type: 'number' },
-                transportFareChild: { type: 'number' },
-                accommodationName: { type: 'string' },
-                accommodationUrl: { type: 'string' },
-                accommodationAddress: { type: 'string' },
-                adultPrice: { type: 'number' },
-                childPrice: { type: 'number' },
-                stayCostPerNight: { type: 'number' },
-                foodBudgetPerDay: { type: 'number' },
                 adults: { type: 'number' },
                 children: { type: 'number' },
                 highlight: { type: 'string' },
@@ -312,6 +292,7 @@ const TOOL_DEFINITIONS = [
                 scheduledPeriod: { type: 'string', enum: ['morning', 'afternoon'], description: 'Buổi tham quan' },
                 description: { type: 'string' },
                 activityType: { type: 'string', enum: ['sightseeing', 'accommodation', 'food', 'transport', 'other'] },
+                transportType: { type: 'string', enum: ['car', 'bus', 'train', 'flight', 'motorbike', 'ferry', 'walking', 'other', ''] },
                 pricingMode: { type: 'string', enum: ['per_person', 'per_room', 'per_group'] },
                 unitPrice: { type: 'number' },
                 quantity: { type: 'number' },
@@ -341,6 +322,12 @@ const TOOL_DEFINITIONS = [
                 scheduledDate: { type: 'string' },
                 scheduledPeriod: { type: 'string', enum: ['morning', 'afternoon', ''] },
                 description: { type: 'string' },
+                activityType: { type: 'string', enum: ['sightseeing', 'accommodation', 'food', 'transport', 'other'] },
+                transportType: { type: 'string', enum: ['car', 'bus', 'train', 'flight', 'motorbike', 'ferry', 'walking', 'other', ''] },
+                pricingMode: { type: 'string', enum: ['per_person', 'per_room', 'per_group'] },
+                unitPrice: { type: 'number' },
+                quantity: { type: 'number' },
+                surcharge: { type: 'number' },
                 adultPrice: { type: 'number' },
                 childPrice: { type: 'number' },
             },
@@ -547,8 +534,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 const db = L.getDb();
                 const maxOrder = (db.prepare('SELECT MAX(sort_order) as m FROM sub_locations WHERE location_id = ?').get(args.locationId) as { m: number | null }).m ?? 0;
                 const result = db.prepare(
-                    'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, duration_days, scheduled_date, scheduled_period, description, activity_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-                ).run(args.locationId, args.sortOrder ?? maxOrder + 1, args.name, args.lat ?? 0, args.lng ?? 0, args.durationMinutes ?? 60, args.durationDays ?? 0, args.scheduledDate ?? '', args.scheduledPeriod ?? '', args.description ?? '', args.activityType ?? 'sightseeing', args.pricingMode ?? 'per_person', args.unitPrice ?? 0, args.quantity ?? 1, args.surcharge ?? 0, args.adultPrice ?? 0, args.childPrice ?? 0);
+                    'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, duration_days, scheduled_date, scheduled_period, description, activity_type, transport_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                ).run(args.locationId, args.sortOrder ?? maxOrder + 1, args.name, args.lat ?? 0, args.lng ?? 0, args.durationMinutes ?? 60, args.durationDays ?? 0, args.scheduledDate ?? '', args.scheduledPeriod ?? '', args.description ?? '', args.activityType ?? 'sightseeing', args.transportType ?? '', args.pricingMode ?? 'per_person', args.unitPrice ?? 0, args.quantity ?? 1, args.surcharge ?? 0, args.adultPrice ?? 0, args.childPrice ?? 0);
                 return ok({ id: result.lastInsertRowid });
             }
 
@@ -560,7 +547,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 if (!db.prepare('SELECT id FROM sub_locations WHERE id = ? AND location_id = ?').get(args.subLocationId, args.locationId)) return err('Sub-location not found');
                 const fields: string[] = [];
                 const values: unknown[] = [];
-                const map: Record<string, unknown> = { name: args.name, lat: args.lat, lng: args.lng, sort_order: args.sortOrder, duration_minutes: args.durationMinutes, duration_days: args.durationDays, scheduled_date: args.scheduledDate, scheduled_period: args.scheduledPeriod, description: args.description, activity_type: args.activityType, pricing_mode: args.pricingMode, unit_price: args.unitPrice, quantity: args.quantity, surcharge: args.surcharge, adult_price: args.adultPrice, child_price: args.childPrice };
+                const map: Record<string, unknown> = { name: args.name, lat: args.lat, lng: args.lng, sort_order: args.sortOrder, duration_minutes: args.durationMinutes, duration_days: args.durationDays, scheduled_date: args.scheduledDate, scheduled_period: args.scheduledPeriod, description: args.description, activity_type: args.activityType, transport_type: args.transportType, pricing_mode: args.pricingMode, unit_price: args.unitPrice, quantity: args.quantity, surcharge: args.surcharge, adult_price: args.adultPrice, child_price: args.childPrice };
                 for (const [k, v] of Object.entries(map)) {
                     if (v !== undefined) { fields.push(`${k} = ?`); values.push(v); }
                 }

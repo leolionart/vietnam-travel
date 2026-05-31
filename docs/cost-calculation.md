@@ -32,8 +32,8 @@ Chi phí location = Vé tham quan + Lưu trú + Ăn uống + Di chuyển
 | `pricingMode` | `per_person`, `per_room`, `per_group` |
 | `adultPrice` / `childPrice` | Giá theo người khi `pricingMode = per_person` |
 | `unitPrice` | Giá theo phòng/đơn vị/nhóm |
-| `quantity` | Với `per_room`: sức chứa/phòng; với `per_group`: số lượng đơn vị |
-| `surcharge` | Với `per_room`: phụ thu mỗi trẻ em; loại khác: phụ thu cố định |
+| `quantity` | Số phòng/đơn vị/nhóm do user nhập |
+| `surcharge` | Phụ thu cố định do user nhập |
 | `durationDays` | Số ngày activity kéo dài, dùng để hiển thị khách sạn/tour nhiều ngày |
 
 Activity loại `sightseeing` dùng cho vé tham quan. Activity loại `accommodation` hoặc `food` là nguồn chi phí lưu trú/ăn uống; parent location chỉ giữ summary và thông tin lịch trình.
@@ -41,11 +41,11 @@ Activity loại `sightseeing` dùng cho vé tham quan. Activity loại `accommod
 Với `pricingMode = per_room`, chi phí được tính:
 
 ```
-số phòng = ceil((adults + children) / quantity)
-chi phí = unitPrice × số phòng + surcharge × children
+chi phí = unitPrice × quantity + surcharge
 ```
 
-Nếu không có phụ thu trẻ em rõ ràng, để `surcharge = 0`.
+Không tự suy luận số phòng từ số người. Nếu cần thêm phòng hoặc phụ thu trẻ em,
+user cập nhật trực tiếp `quantity` hoặc `surcharge`.
 
 ### 2. Vé tham quan
 
@@ -70,7 +70,7 @@ Vé tham quan = ticketAdultTotal(loc) × adults + ticketChildTotal(loc) × child
 
 Lưu trú = tổng `subActivityCost()` của các activity `activityType = accommodation`.
 
-Không còn fallback về `location.stayCostPerNight`. Khách sạn/du thuyền phải nhập như activity, thường là `pricingMode = per_room`, `quantity = sức chứa/phòng`, `surcharge = phụ thu mỗi trẻ em nếu có`.
+Không còn fallback về `location.stayCostPerNight`. Khách sạn/du thuyền phải nhập như activity, thường là `pricingMode = per_room`, `quantity = số phòng/đơn vị`, `surcharge = phụ thu cố định nếu có`.
 
 ### 4. Ăn uống
 

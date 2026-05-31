@@ -15,6 +15,7 @@ interface DbSubLocation {
     scheduled_period: string;
     description: string;
     activity_type: string;
+    transport_type: string;
     pricing_mode: string;
     unit_price: number;
     quantity: number;
@@ -36,16 +37,6 @@ interface DbLocation {
     duration_days: number;
     transport_type: string;
     transport_label: string;
-    transport_fare: number;
-    transport_fare_adult: number;
-    transport_fare_child: number;
-    accommodation_name: string;
-    accommodation_url: string;
-    accommodation_address: string;
-    adult_price: number;
-    child_price: number;
-    stay_cost_per_night: number;
-    food_budget_per_day: number;
     adults: number;
     children: number;
     highlight: string;
@@ -76,6 +67,7 @@ function subToPublic(sub: DbSubLocation) {
         scheduledPeriod: sub.scheduled_period,
         description: sub.description,
         activityType: sub.activity_type || 'sightseeing',
+        transportType: sub.transport_type || '',
         pricingMode: sub.pricing_mode || 'per_person',
         unitPrice: sub.unit_price || 0,
         quantity: sub.quantity ?? 1,
@@ -112,16 +104,6 @@ function locationToPublic(loc: DbLocation, prevProvince?: string) {
         duration: loc.duration_days,
         transport: loc.transport_label,
         transportType: loc.transport_type,
-        transportFare: loc.transport_fare,
-        transportFareAdult: loc.transport_fare_adult,
-        transportFareChild: loc.transport_fare_child,
-        accommodationName: loc.accommodation_name,
-        accommodationUrl: loc.accommodation_url,
-        accommodationAddress: loc.accommodation_address,
-        adultPrice: loc.adult_price,
-        childPrice: loc.child_price,
-        stayCostPerNight: loc.stay_cost_per_night,
-        foodBudgetPerDay: loc.food_budget_per_day,
         adults: loc.adults,
         children: loc.children,
         highlight: loc.highlight,

@@ -7,7 +7,7 @@ Tài liệu kỹ thuật cho Viet Roadtrips.
 | File | Nội dung |
 |------|---------|
 | [agents.md](agents.md) | Hướng dẫn cho AI assistant: cấu trúc project, API endpoints, dev workflow, gotchas |
-| [deploy.md](deploy.md) | Runbook triển khai: fresh deploy, cập nhật data, rollback |
+| [deploy.md](deploy.md) | Runbook triển khai code/schema, giữ dữ liệu theo từng môi trường |
 
 ## Logic ứng dụng
 

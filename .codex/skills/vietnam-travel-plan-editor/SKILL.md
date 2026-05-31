@@ -12,7 +12,7 @@ Use this skill when the user asks to modify or inspect a travel plan in this rep
 - Never write admin passwords, JWTs, or server secrets to tracked files, docs, commits, logs, or final replies.
 - Prefer `TRAVEL_ADMIN_PASSWORD` in the shell environment for CLI writes.
 - For MCP writes, pass `adminPassword` only as a tool argument for that call, or use `set_admin_password` for the current MCP session.
-- Use `--keep-db` when deploying code-only changes to prod so existing plan data is preserved.
+- Deploys must preserve DB data. Do not use deploy/migration to move local plan data to prod.
 - Do not edit deprecated root `index.html`, root `vite.config.ts`, or `dev-server.ts`.
 
 ## Prod Defaults
@@ -106,10 +106,10 @@ Cost details belong on activities (`sub_locations`), not fixed location fields.
 
 - `activityType`: `sightseeing`, `accommodation`, `food`, `transport`, `other`
 - `pricingMode`: `per_person`, `per_room`, `per_group`
-- Hotels: use `activityType="accommodation"`, `pricingMode="per_room"`, `unitPrice` per room/night or stay unit, `quantity` for room count, `surcharge` for child/extra charges, default surcharge `0`, and `durationDays` for multi-day stay bars.
+- Hotels: use `activityType="accommodation"`, `pricingMode="per_room"`, `unitPrice` per room/night or stay unit, `quantity` for room/unit count, `surcharge` for fixed extra charges, default surcharge `0`, and `durationDays` for multi-day stay bars.
 - Tickets: use adult/child prices with `pricingMode="per_person"`.
 - Transport and meals should also be activities when they affect cost.
-- Location-level cost fields are legacy/summary only.
+- Location-level cost fields are legacy storage only. Configure costs as activities.
 
 ## Verification
 

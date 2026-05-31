@@ -29,6 +29,7 @@ type ActivityInput = {
     description?: string;
     sortOrder?: number;
     activityType?: string;
+    transportType?: string;
     pricingMode?: string;
     unitPrice?: number;
     quantity?: number;
@@ -70,6 +71,7 @@ function listActivitiesForPlan(planId: number) {
             s.scheduled_period as scheduledPeriod,
             s.description,
             s.activity_type as activityType,
+            s.transport_type as transportType,
             s.pricing_mode as pricingMode,
             s.unit_price as unitPrice,
             s.quantity,
@@ -97,8 +99,8 @@ function insertActivity(locationId: number, input: ActivityInput) {
     const db = getDb();
     const maxOrder = (db.prepare('SELECT MAX(sort_order) as m FROM sub_locations WHERE location_id = ?').get(locationId) as { m: number | null }).m ?? 0;
     const result = db.prepare(
-        'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, duration_days, scheduled_date, scheduled_period, description, activity_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(locationId, input.sortOrder ?? maxOrder + 1, input.name, input.lat ?? 0, input.lng ?? 0, input.durationMinutes ?? 60, input.durationDays ?? 0, input.scheduledDate ?? '', input.scheduledPeriod ?? '', input.description ?? '', input.activityType ?? 'sightseeing', input.pricingMode ?? 'per_person', input.unitPrice ?? 0, input.quantity ?? 1, input.surcharge ?? 0, input.adultPrice ?? 0, input.childPrice ?? 0);
+        'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, duration_days, scheduled_date, scheduled_period, description, activity_type, transport_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(locationId, input.sortOrder ?? maxOrder + 1, input.name, input.lat ?? 0, input.lng ?? 0, input.durationMinutes ?? 60, input.durationDays ?? 0, input.scheduledDate ?? '', input.scheduledPeriod ?? '', input.description ?? '', input.activityType ?? 'sightseeing', input.transportType ?? '', input.pricingMode ?? 'per_person', input.unitPrice ?? 0, input.quantity ?? 1, input.surcharge ?? 0, input.adultPrice ?? 0, input.childPrice ?? 0);
     return { id: result.lastInsertRowid };
 }
 
@@ -118,6 +120,7 @@ function updateActivity(activityId: number, input: ActivityInput): boolean {
         scheduled_period: input.scheduledPeriod,
         description: input.description,
         activity_type: input.activityType,
+        transport_type: input.transportType,
         pricing_mode: input.pricingMode,
         unit_price: input.unitPrice,
         quantity: input.quantity,

@@ -232,7 +232,7 @@
                 <span class="min-w-0 flex-1 truncate text-xs lg:text-sm font-bold text-white" x-text="selectedPlanName()"></span>
                 <i data-lucide="chevron-down"
                    class="w-4 h-4 text-slate-400 flex-none transition-transform"
-                   :class="planDropdownOpen ? 'rotate-180' : ''"></i>
+                   :class="typeof planDropdownOpen !== 'undefined' && planDropdownOpen ? 'rotate-180' : ''"></i>
             </button>
             <div x-show="planDropdownOpen"
                  x-transition:enter="transition ease-out duration-150"
@@ -279,10 +279,10 @@
             </button>
             <button @click="toggleTheme()"
                     class="w-9 h-9 rounded-xl transition-all inline-flex items-center justify-center text-slate-400 hover:text-white"
-                    :class="theme === 'light' ? 'bg-slate-900 text-white' : 'bg-white/5'"
-                    :title="theme === 'light' ? 'Chuyển sang dark mode' : 'Chuyển sang light mode'">
-                <i x-show="theme !== 'light'" data-lucide="sun" class="w-3.5 h-3.5"></i>
-                <i x-show="theme === 'light'" data-lucide="moon" class="w-3.5 h-3.5"></i>
+                    :class="typeof theme !== 'undefined' && theme === 'light' ? 'bg-slate-900 text-white' : 'bg-white/5'"
+                    :title="typeof theme !== 'undefined' && theme === 'light' ? 'Chuyển sang dark mode' : 'Chuyển sang light mode'">
+                <i x-show="typeof theme === 'undefined' || theme !== 'light'" data-lucide="sun" class="w-3.5 h-3.5"></i>
+                <i x-show="typeof theme !== 'undefined' && theme === 'light'" data-lucide="moon" class="w-3.5 h-3.5"></i>
             </button>
         </div>
     </header>
@@ -415,10 +415,10 @@
                             </div>
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Vé tham quan</p>
-                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planTicketTotal())"></p>
-                                <p class="mt-1 text-[9px] font-bold text-emerald-300" x-text="costPercentLabel(planTicketTotal())"></p>
+                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['sightseeing']))"></p>
+                                <p class="mt-1 text-[9px] font-bold text-emerald-300" x-text="costPercentLabel(planActivityTotal(['sightseeing']))"></p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
-                                    <div class="h-full rounded-full bg-emerald-300" :style="`width:${costBarWidth(planTicketTotal())}%`"></div>
+                                    <div class="h-full rounded-full bg-emerald-300" :style="`width:${costBarWidth(planActivityTotal(['sightseeing']))}%`"></div>
                                 </div>
                             </div>
                         </div>
@@ -430,12 +430,6 @@
                                         <div>
                                             <h3 class="text-sm lg:text-lg font-bold text-white" x-text="week.label"></h3>
                                             <p class="text-[10px] font-bold text-slate-500" x-text="week.range"></p>
-                                        </div>
-                                        <div class="flex flex-wrap items-center gap-1 text-[8px] font-bold text-slate-400">
-                                            <span class="rounded-md border border-cyan-300/25 bg-cyan-300/10 px-1.5 py-0.5" title="Mã địa điểm, ví dụ NA = Nghệ An">NA</span>
-                                            <span class="rounded-md border border-sky-300/25 bg-sky-300/10 px-1.5 py-0.5" title="Di chuyển">Xe</span>
-                                            <span class="rounded-md border border-emerald-300/25 bg-emerald-300/10 px-1.5 py-0.5" title="Ăn uống">Ăn</span>
-                                            <span class="rounded-md border border-emerald-300/25 bg-emerald-300/10 px-1.5 py-0.5" title="Vé / tham quan">Vé</span>
                                         </div>
                                     </div>
                                     <div class="overflow-x-auto no-scrollbar">
@@ -608,10 +602,10 @@
                             </div>
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Vé tham quan</p>
-                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planTicketTotal())"></p>
-                                <p class="mt-1 text-[9px] font-bold text-emerald-300" x-text="costPercentLabel(planTicketTotal())"></p>
+                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['sightseeing']))"></p>
+                                <p class="mt-1 text-[9px] font-bold text-emerald-300" x-text="costPercentLabel(planActivityTotal(['sightseeing']))"></p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
-                                    <div class="h-full rounded-full bg-emerald-300" :style="`width:${costBarWidth(planTicketTotal())}%`"></div>
+                                    <div class="h-full rounded-full bg-emerald-300" :style="`width:${costBarWidth(planActivityTotal(['sightseeing']))}%`"></div>
                                 </div>
                             </div>
                         </div>
@@ -917,7 +911,7 @@
                         <div class="bg-white/5 rounded-xl p-2.5 flex items-center justify-between">
                             <div>
                                 <p class="text-[9px] font-bold text-slate-400 uppercase">Người lớn</p>
-                                <p class="text-[9px] text-slate-500 mt-0.5" x-text="ticketAdultTotal(activeLocation) > 0 ? formatCurrency(ticketAdultTotal(activeLocation)) + '/ng' : 'Miễn phí'"></p>
+                                <p class="text-[9px] text-slate-500 mt-0.5" x-text="participantAdultRate(activeLocation) > 0 ? formatCurrency(participantAdultRate(activeLocation)) + '/ng' : 'Không có activity/người'"></p>
                             </div>
                             <div class="flex items-center gap-1 bg-white/5 rounded-lg p-0.5">
                                 <button @click="adjustAdults(-1)" class="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded-md transition-all text-sm">-</button>
@@ -928,7 +922,7 @@
                         <div class="bg-white/5 rounded-xl p-2.5 flex items-center justify-between">
                             <div>
                                 <p class="text-[9px] font-bold text-slate-400 uppercase">Trẻ em</p>
-                                <p class="text-[9px] text-slate-500 mt-0.5" x-text="ticketChildTotal(activeLocation) > 0 ? formatCurrency(ticketChildTotal(activeLocation)) + '/ng' : 'Miễn phí'"></p>
+                                <p class="text-[9px] text-slate-500 mt-0.5" x-text="participantChildRate(activeLocation) > 0 ? formatCurrency(participantChildRate(activeLocation)) + '/ng' : 'Không có activity/người'"></p>
                             </div>
                             <div class="flex items-center gap-1 bg-white/5 rounded-lg p-0.5">
                                 <button @click="adjustChildren(-1)" class="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded-md transition-all text-sm">-</button>
@@ -942,20 +936,11 @@
                     <div class="space-y-2 text-[10px]">
 
                         <!-- Vé tham quan người lớn -->
-                        <template x-if="ticketAdultTotal(activeLocation) > 0">
+                        <template x-if="subActivityTotal(activeLocation, ['sightseeing']) > 0">
                             <div class="flex items-center gap-2 text-slate-300">
-                                <span class="text-slate-400 flex-1 min-w-0 truncate">Vé tham quan NL</span>
-                                <span class="flex-none whitespace-nowrap" x-text="activeLocation.adults + ' ng × ' + formatCurrency(ticketAdultTotal(activeLocation))"></span>
-                                <span class="flex-none whitespace-nowrap font-bold text-white" x-text="formatCurrency(activeLocation.adults * ticketAdultTotal(activeLocation))"></span>
-                            </div>
-                        </template>
-
-                        <!-- Vé tham quan trẻ em -->
-                        <template x-if="ticketChildTotal(activeLocation) > 0 && activeLocation.children > 0">
-                            <div class="flex items-center gap-2 text-slate-300">
-                                <span class="text-slate-400 flex-1 min-w-0 truncate">Vé tham quan TE</span>
-                                <span class="flex-none whitespace-nowrap" x-text="activeLocation.children + ' ng × ' + formatCurrency(ticketChildTotal(activeLocation))"></span>
-                                <span class="flex-none whitespace-nowrap font-bold text-white" x-text="formatCurrency(activeLocation.children * ticketChildTotal(activeLocation))"></span>
+                                <span class="text-slate-400 flex-1 min-w-0 truncate">Vé tham quan</span>
+                                <span class="flex-none whitespace-nowrap">Theo activity</span>
+                                <span class="flex-none whitespace-nowrap font-bold text-white" x-text="formatCurrency(subActivityTotal(activeLocation, ['sightseeing']))"></span>
                             </div>
                         </template>
 
@@ -1997,6 +1982,18 @@
                     return subs.reduce((sum, s) => sum + (s.childPrice || 0), 0);
                 },
 
+                participantAdultRate(loc) {
+                    return (loc.subLocations || [])
+                        .filter(s => !this.excludedSubs[s.id] && (s.pricingMode || 'per_person') === 'per_person')
+                        .reduce((sum, s) => sum + Number(s.adultPrice || 0), 0);
+                },
+
+                participantChildRate(loc) {
+                    return (loc.subLocations || [])
+                        .filter(s => !this.excludedSubs[s.id] && (s.pricingMode || 'per_person') === 'per_person')
+                        .reduce((sum, s) => sum + Number(s.childPrice || 0), 0);
+                },
+
                 subActivityType(sub) {
                     return sub.activityType || 'sightseeing';
                 },
@@ -2028,10 +2025,7 @@
                     const quantity = Number(sub.quantity ?? 1) || 0;
                     const surcharge = Number(sub.surcharge || 0);
                     if (mode === 'per_room') {
-                        const capacity = Math.max(quantity || 2, 1);
-                        const people = Math.max((loc.adults || 0) + (loc.children || 0), 1);
-                        const rooms = Math.max(Math.ceil(people / capacity), 1);
-                        return (Number(sub.unitPrice || 0) * rooms) + (surcharge * (loc.children || 0));
+                        return (Number(sub.unitPrice || 0) * Math.max(quantity, 1)) + surcharge;
                     }
                     if (mode === 'per_group') {
                         return (Number(sub.unitPrice || 0) * Math.max(quantity, 1)) + surcharge;
@@ -2399,7 +2393,7 @@
                     if (event?.activityType === 'accommodation' || (event?.type === 'stay' && event?.subLocationId)) return 'bed';
                     if (event?.type === 'stay') return 'map-pin';
                     if (event?.activityType === 'food') return 'utensils';
-                    if (event?.type === 'transport' || event?.activityType === 'transport') return 'car';
+                    if (event?.type === 'transport' || event?.activityType === 'transport') return this.getTransportIcon(this.calendarTransportType(event));
                     if (event?.activityType === 'sightseeing' || event?.type === 'visit') return 'ticket';
                     return 'circle-dot';
                 },
@@ -2408,9 +2402,35 @@
                     if (event?.activityType === 'accommodation' || (event?.type === 'stay' && event?.subLocationId)) return '🏨';
                     if (event?.type === 'stay') return '📍';
                     if (event?.activityType === 'food') return '🍽';
-                    if (event?.type === 'transport' || event?.activityType === 'transport') return '🚗';
+                    if (event?.type === 'transport' || event?.activityType === 'transport') return this.transportGlyph(this.calendarTransportType(event));
                     if (event?.activityType === 'sightseeing' || event?.type === 'visit') return '🎟';
                     return '•';
+                },
+
+                calendarTransportType(event) {
+                    const explicit = String(event?.transportType || '').toLowerCase();
+                    if (explicit) return explicit;
+                    const text = `${event?.title || ''} ${event?.meta || ''}`.toLowerCase();
+                    if (/(bay|flight|sân bay|may bay|máy bay)/i.test(text)) return 'flight';
+                    if (/(tàu hỏa|tau hoa|train)/i.test(text)) return 'train';
+                    if (/(bus|xe khách|limousine)/i.test(text)) return 'bus';
+                    if (/(phà|ferry|tàu|du thuyền)/i.test(text)) return 'ferry';
+                    if (/(xe máy|motorbike)/i.test(text)) return 'motorbike';
+                    if (/(đi bộ|walking)/i.test(text)) return 'walking';
+                    return 'car';
+                },
+
+                transportGlyph(type) {
+                    const glyphs = {
+                        flight: '✈️',
+                        train: '🚆',
+                        bus: '🚌',
+                        car: '🚗',
+                        motorbike: '🏍️',
+                        ferry: '⛴️',
+                        walking: '🚶',
+                    };
+                    return glyphs[type] || '🚗';
                 },
 
                 calendarEventShortLabel(event) {
@@ -2713,6 +2733,7 @@
                                     groupId: `${type}-${sub.id}`,
                                     type,
                                     activityType,
+                                    transportType: sub.transportType || '',
                                     title: sub.name,
                                     meta: `${loc.name} · ${this.activityTypeLabel(activityType)} · ${this.formatCurrency(this.subActivityCost(sub, loc))}`,
                                     time: slot.label,
@@ -2901,19 +2922,7 @@
 
                 calculateLocationCost(loc) {
                     if (!loc) return 0;
-                    const rawDays = typeof loc.duration === 'number' ? loc.duration : 1;
-                    const days = Math.max(rawDays, 1);
-                    const adults = loc.adults || 0;
-                    const children = loc.children || 0;
-
-                    // Vé/lưu trú/ăn uống lấy từ activity; location chỉ giữ summary và thông tin tuyến.
-                    const subTicketAdult = (loc.subLocations || []).filter(s => !this.excludedSubs[s.id] && this.subActivityType(s) === 'sightseeing').reduce((sum, s) => sum + (s.adultPrice || 0), 0);
-                    const subTicketChild = (loc.subLocations || []).filter(s => !this.excludedSubs[s.id] && this.subActivityType(s) === 'sightseeing').reduce((sum, s) => sum + (s.childPrice || 0), 0);
-                    const ticketCost = subTicketAdult * adults + subTicketChild * children;
-                    const activityStayCost = this.subActivityTotal(loc, ['accommodation']);
-                    const activityFoodCost = this.subActivityTotal(loc, ['food']);
-                    const activityOtherCost = this.subActivityTotal(loc, ['transport', 'other']);
-                    return ticketCost + activityStayCost + activityFoodCost + activityOtherCost;
+                    return this.subActivityTotal(loc, ['sightseeing', 'accommodation', 'food', 'transport', 'other']);
                 },
 
                 calculateTotalPlanCost(plan = this.currentPlan) {
@@ -2933,11 +2942,7 @@
                 },
 
                 planTicketTotal(plan = this.currentPlan) {
-                    if (!plan || !plan.locations) return 0;
-                    return plan.locations.reduce((total, loc) => {
-                        if (this.excludedLocations[loc.id]) return total;
-                        return total + (this.ticketAdultTotal(loc) * (loc.adults || 0)) + (this.ticketChildTotal(loc) * (loc.children || 0));
-                    }, 0);
+                    return this.planActivityTotal(['sightseeing'], plan);
                 },
 
                 costPercent(value, total = this.totalPlanCost) {

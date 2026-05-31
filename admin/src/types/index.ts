@@ -9,6 +9,7 @@ export interface SubLocation {
     scheduledPeriod: 'morning' | 'afternoon' | '';
     description: string;
     activityType: 'sightseeing' | 'accommodation' | 'food' | 'transport' | 'other';
+    transportType?: 'car' | 'bus' | 'train' | 'flight' | 'motorbike' | 'ferry' | 'walking' | 'other' | '';
     pricingMode: 'per_person' | 'per_room' | 'per_group';
     unitPrice: number;
     quantity: number;
@@ -35,13 +36,6 @@ export interface Location {
     duration: number;
     transport: string;
     transportType: string;
-    transportFare: number;
-    accommodationName: string;
-    accommodationUrl: string;
-    adultPrice: number;
-    childPrice: number;
-    stayCostPerNight: number;
-    foodBudgetPerDay: number;
     adults: number;
     children: number;
     highlight: string;
@@ -62,15 +56,6 @@ export interface LocationInput {
     durationDays?: number;
     transportType?: string;
     transportLabel?: string;
-    transportFare?: number;
-    transportFareAdult?: number;
-    transportFareChild?: number;
-    accommodationName?: string;
-    accommodationUrl?: string;
-    adultPrice?: number;
-    childPrice?: number;
-    stayCostPerNight?: number;
-    foodBudgetPerDay?: number;
     adults?: number;
     children?: number;
     highlight?: string;

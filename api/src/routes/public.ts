@@ -109,16 +109,16 @@ router.post('/plans/:slug/locations/:id/sub-locations', (req, res) => {
     const locationId = Number(req.params.id);
     if (!getLocationForPlan(planId, locationId)) { res.status(404).json({ error: 'Location not found' }); return; }
 
-    const { name, lat, lng, durationMinutes, durationDays, scheduledDate, scheduledPeriod, description, sortOrder, activityType, pricingMode, unitPrice, quantity, surcharge, adultPrice, childPrice } = req.body as {
-        name?: string; lat?: number; lng?: number; durationMinutes?: number; durationDays?: number; scheduledDate?: string; scheduledPeriod?: string; description?: string; sortOrder?: number; activityType?: string; pricingMode?: string; unitPrice?: number; quantity?: number; surcharge?: number; adultPrice?: number; childPrice?: number;
+    const { name, lat, lng, durationMinutes, durationDays, scheduledDate, scheduledPeriod, description, sortOrder, activityType, transportType, pricingMode, unitPrice, quantity, surcharge, adultPrice, childPrice } = req.body as {
+        name?: string; lat?: number; lng?: number; durationMinutes?: number; durationDays?: number; scheduledDate?: string; scheduledPeriod?: string; description?: string; sortOrder?: number; activityType?: string; transportType?: string; pricingMode?: string; unitPrice?: number; quantity?: number; surcharge?: number; adultPrice?: number; childPrice?: number;
     };
     if (!name?.trim()) { res.status(400).json({ error: 'name is required' }); return; }
 
     const db = getDb();
     const maxOrder = (db.prepare('SELECT MAX(sort_order) as m FROM sub_locations WHERE location_id = ?').get(locationId) as { m: number | null }).m ?? 0;
     const result = db.prepare(
-        'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, duration_days, scheduled_date, scheduled_period, description, activity_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(locationId, sortOrder ?? maxOrder + 1, name, lat ?? 0, lng ?? 0, durationMinutes ?? 60, durationDays ?? 0, scheduledDate ?? '', scheduledPeriod ?? '', description ?? '', activityType ?? 'sightseeing', pricingMode ?? 'per_person', unitPrice ?? 0, quantity ?? 1, surcharge ?? 0, adultPrice ?? 0, childPrice ?? 0);
+        'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, duration_days, scheduled_date, scheduled_period, description, activity_type, transport_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(locationId, sortOrder ?? maxOrder + 1, name, lat ?? 0, lng ?? 0, durationMinutes ?? 60, durationDays ?? 0, scheduledDate ?? '', scheduledPeriod ?? '', description ?? '', activityType ?? 'sightseeing', transportType ?? '', pricingMode ?? 'per_person', unitPrice ?? 0, quantity ?? 1, surcharge ?? 0, adultPrice ?? 0, childPrice ?? 0);
     res.status(201).json({ id: result.lastInsertRowid });
 });
 
@@ -135,8 +135,8 @@ router.put('/plans/:slug/locations/:id/sub-locations/:subId', (req, res) => {
         res.status(404).json({ error: 'Sub-location not found' }); return;
     }
 
-    const { name, lat, lng, durationMinutes, durationDays, scheduledDate, scheduledPeriod, description, sortOrder, activityType, pricingMode, unitPrice, quantity, surcharge, adultPrice, childPrice } = req.body as {
-        name?: string; lat?: number; lng?: number; durationMinutes?: number; durationDays?: number; scheduledDate?: string; scheduledPeriod?: string; description?: string; sortOrder?: number; activityType?: string; pricingMode?: string; unitPrice?: number; quantity?: number; surcharge?: number; adultPrice?: number; childPrice?: number;
+    const { name, lat, lng, durationMinutes, durationDays, scheduledDate, scheduledPeriod, description, sortOrder, activityType, transportType, pricingMode, unitPrice, quantity, surcharge, adultPrice, childPrice } = req.body as {
+        name?: string; lat?: number; lng?: number; durationMinutes?: number; durationDays?: number; scheduledDate?: string; scheduledPeriod?: string; description?: string; sortOrder?: number; activityType?: string; transportType?: string; pricingMode?: string; unitPrice?: number; quantity?: number; surcharge?: number; adultPrice?: number; childPrice?: number;
     };
     const fields: string[] = [];
     const values: unknown[] = [];
@@ -150,6 +150,7 @@ router.put('/plans/:slug/locations/:id/sub-locations/:subId', (req, res) => {
     if (scheduledPeriod !== undefined) { fields.push('scheduled_period = ?'); values.push(scheduledPeriod); }
     if (description !== undefined) { fields.push('description = ?'); values.push(description); }
     if (activityType !== undefined) { fields.push('activity_type = ?'); values.push(activityType); }
+    if (transportType !== undefined) { fields.push('transport_type = ?'); values.push(transportType); }
     if (pricingMode !== undefined) { fields.push('pricing_mode = ?'); values.push(pricingMode); }
     if (unitPrice !== undefined) { fields.push('unit_price = ?'); values.push(unitPrice); }
     if (quantity !== undefined) { fields.push('quantity = ?'); values.push(quantity); }

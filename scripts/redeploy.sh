@@ -1,20 +1,23 @@
 #!/bin/bash
-# redeploy.sh — Deploy image mới + reset DB từ plans.json
-# Dùng khi: cập nhật plans.json, migrate.ts, hoặc muốn sync dữ liệu từ code
+# redeploy.sh — Deploy image mới, luôn GIỮ nguyên DB hiện tại.
 #
 # Cách dùng:
-#   ./scripts/redeploy.sh              # fresh deploy (reset DB)
-#   ./scripts/redeploy.sh --keep-db    # deploy image mới, GIỮ nguyên DB hiện tại
+#   ./scripts/redeploy.sh              # deploy image mới, GIỮ nguyên DB hiện tại
+#   ./scripts/redeploy.sh --keep-db    # tương thích cũ, cũng giữ DB
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR/.."
 
-KEEP_DB=false
-if [[ "$1" == "--keep-db" ]]; then
-    KEEP_DB=true
-fi
+case "${1:-}" in
+    ""|--keep-db)
+        ;;
+    *)
+        echo "Usage: $0 [--keep-db]"
+        exit 1
+        ;;
+esac
 
 echo "==> Pulling latest image…"
 docker compose pull
@@ -22,13 +25,8 @@ docker compose pull
 echo "==> Stopping container…"
 docker compose down
 
-if [[ "$KEEP_DB" == "false" ]]; then
-    echo "==> Resetting database (FORCE_MIGRATE=true)…"
-    FORCE_MIGRATE=true docker compose up -d
-else
-    echo "==> Starting with existing database…"
-    docker compose up -d
-fi
+echo "==> Starting with existing database…"
+docker compose up -d
 
 echo "==> Waiting for health check…"
 sleep 5
