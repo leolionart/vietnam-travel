@@ -2567,14 +2567,6 @@
                     return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
                 },
 
-                calendarTransportOrder(date) {
-                    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return 0;
-                    const hour = date.getHours() + date.getMinutes() / 60;
-                    if (hour < 12) return 0.2;
-                    if (hour < 17) return 3.5;
-                    return 4.5;
-                },
-
                 locationStayDays(loc) {
                     const { start, end } = this.parseDateRange(loc?.dateRange || '');
                     if (!start && !end) return [];
@@ -2662,26 +2654,10 @@
                         byDay[key].push(event);
                     };
 
-                    (this.currentPlan.locations || []).forEach((loc, index) => {
-                        const { start } = this.parseDateRange(loc.dateRange);
+                    (this.currentPlan.locations || []).forEach((loc) => {
                         const stayDays = this.locationStayDays(loc);
-                        if (start) {
-                            const transportOrder = this.calendarTransportOrder(start);
-                            add(start, {
-                                id: `transport-${loc.id}`,
-                                groupId: `transport-${loc.id}`,
-                                type: 'transport',
-                                activityType: 'transport',
-                                title: loc.transport || (index === 0 ? `Bắt đầu tại ${loc.name}` : `Di chuyển đến ${loc.name}`),
-                                meta: index === 0 ? loc.name : `${this.currentPlan.locations[index - 1]?.name || 'Điểm trước'} -> ${loc.name}`,
-                                time: this.calendarTime(start),
-                                order: transportOrder,
-                                locationId: loc.id,
-                            });
-                        }
 
                         stayDays.forEach((day, dayIndex) => {
-                            const checkinOrder = start ? this.calendarTransportOrder(start) + 0.1 : 1;
                             add(day, {
                                 id: `stay-${loc.id}-${this.localDateKey(day)}`,
                                 groupId: `stay-${loc.id}`,
@@ -2691,7 +2667,7 @@
                                 locationCode: this.locationCode(loc),
                                 meta: `${dayIndex === 0 ? 'Check-in / nghỉ ngơi' : 'Ngày ở lại'} · ${dayIndex + 1}/${stayDays.length}`,
                                 time: '',
-                                order: dayIndex === 0 ? checkinOrder : 1,
+                                order: 1,
                                 span: stayDays.length,
                                 dayIndex,
                                 isMultiDay: stayDays.length > 1,
