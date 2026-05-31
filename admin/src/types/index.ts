@@ -38,8 +38,6 @@ export interface Location {
     duration: number;
     transport: string;
     transportType: string;
-    adults: number;
-    children: number;
     highlight: string;
     description: string;
     activities: string[];
@@ -58,8 +56,6 @@ export interface LocationInput {
     durationDays?: number;
     transportType?: string;
     transportLabel?: string;
-    adults?: number;
-    children?: number;
     highlight?: string;
     description?: string;
     activities?: string[];

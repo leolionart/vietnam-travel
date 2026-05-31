@@ -20,8 +20,6 @@ export interface CreateLocationInput {
     durationDays?: number;
     transportType?: string;
     transportLabel?: string;
-    adults?: number;
-    children?: number;
     highlight?: string;
     description?: string;
     activities?: string[];
@@ -67,8 +65,8 @@ export function addLocation(planId: number, input: CreateLocationInput): number 
         0,
         0,
         0,
-        input.adults ?? 2,
-        input.children ?? 0,
+        0,
+        0,
         input.highlight ?? '',
         input.description ?? '',
         JSON.stringify(input.activities ?? []),
@@ -100,8 +98,6 @@ export function updateLocation(
         duration_days: input.durationDays,
         transport_type: input.transportType,
         transport_label: input.transportLabel,
-        adults: input.adults,
-        children: input.children,
         highlight: input.highlight,
         description: input.description,
         activities: input.activities !== undefined ? JSON.stringify(input.activities) : undefined,

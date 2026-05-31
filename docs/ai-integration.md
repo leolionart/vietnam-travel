@@ -118,9 +118,8 @@ npm --prefix api run cli -- search-vexere-trips "Hà Nội" "Nghệ An" 2026-06-
 
 - Costs belong on activities (`sub_locations`), not location-level legacy cost
   columns.
-- Per-person activities inherit `location.adults` and `location.children` by
-  default. When group size changes for a single activity or date range, set
-  `participantAdults` and `participantChildren` on that activity.
+- Per-person activities use `participantAdults` and `participantChildren` on
+  each activity. Do not rely on location-level headcount for cost calculation.
 - Use `activityType="transport"` and `transportType="bus"` for coach/bus
   transport activities that should show transport icons and duration.
 - Use `analyze_activity_proximity` before adding or moving activities so close

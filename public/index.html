@@ -911,30 +911,9 @@
                         <i data-lucide="calculator" class="w-4 h-4 text-blue-400"></i>
                     </div>
 
-                    <!-- Số người -->
-                    <div class="grid grid-cols-2 gap-2 mb-4">
-                        <div class="bg-white/5 rounded-xl p-2.5 flex items-center justify-between">
-                            <div>
-                                <p class="text-[9px] font-bold text-slate-400 uppercase">Người lớn</p>
-                                <p class="text-[9px] text-slate-500 mt-0.5" x-text="participantAdultRate(activeLocation) > 0 ? formatCurrency(participantAdultRate(activeLocation)) + '/ng' : 'Không có activity/người'"></p>
-                            </div>
-                            <div class="flex items-center gap-1 bg-white/5 rounded-lg p-0.5">
-                                <button @click="adjustAdults(-1)" class="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded-md transition-all text-sm">-</button>
-                                <span class="w-5 text-center text-xs font-bold" x-text="activeLocation.adults"></span>
-                                <button @click="adjustAdults(1)" class="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded-md transition-all text-sm">+</button>
-                            </div>
-                        </div>
-                        <div class="bg-white/5 rounded-xl p-2.5 flex items-center justify-between">
-                            <div>
-                                <p class="text-[9px] font-bold text-slate-400 uppercase">Trẻ em</p>
-                                <p class="text-[9px] text-slate-500 mt-0.5" x-text="participantChildRate(activeLocation) > 0 ? formatCurrency(participantChildRate(activeLocation)) + '/ng' : 'Không có activity/người'"></p>
-                            </div>
-                            <div class="flex items-center gap-1 bg-white/5 rounded-lg p-0.5">
-                                <button @click="adjustChildren(-1)" class="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded-md transition-all text-sm">-</button>
-                                <span class="w-5 text-center text-xs font-bold" x-text="activeLocation.children"></span>
-                                <button @click="adjustChildren(1)" class="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded-md transition-all text-sm">+</button>
-                            </div>
-                        </div>
+                    <div class="rounded-xl border border-white/10 bg-white/5 p-3 mb-4">
+                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Số người theo activity</p>
+                        <p class="mt-1 text-[10px] leading-snug text-slate-500">Chi phí theo người dùng số người nhập trên từng activity, không dùng cấu hình theo địa điểm.</p>
                     </div>
 
                     <!-- Chi tiết từng khoản -->
@@ -982,12 +961,6 @@
                             <span class="text-[10px] font-bold text-slate-400">Tổng cộng</span>
                             <span class="text-lg lg:text-xl font-bold text-white font-display" x-text="formatCurrency(calculateLocationCost(activeLocation))"></span>
                         </div>
-                        <template x-if="activeLocation.adults > 0">
-                            <div class="flex justify-between items-center">
-                                <span class="text-[10px] text-slate-500" x-text="'Mỗi người lớn (' + activeLocation.adults + ' NL)'"></span>
-                                <span class="text-[11px] font-bold text-blue-400" x-text="formatCurrency(Math.round(calculateLocationCost(activeLocation) / activeLocation.adults))"></span>
-                            </div>
-                        </template>
                     </div>
                 </div>
 
@@ -1284,12 +1257,8 @@
                     return `https://loremflickr.com/800/600/${ascii},vietnam/all?lock=${h}`;
                 },
 
-                // Getter có explicit dependency vào activeLocation.adults/children, excludedSubs và excludedLocations
-                // để Alpine track mutation khi user chỉnh counter hoặc toggle sub-location / location
+                // Getter có explicit dependency vào excludedSubs và excludedLocations để Alpine track mutation.
                 get totalPlanCost() {
-                    const loc = this.activeLocation;
-                    void loc?.adults;
-                    void loc?.children;
                     void this.excludedSubs;
                     void this.excludedLocations;
                     return this.calculateTotalPlanCost();
@@ -1710,43 +1679,6 @@
                     this.$nextTick(() => this.updateMap(true, true));
                 },
 
-                adjustAdults(delta) {
-                    const loc = this.activeLocation;
-                    loc.adults = Math.max(1, loc.adults + delta);
-                    this.saveHeadcounts();
-                    this.scheduleSessionSave();
-                },
-
-                adjustChildren(delta) {
-                    const loc = this.activeLocation;
-                    loc.children = Math.max(0, loc.children + delta);
-                    this.saveHeadcounts();
-                    this.scheduleSessionSave();
-                },
-
-                saveHeadcounts() {
-                    if (!this.currentPlanId) return;
-                    const data = {};
-                    this.currentPlan.locations.forEach(loc => {
-                        data[loc.id] = { adults: loc.adults, children: loc.children };
-                    });
-                    localStorage.setItem(`vt_hc_${this.currentPlanId}`, JSON.stringify(data));
-                },
-
-                restoreHeadcounts(planId) {
-                    const saved = localStorage.getItem(`vt_hc_${planId}`);
-                    if (!saved) return;
-                    try {
-                        const data = JSON.parse(saved);
-                        this.plans[planId].locations.forEach(loc => {
-                            if (data[loc.id]) {
-                                loc.adults = data[loc.id].adults ?? loc.adults;
-                                loc.children = data[loc.id].children ?? loc.children;
-                            }
-                        });
-                    } catch (e) {}
-                },
-
                 toggleSub(subId) {
                     const next = { ...this.excludedSubs };
                     if (next[subId]) {
@@ -1805,11 +1737,7 @@
                 // ── Session methods ──────────────────────────────────────
 
                 buildCustom() {
-                    const headcounts = {};
-                    this.currentPlan.locations.forEach(loc => {
-                        headcounts[loc.id] = { adults: loc.adults, children: loc.children };
-                    });
-                    return { headcounts, excludedSubs: this.excludedSubs, excludedLocations: this.excludedLocations };
+                    return { excludedSubs: this.excludedSubs, excludedLocations: this.excludedLocations };
                 },
 
                 async loadSession(id) {
@@ -1820,14 +1748,6 @@
                         // Ghi nhớ source session — nhưng KHÔNG claim là của mình
                         // Lần đầu user thay đổi gì → sẽ tự động fork thành session riêng
                         this.sessionSourceId = id;
-
-                        const hc = sess.custom?.headcounts || {};
-                        this.currentPlan.locations.forEach(loc => {
-                            if (hc[loc.id]) {
-                                loc.adults = hc[loc.id].adults ?? loc.adults;
-                                loc.children = hc[loc.id].children ?? loc.children;
-                            }
-                        });
 
                         this.excludedSubs = sess.custom?.excludedSubs || {};
                         this.excludedLocations = sess.custom?.excludedLocations || {};
@@ -1929,7 +1849,6 @@
                                 dateRange: full.dateRange,
                                 locations: full.locations,
                             };
-                            this.restoreHeadcounts(planId);
                         } catch (e) {                            console.error('Lỗi tải plan:', e);
                             this.planLoading = false;
                             return;
@@ -2056,8 +1975,8 @@
                     if (mode === 'per_group') {
                         return (Number(sub.unitPrice || 0) * Math.max(quantity, 1)) + surcharge;
                     }
-                    const adults = sub.participantAdults ?? loc.adults ?? 0;
-                    const children = sub.participantChildren ?? loc.children ?? 0;
+                    const adults = Number(sub.participantAdults ?? 0);
+                    const children = Number(sub.participantChildren ?? 0);
                     return ((Number(sub.adultPrice || 0) * adults) + (Number(sub.childPrice || 0) * children)) + surcharge;
                 },
 
@@ -3125,8 +3044,6 @@
                                 <td class="money">${formatMoney(this.subActivityTotal(loc, ['food']))}</td>
                                 <td>${escapeHtml((loc.activities || []).join(', '))}</td>
                                 <td>${escapeHtml((loc.food || []).join(', '))}</td>
-                                <td class="num">${Number(loc.adults || 0)}</td>
-                                <td class="num">${Number(loc.children || 0)}</td>
                                 <td class="money">${formatMoney(cost)}</td>
                             </tr>
                         `;
@@ -3266,8 +3183,6 @@
           <th style="width:72px">Ăn uống activity</th>
           <th>Hoạt động</th>
           <th>Ẩm thực</th>
-          <th style="width:36px">NL</th>
-          <th style="width:36px">TE</th>
           <th style="width:86px">Thành tiền</th>
         </tr>
       </thead>

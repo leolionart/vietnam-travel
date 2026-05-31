@@ -59,7 +59,7 @@ Người lớn dùng `Σ sub.adultPrice`; trẻ em dùng `Σ sub.childPrice`. C�
 
 **Công thức:**
 ```
-Vé tham quan = ticketAdultTotal(loc) × adults + ticketChildTotal(loc) × children
+Vé tham quan = sum(activity.adultPrice × activity.participantAdults + activity.childPrice × activity.participantChildren + surcharge)
 ```
 
 > ⚠️ **Chú ý excluded subs:** Khi user bỏ qua một điểm tham quan con (`excludedSubs[sub.id] = true`), giá của nó **không được tính** vào tổng. UI hiển thị dòng "Tiết kiệm X đ" tương ứng.

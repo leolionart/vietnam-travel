@@ -39,8 +39,6 @@ interface DbLocation {
     duration_days: number;
     transport_type: string;
     transport_label: string;
-    adults: number;
-    children: number;
     highlight: string;
     description: string;
     activities: string;
@@ -108,8 +106,6 @@ function locationToPublic(loc: DbLocation, prevProvince?: string) {
         duration: loc.duration_days,
         transport: loc.transport_label,
         transportType: loc.transport_type,
-        adults: loc.adults,
-        children: loc.children,
         highlight: loc.highlight,
         description: loc.description,
         activities: JSON.parse(loc.activities || '[]') as string[],

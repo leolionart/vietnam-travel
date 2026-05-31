@@ -218,9 +218,9 @@ Cost details belong on activities (`sub_locations`), not fixed location fields.
 - Hotels: use `activityType="accommodation"`, `pricingMode="per_room"`, `unitPrice` per room/night or stay unit, `quantity` for room/unit count, `surcharge` for fixed extra charges, default surcharge `0`, and `durationDays` for multi-day stay bars.
 - Tickets: use adult/child prices with `pricingMode="per_person"`.
 - Transport and meals should also be activities when they affect cost.
-- For activities after group-size changes, set `participantAdults` and
-  `participantChildren` on that activity; omit/null means inherit the location
-  `adults` and `children`.
+- For per-person activities, always set `participantAdults` and
+  `participantChildren` on that activity. Location-level headcount is legacy
+  storage and is not used for cost calculation.
 - Location-level cost fields are legacy storage only. Configure costs as activities.
 
 ## Activity JSON Cheat Sheet

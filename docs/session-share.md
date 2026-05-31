@@ -10,7 +10,7 @@ Có **2 loại session** hoàn toàn khác nhau, đều dùng `?session=` trên 
 
 | Loại | Ai tạo | Mục đích | API endpoint |
 |------|--------|----------|-------------|
-| **User session** | Visitor tự tạo khi chỉnh sửa | Lưu customization (headcount, bỏ điểm) | `POST /api/sessions` |
+| **User session** | Visitor tự tạo khi chỉnh sửa | Lưu customization bỏ activity/location | `POST /api/sessions` |
 | **Session plan** | Public MCP (AI tool) | Plan hoàn toàn mới, không liên kết slug | `GET /api/sessions/plan/:id` |
 
 ---
@@ -20,7 +20,7 @@ Có **2 loại session** hoàn toàn khác nhau, đều dùng `?session=` trên 
 ### Luồng tạo session
 
 ```
-User thay đổi gì đó (headcount, bỏ sub-location, bỏ location)
+User thay đổi gì đó (bỏ sub-location, bỏ location)
     → scheduleSessionSave() — debounce 900ms
     → flushSession()
         ├─ Chưa có mySessionId?
@@ -37,10 +37,6 @@ User thay đổi gì đó (headcount, bỏ sub-location, bỏ location)
 
 ```json
 {
-  "headcounts": {
-    "101": { "adults": 3, "children": 1 },
-    "102": { "adults": 3, "children": 1 }
-  },
   "excludedSubs": {
     "201": true,
     "205": true
@@ -51,16 +47,15 @@ User thay đổi gì đó (headcount, bỏ sub-location, bỏ location)
 }
 ```
 
-`headcounts` key = `location.id` (số), value = số người lớn/trẻ em tại điểm đó.
+Số người đi theo từng activity (`participantAdults`, `participantChildren`), không nằm trong customization theo địa điểm.
 
 ### Luồng load session (khi mở link chia sẻ)
 
 ```
 URL có ?session=abc123def456
     → fetch GET /api/sessions/abc123def456
-    ← { planSlug, custom: { headcounts, excludedSubs, excludedLocations } }
+    ← { planSlug, custom: { excludedSubs, excludedLocations } }
     → apply vào plan đang xem:
-        - ghi đè adults/children từng location
         - set excludedSubs, excludedLocations
     → sessionSourceId = "abc123def456"   ← ghi nhớ "đây là của người khác"
     → mySessionId = null                 ← chưa phải của mình
@@ -70,7 +65,7 @@ URL có ?session=abc123def456
 
 ```
 Đang xem ?session=abc123def456 của bạn
-    → User thay đổi số người
+    → User bỏ/bật activity hoặc location
     → scheduleSessionSave() → flushSession()
     → mySessionId = null → tạo session MỚI
     → mySessionId = "xyz789..."

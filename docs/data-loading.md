@@ -30,7 +30,7 @@ Khi `changePlan(slug)`:
 1. Kiểm tra cache `plans[slug]` → nếu có, dùng luôn (không fetch lại)
 2. Nếu chưa có → `GET /api/plans/:slug` → lưu vào cache
 3. Reset state: `activeId`, `excludedSubs`, `excludedLocations`, session state
-4. Restore từ localStorage (headcounts, excluded state)
+4. Restore từ localStorage (excluded state)
 
 ---
 
@@ -40,14 +40,12 @@ Các thay đổi được lưu vào `localStorage` theo `planId` (không cần t
 
 | Key | Value | Nội dung |
 |-----|-------|---------|
-| `vt_hc_{planId}` | JSON | Headcounts: `{ "101": { adults:2, children:0 } }` |
 | `vt_ex_{planId}` | JSON | Excluded sub-locations: `{ "201": true }` |
 | `vt_eloc_{planId}` | JSON | Excluded locations: `{ "103": true }` |
 
 **Restore order khi changePlan:**
-1. `restoreHeadcounts(planId)` — ghi đè adults/children từ localStorage
-2. `restoreExcluded(planId)` — restore excludedSubs
-3. `restoreExcludedLocations(planId)` — restore excludedLocations
+1. `restoreExcluded(planId)` — restore excludedSubs
+2. `restoreExcludedLocations(planId)` — restore excludedLocations
 
 > **Session override localStorage:** Nếu có `?session=` trong URL, `loadSession()` được gọi sau `changePlan()` và **ghi đè** data từ localStorage bằng data của session.
 
@@ -57,7 +55,7 @@ Các thay đổi được lưu vào `localStorage` theo `planId` (không cần t
 
 ```javascript
 get activeLocation() {
-    // Có explicit dependency vào adults/children, excludedSubs, excludedLocations
+    // Có explicit dependency vào excludedSubs, excludedLocations
     void this.excludedSubs;
     void this.excludedLocations;
     return this.currentPlan?.locations?.find(l => l.id === this.activeId) ?? {};

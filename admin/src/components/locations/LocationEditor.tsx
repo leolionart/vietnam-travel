@@ -54,7 +54,7 @@ function durationBetweenInputs(arrive: string, depart: string): number | null {
     return Math.max(0, Math.round((departDate.getTime() - arriveDate.getTime()) / MS_PER_DAY));
 }
 
-function activityCost(sub: SubLocation, adults: number, children: number): number {
+function activityCost(sub: SubLocation): number {
     const mode = sub.pricingMode || 'per_person';
     const quantity = Number(sub.quantity ?? 1) || 0;
     const surcharge = Number(sub.surcharge || 0);
@@ -64,8 +64,8 @@ function activityCost(sub: SubLocation, adults: number, children: number): numbe
     if (mode === 'per_group') {
         return (Number(sub.unitPrice || 0) * Math.max(quantity, 1)) + surcharge;
     }
-    const participantAdults = sub.participantAdults ?? adults;
-    const participantChildren = sub.participantChildren ?? children;
+    const participantAdults = Number(sub.participantAdults ?? 0);
+    const participantChildren = Number(sub.participantChildren ?? 0);
     return (Number(sub.adultPrice || 0) * participantAdults) + (Number(sub.childPrice || 0) * participantChildren) + surcharge;
 }
 
@@ -74,10 +74,10 @@ function activityDurationLabel(sub: Pick<SubLocation, 'durationDays' | 'duration
     return `${sub.durationMinutes} phút`;
 }
 
-function costSummary(subLocations: SubLocation[], adults: number, children: number) {
+function costSummary(subLocations: SubLocation[]) {
     return subLocations.reduce((sum, sub) => {
         const type = sub.activityType || 'sightseeing';
-        const cost = activityCost(sub, adults, children);
+        const cost = activityCost(sub);
         if (type === 'sightseeing') sum.sightseeing += cost;
         else if (type === 'accommodation') sum.accommodation += cost;
         else if (type === 'food') sum.food += cost;
@@ -114,15 +114,13 @@ export function LocationEditor({ location, planSlug, onSave, onClose }: Props) {
                 durationDays: location.duration,
                 transportType: location.transportType,
                 transportLabel: location.transport,
-                adults: location.adults,
-                children: location.children,
                 highlight: location.highlight,
                 description: location.description,
                 activities: [...(location.activities || [])],
                 food: [...(location.food || [])],
             });
         } else {
-            setForm({ adults: 2, children: 0, durationDays: 0, transportType: 'car' });
+            setForm({ durationDays: 0, transportType: 'car' });
             setArriveInput('');
             setDepartInput('');
         }
@@ -219,8 +217,8 @@ export function LocationEditor({ location, planSlug, onSave, onClose }: Props) {
             surcharge: Number(subForm.surcharge) || 0,
             adultPrice: Number(subForm.adultPrice) || 0,
             childPrice: Number(subForm.childPrice) || 0,
-            participantAdults: subForm.participantAdults.trim() === '' ? null : Math.max(0, Number(subForm.participantAdults) || 0),
-            participantChildren: subForm.participantChildren.trim() === '' ? null : Math.max(0, Number(subForm.participantChildren) || 0),
+            participantAdults: Math.max(0, Number(subForm.participantAdults) || 0),
+            participantChildren: Math.max(0, Number(subForm.participantChildren) || 0),
         };
         try {
             if (expandedSubId === 'new') {
@@ -344,17 +342,12 @@ export function LocationEditor({ location, planSlug, onSave, onClose }: Props) {
                             </p>
                         </Section>
 
-                        <Section title="Quy mô đoàn & summary chi phí">
-                            <div className="grid grid-cols-2 gap-3">
-                                <Field label="Số người lớn">
-                                    <input type="number" min="1" value={form.adults ?? 2} onChange={e => set('adults', Number(e.target.value))} className="input-field" />
-                                </Field>
-                                <Field label="Số trẻ em">
-                                    <input type="number" min="0" value={form.children ?? 0} onChange={e => set('children', Number(e.target.value))} className="input-field" />
-                                </Field>
-                            </div>
+                        <Section title="Summary chi phí">
+                            <p className="text-[10px] text-slate-500">
+                                Số người được nhập trên từng activity để tính đúng chi phí theo hoạt động. Địa điểm chỉ giữ vai trò mốc ngày và khu vực.
+                            </p>
                             <CostSummaryPanel
-                                summary={costSummary(subLocations, Number(form.adults ?? 0), Number(form.children ?? 0))}
+                                summary={costSummary(subLocations)}
                             />
                         </Section>
                     </div>
@@ -770,12 +763,12 @@ function SubForm({ form, setForm }: { form: SubFormState; setForm: React.Dispatc
             {form.pricingMode === 'per_person' && (
                 <div className="grid grid-cols-2 gap-2">
                     <div>
-                        <label className="block text-[10px] text-slate-500 mb-1">Override người lớn</label>
-                        <input type="number" min="0" value={form.participantAdults} onChange={e => setForm(f => ({ ...f, participantAdults: e.target.value }))} className="input-field" placeholder="Theo chặng" />
+                        <label className="block text-[10px] text-slate-500 mb-1">Người lớn tham gia</label>
+                        <input type="number" min="0" value={form.participantAdults} onChange={e => setForm(f => ({ ...f, participantAdults: e.target.value }))} className="input-field" placeholder="0" />
                     </div>
                     <div>
-                        <label className="block text-[10px] text-slate-500 mb-1">Override trẻ em</label>
-                        <input type="number" min="0" value={form.participantChildren} onChange={e => setForm(f => ({ ...f, participantChildren: e.target.value }))} className="input-field" placeholder="Theo chặng" />
+                        <label className="block text-[10px] text-slate-500 mb-1">Trẻ em tham gia</label>
+                        <input type="number" min="0" value={form.participantChildren} onChange={e => setForm(f => ({ ...f, participantChildren: e.target.value }))} className="input-field" placeholder="0" />
                     </div>
                 </div>
             )}
