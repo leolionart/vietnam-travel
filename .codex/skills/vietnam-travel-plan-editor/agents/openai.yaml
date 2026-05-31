@@ -1,4 +1,4 @@
 interface:
   display_name: "Vietnam Travel Plan Editor"
-  short_description: "Edit prod travel plans via CLI or MCP"
-  default_prompt: "Use $vietnam-travel-plan-editor to update the prod trip plan."
+  short_description: "Edit travel plans with CLI/MCP"
+  default_prompt: "Use $vietnam-travel-plan-editor to create or update a naai.studio travel plan with the project CLI or MCP tools."

@@ -35,6 +35,18 @@ Do not edit deprecated root `index.html`, root `vite.config.ts`, or
   it from dev to prod.
 - `runMigration()` only performs idempotent schema upgrades.
 
+## AI Tooling
+
+External AI systems should use the MCP/CLI flow documented in
+`docs/ai-integration.md`. The same editing surface is available for admin plans
+and user session plans:
+
+- Without an admin password, writes create or update a session plan and return a
+  share URL with `?session=...`.
+- With an admin password, writes can update admin/sample plans directly.
+- Vexere fare search is exposed through app-owned server credentials; never
+  expose Vexere credentials to clients or prompts.
+
 ## Repository Layout
 
 ```
