@@ -534,7 +534,7 @@
                     </div>
                 </template>
             </div>
-            <div x-show="calendarEditingEnabled() || calendarScheduleDirty || scheduleSaveStatus"
+            <div x-show="calendarScheduleDirty || calendarScheduleSaving || scheduleSaveStatus"
                  class="flex flex-col gap-2 border-t border-white/10 bg-slate-950/55 px-3 py-2.5 backdrop-blur-xl lg:flex-row lg:items-center lg:justify-between lg:px-4">
                 <div class="flex flex-wrap items-center gap-1.5 text-[10px]">
                     <span class="rounded-md border border-white/10 bg-white/5 px-2 py-1 font-bold text-slate-300">Chỉnh lịch thủ công</span>
@@ -751,7 +751,7 @@
                     </div>
                 </template>
             </div>
-            <div x-show="calendarEditingEnabled() || calendarScheduleDirty || scheduleSaveStatus"
+            <div x-show="calendarScheduleDirty || calendarScheduleSaving || scheduleSaveStatus"
                  class="flex flex-col gap-2 border-t border-white/10 bg-slate-950/55 px-3 py-2.5 backdrop-blur-xl lg:flex-row lg:items-center lg:justify-between lg:px-4">
                 <div class="flex flex-wrap items-center gap-1.5 text-[10px]">
                     <span class="rounded-md border border-white/10 bg-white/5 px-2 py-1 font-bold text-slate-300">Chỉnh lịch thủ công</span>
