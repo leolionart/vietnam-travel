@@ -18,9 +18,6 @@ export function LoginPage({ onLogin }: Props) {
             const { token } = await api.login(password);
             saveToken(token);
             onLogin();
-            const params = new URLSearchParams(window.location.search);
-            const returnTo = params.get('return');
-            if (returnTo?.startsWith('/')) window.location.href = returnTo;
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Đăng nhập thất bại');
         } finally {

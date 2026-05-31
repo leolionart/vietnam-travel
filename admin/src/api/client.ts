@@ -1,12 +1,3 @@
-import type { Plan, LocationInput } from '../types/index.js';
-
-export interface SubLocationScheduleInput {
-    id: number;
-    scheduledDate: string;
-    scheduledPeriod: string;
-    scheduledTime?: string;
-}
-
 const BASE = '/api';
 
 function getToken(): string | null {
@@ -53,67 +44,6 @@ export const api = {
         request<{ ok: boolean }>('/auth/logout', { method: 'POST' }),
 
     me: () => request<{ ok: boolean }>('/auth/me'),
-
-    listPlans: () => request<Plan[]>('/plans'),
-
-    getPlan: (slug: string) => request<Plan>(`/plans/${slug}`),
-
-    createPlan: (data: { slug: string; name: string }) =>
-        request<Plan>('/plans', { method: 'POST', body: JSON.stringify(data) }),
-
-    updatePlan: (slug: string, data: { name?: string; slug?: string }) =>
-        request<Plan>(`/plans/${slug}`, { method: 'PUT', body: JSON.stringify(data) }),
-
-    deletePlan: (slug: string) =>
-        request<{ ok: boolean }>(`/plans/${slug}`, { method: 'DELETE' }),
-
-    addLocation: (slug: string, data: LocationInput) =>
-        request<{ id: number }>(`/plans/${slug}/locations`, {
-            method: 'POST',
-            body: JSON.stringify(data),
-        }),
-
-    updateLocation: (slug: string, id: number, data: LocationInput) =>
-        request<Plan>(`/plans/${slug}/locations/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(data),
-        }),
-
-    deleteLocation: (slug: string, id: number) =>
-        request<{ ok: boolean }>(`/plans/${slug}/locations/${id}`, { method: 'DELETE' }),
-
-    reorderLocations: (slug: string, orderedIds: number[]) =>
-        request<Plan>(`/plans/${slug}/locations/reorder`, {
-            method: 'PATCH',
-            body: JSON.stringify({ orderedIds }),
-        }),
-
-    getVexereLink: (from: string, to: string, date: string, type?: string) => {
-        const params = new URLSearchParams({ from, to, date });
-        if (type) params.set('type', type);
-        return request<{ url: string }>(`/vexere-link?${params}`);
-    },
-
-    addSubLocation: (slug: string, locationId: number, data: { name: string; lat: number; lng: number; durationMinutes: number; durationDays?: number; scheduledDate?: string; scheduledPeriod?: string; scheduledTime?: string; description: string; activityType?: string; transportType?: string; pricingMode?: string; unitPrice?: number; quantity?: number; surcharge?: number; adultPrice: number; childPrice: number; participantAdults?: number | null; participantChildren?: number | null }) =>
-        request<{ id: number }>(`/plans/${slug}/locations/${locationId}/sub-locations`, {
-            method: 'POST',
-            body: JSON.stringify(data),
-        }),
-
-    updateSubLocation: (slug: string, locationId: number, subId: number, data: Partial<{ name: string; lat: number; lng: number; durationMinutes: number; durationDays: number; scheduledDate: string; scheduledPeriod: string; scheduledTime: string; description: string; sortOrder: number; activityType: string; transportType: string; pricingMode: string; unitPrice: number; quantity: number; surcharge: number; adultPrice: number; childPrice: number; participantAdults: number | null; participantChildren: number | null }>) =>
-        request<{ ok: boolean }>(`/plans/${slug}/locations/${locationId}/sub-locations/${subId}`, {
-            method: 'PUT',
-            body: JSON.stringify(data),
-        }),
-
-    deleteSubLocation: (slug: string, locationId: number, subId: number) =>
-        request<{ ok: boolean }>(`/plans/${slug}/locations/${locationId}/sub-locations/${subId}`, { method: 'DELETE' }),
-
-    reorderSubLocations: (slug: string, locationId: number, orderedIds: number[], schedules?: SubLocationScheduleInput[]) =>
-        request<{ ok: boolean }>(`/plans/${slug}/locations/${locationId}/sub-locations/reorder`, {
-            method: 'PATCH',
-            body: JSON.stringify({ orderedIds, schedules }),
-        }),
 };
 
 export function isLoggedIn(): boolean {

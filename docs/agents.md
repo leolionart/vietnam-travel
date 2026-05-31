@@ -5,7 +5,8 @@ This document is for AI coding assistants working on Vietnam Travel Planner.
 ## Project Overview
 
 - Public visitors browse plans, maps, calendars, and cost summaries.
-- Admin dashboard manages plans, locations, and activities.
+- Admin login unlocks edit mode in the public calendar viewer. Plan editing
+  lives in the shared viewer plus CLI/MCP, not in a separate admin dashboard.
 - Express + SQLite backend serves the API and static builds in production.
 - Docker image is published to GHCR on push to `main`.
 
@@ -18,7 +19,7 @@ between environments.
 | Purpose | Files |
 |---|---|
 | Public frontend | `public/index.html` |
-| Admin dashboard | `admin/src/` |
+| Admin login gate | `admin/src/` |
 | Backend API | `api/src/` |
 | Schema migration | `api/src/db/schema.sql`, `api/src/db/migrate.ts` |
 | Public Vite config | `public/vite.config.ts` |
@@ -52,7 +53,7 @@ and user session plans:
 ```
 .
 ├── public/                 # Alpine.js public frontend
-├── admin/                  # React admin dashboard
+├── admin/                  # React login gate that redirects to public calendar admin mode
 ├── api/                    # Express + SQLite backend
 │   └── src/db/migrate.ts   # Schema-only migration
 ├── Dockerfile              # Multi-stage production image
@@ -69,7 +70,7 @@ and user session plans:
 |---|---|
 | Backend | Node.js 20, Express, better-sqlite3, jose |
 | Public frontend | Alpine.js 3, Tailwind CDN, Leaflet |
-| Admin dashboard | React 18, React Router 6, @dnd-kit, Tailwind |
+| Admin login gate | React 18, Tailwind |
 | Database | SQLite |
 | Build | Vite + tsc |
 
