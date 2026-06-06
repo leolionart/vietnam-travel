@@ -1,5 +1,11 @@
 # Release Notes
 
+## Unreleased - 2026-06-06 16:49 +07
+
+Generated before push from commits:
+
+- `50f51da` Use drawer for calendar event details
+
 ## Unreleased - 2026-06-06 16:40 +07
 
 Generated before push from commits:
