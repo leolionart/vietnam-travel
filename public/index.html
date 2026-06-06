@@ -455,11 +455,17 @@
                 </div>
                 <div class="flex flex-col items-start lg:items-end gap-2">
                     <div class="flex flex-wrap justify-start lg:justify-end gap-1.5 text-[9px] font-bold">
-                        <span class="inline-flex items-center gap-1 rounded-md bg-sky-500/10 text-sky-300 border border-sky-500/20 px-2 py-0.5">
-                            <span class="w-1.5 h-1.5 rounded-full bg-sky-300"></span> Di chuyển
+                        <span class="inline-flex items-center gap-1 rounded-md bg-slate-500/10 text-slate-300 border border-slate-500/20 px-2 py-0.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Di chuyển
                         </span>
-                        <span class="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-2 py-0.5">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-300"></span> Tham quan
+                        <span class="inline-flex items-center gap-1 rounded-md bg-blue-500/10 text-blue-300 border border-blue-500/20 px-2 py-0.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-300"></span> Tham quan
+                        </span>
+                        <span class="inline-flex items-center gap-1 rounded-md bg-red-500/10 text-red-300 border border-red-500/20 px-2 py-0.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-red-300"></span> Ăn
+                        </span>
+                        <span class="inline-flex items-center gap-1 rounded-md bg-orange-500/10 text-orange-300 border border-orange-500/20 px-2 py-0.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-orange-300"></span> Cafe
                         </span>
                         <span class="inline-flex items-center gap-1 rounded-md bg-white/5 text-slate-300 border border-white/10 px-2 py-0.5">
                             <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Lưu trú
@@ -506,33 +512,33 @@
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Ăn uống</p>
                                 <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['food']))"></p>
-                                <p class="mt-1 text-[9px] font-bold text-orange-300" x-text="costPercentLabel(planActivityTotal(['food']))"></p>
+                                <p class="mt-1 text-[9px] font-bold text-red-300" x-text="costPercentLabel(planActivityTotal(['food']))"></p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
-                                    <div class="h-full rounded-full bg-orange-300" :style="`width:${costBarWidth(planActivityTotal(['food']))}%`"></div>
+                                    <div class="h-full rounded-full bg-red-300" :style="`width:${costBarWidth(planActivityTotal(['food']))}%`"></div>
                                 </div>
                             </div>
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Cafe</p>
                                 <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['cafe']))"></p>
-                                <p class="mt-1 text-[9px] font-bold text-rose-300" x-text="costPercentLabel(planActivityTotal(['cafe']))"></p>
+                                <p class="mt-1 text-[9px] font-bold text-orange-300" x-text="costPercentLabel(planActivityTotal(['cafe']))"></p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
-                                    <div class="h-full rounded-full bg-rose-300" :style="`width:${costBarWidth(planActivityTotal(['cafe']))}%`"></div>
+                                    <div class="h-full rounded-full bg-orange-300" :style="`width:${costBarWidth(planActivityTotal(['cafe']))}%`"></div>
                                 </div>
                             </div>
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Di chuyển</p>
                                 <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['transport']))"></p>
-                                <p class="mt-1 text-[9px] font-bold text-sky-300" x-text="costPercentLabel(planActivityTotal(['transport']))"></p>
+                                <p class="mt-1 text-[9px] font-bold text-slate-300" x-text="costPercentLabel(planActivityTotal(['transport']))"></p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
-                                    <div class="h-full rounded-full bg-sky-300" :style="`width:${costBarWidth(planActivityTotal(['transport']))}%`"></div>
+                                    <div class="h-full rounded-full bg-slate-300" :style="`width:${costBarWidth(planActivityTotal(['transport']))}%`"></div>
                                 </div>
                             </div>
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Vé tham quan</p>
                                 <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['sightseeing']))"></p>
-                                <p class="mt-1 text-[9px] font-bold text-emerald-300" x-text="costPercentLabel(planActivityTotal(['sightseeing']))"></p>
+                                <p class="mt-1 text-[9px] font-bold text-blue-300" x-text="costPercentLabel(planActivityTotal(['sightseeing']))"></p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
-                                    <div class="h-full rounded-full bg-emerald-300" :style="`width:${costBarWidth(planActivityTotal(['sightseeing']))}%`"></div>
+                                    <div class="h-full rounded-full bg-blue-300" :style="`width:${costBarWidth(planActivityTotal(['sightseeing']))}%`"></div>
                                 </div>
                             </div>
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
@@ -590,7 +596,7 @@
                                                             @dragstart="handleCalendarDragStart($event, event)"
                                                             @dragend="handleCalendarDragEnd()"
                                                             class="w-full text-left rounded-md border px-1.5 py-1 transition-colors"
-                                                                :class="calendarEventClass(event.type)"
+                                                                :class="calendarEventClass(event)"
                                                                 :title="`${event.title} - ${event.meta}`">
                                                             <div class="flex items-start gap-1 min-w-0">
                                                                 <span class="w-3.5 flex-none text-[11px] leading-none mt-0.5" x-text="calendarEventGlyph(event)"></span>
@@ -630,7 +636,7 @@
                                                             @dragstart="handleCalendarDragStart($event, event)"
                                                             @dragend="handleCalendarDragEnd()"
                                                             class="absolute left-1 right-1 text-left rounded-md border px-1.5 py-1 transition-colors overflow-hidden"
-                                                            :class="calendarEventClass(event.type)"
+                                                            :class="calendarEventClass(event)"
                                                             :style="calendarWeekEventStyle(event)"
                                                             :title="[event.title, calendarWeekEventTimeLabel(event), event.durationLabel, event.locationName, event.meta].filter(Boolean).join(' · ')">
                                                         <span class="absolute right-1 top-1 text-[10px] leading-none" x-text="calendarEventGlyph(event)"></span>
@@ -707,8 +713,17 @@
                         <span class="inline-flex items-center gap-1 rounded-md bg-white/5 text-slate-300 border border-white/10 px-2 py-0.5">
                             <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Cả ngày / nhiều ngày
                         </span>
-                        <span class="inline-flex items-center gap-1 rounded-md bg-sky-500/10 text-sky-300 border border-sky-500/20 px-2 py-0.5">
-                            <span class="w-1.5 h-1.5 rounded-full bg-sky-300"></span> Sáng / di chuyển
+                        <span class="inline-flex items-center gap-1 rounded-md bg-slate-500/10 text-slate-300 border border-slate-500/20 px-2 py-0.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Sáng / di chuyển
+                        </span>
+                        <span class="inline-flex items-center gap-1 rounded-md bg-blue-500/10 text-blue-300 border border-blue-500/20 px-2 py-0.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-300"></span> Tham quan
+                        </span>
+                        <span class="inline-flex items-center gap-1 rounded-md bg-red-500/10 text-red-300 border border-red-500/20 px-2 py-0.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-red-300"></span> Ăn
+                        </span>
+                        <span class="inline-flex items-center gap-1 rounded-md bg-orange-500/10 text-orange-300 border border-orange-500/20 px-2 py-0.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-orange-300"></span> Cafe
                         </span>
                         <span class="inline-flex items-center gap-1 rounded-md bg-orange-400/10 text-orange-200 border border-orange-300/20 px-2 py-0.5">
                             <span class="w-1.5 h-1.5 rounded-full bg-orange-200"></span> Chiều
@@ -754,33 +769,33 @@
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Ăn uống</p>
                                 <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['food']))"></p>
-                                <p class="mt-1 text-[9px] font-bold text-orange-300" x-text="costPercentLabel(planActivityTotal(['food']))"></p>
+                                <p class="mt-1 text-[9px] font-bold text-red-300" x-text="costPercentLabel(planActivityTotal(['food']))"></p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
-                                    <div class="h-full rounded-full bg-orange-300" :style="`width:${costBarWidth(planActivityTotal(['food']))}%`"></div>
+                                    <div class="h-full rounded-full bg-red-300" :style="`width:${costBarWidth(planActivityTotal(['food']))}%`"></div>
                                 </div>
                             </div>
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Cafe</p>
                                 <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['cafe']))"></p>
-                                <p class="mt-1 text-[9px] font-bold text-rose-300" x-text="costPercentLabel(planActivityTotal(['cafe']))"></p>
+                                <p class="mt-1 text-[9px] font-bold text-orange-300" x-text="costPercentLabel(planActivityTotal(['cafe']))"></p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
-                                    <div class="h-full rounded-full bg-rose-300" :style="`width:${costBarWidth(planActivityTotal(['cafe']))}%`"></div>
+                                    <div class="h-full rounded-full bg-orange-300" :style="`width:${costBarWidth(planActivityTotal(['cafe']))}%`"></div>
                                 </div>
                             </div>
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Di chuyển</p>
                                 <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['transport']))"></p>
-                                <p class="mt-1 text-[9px] font-bold text-sky-300" x-text="costPercentLabel(planActivityTotal(['transport']))"></p>
+                                <p class="mt-1 text-[9px] font-bold text-slate-300" x-text="costPercentLabel(planActivityTotal(['transport']))"></p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
-                                    <div class="h-full rounded-full bg-sky-300" :style="`width:${costBarWidth(planActivityTotal(['transport']))}%`"></div>
+                                    <div class="h-full rounded-full bg-slate-300" :style="`width:${costBarWidth(planActivityTotal(['transport']))}%`"></div>
                                 </div>
                             </div>
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Vé tham quan</p>
                                 <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['sightseeing']))"></p>
-                                <p class="mt-1 text-[9px] font-bold text-emerald-300" x-text="costPercentLabel(planActivityTotal(['sightseeing']))"></p>
+                                <p class="mt-1 text-[9px] font-bold text-blue-300" x-text="costPercentLabel(planActivityTotal(['sightseeing']))"></p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
-                                    <div class="h-full rounded-full bg-emerald-300" :style="`width:${costBarWidth(planActivityTotal(['sightseeing']))}%`"></div>
+                                    <div class="h-full rounded-full bg-blue-300" :style="`width:${costBarWidth(planActivityTotal(['sightseeing']))}%`"></div>
                                 </div>
                             </div>
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
@@ -843,7 +858,7 @@
                                                                             @dragstart="handleCalendarDragStart($event, event)"
                                                                             @dragend="handleCalendarDragEnd()"
                                                                             class="w-full text-left rounded-md border px-1.5 py-1 transition-colors"
-                                                                            :class="calendarEventClass(event.type)"
+                                                                            :class="calendarEventClass(event)"
                                                                             :title="`${event.title} - ${event.meta}`">
                                                                         <div class="flex items-start gap-1 min-w-0">
                                                                             <span class="w-3.5 flex-none text-[11px] leading-none mt-0.5" x-text="calendarEventGlyph(event)"></span>
@@ -861,10 +876,10 @@
                                                                              class="rounded-md border min-h-[40px] p-1.5"
                                                                              @dragover.prevent="calendarEditingEnabled()"
                                                                              @drop.prevent="handleCalendarDrop($event, day, part)"
-                                                                             :class="part === 'morning' ? 'bg-sky-400/5 border-sky-300/15' : (part === 'afternoon' ? 'bg-orange-400/5 border-orange-300/15' : 'bg-violet-400/5 border-violet-300/15')"
+                                                                             :class="part === 'morning' ? 'bg-slate-400/5 border-slate-300/15' : (part === 'afternoon' ? 'bg-orange-400/5 border-orange-300/15' : 'bg-violet-400/5 border-violet-300/15')"
                                                                              :style="calendarDayAccentStyle(day, part)">
                                                                             <div class="flex items-center justify-between gap-2 text-[8px] font-bold uppercase leading-none mb-1"
-                                                                                 :class="part === 'morning' ? 'text-sky-200' : (part === 'afternoon' ? 'text-orange-200' : 'text-violet-200')">
+                                                                                 :class="part === 'morning' ? 'text-slate-200' : (part === 'afternoon' ? 'text-orange-200' : 'text-violet-200')">
                                                                                 <span x-text="part === 'morning' ? 'Sáng' : (part === 'afternoon' ? 'Chiều' : 'Tối')"></span>
                                                                                 <span x-show="calendarPartEvents(day, part).length" x-text="calendarPartEvents(day, part).length"></span>
                                                                             </div>
@@ -875,7 +890,7 @@
                                                                                             @dragstart="handleCalendarDragStart($event, event)"
                                                                                             @dragend="handleCalendarDragEnd()"
                                                                                             class="w-full text-left rounded border px-1 py-0.5 transition-colors"
-                                                                                            :class="calendarEventClass(event.type)"
+                                                                                            :class="calendarEventClass(event)"
                                                                                             :title="`${event.time ? event.time + ' · ' : ''}${event.title} - ${event.meta}`">
                                                                                         <div class="flex items-start gap-1 min-w-0">
                                                                                             <span class="w-3.5 flex-none text-[11px] leading-none mt-0.5" x-text="calendarEventGlyph(event)"></span>
@@ -1358,7 +1373,7 @@
                     <h4 class="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 lg:mb-4">Cafe trong lịch trình</h4>
                     <div class="flex flex-wrap gap-2">
                         <template x-for="cafe in summaryActivitiesByType(activeLocation, ['cafe'])" :key="cafe.id">
-                            <span class="px-3 py-1.5 bg-rose-300/10 rounded-full text-[9px] lg:text-[10px] font-bold text-rose-100 border border-rose-300/20"
+                            <span class="px-3 py-1.5 bg-orange-300/10 rounded-full text-[9px] lg:text-[10px] font-bold text-orange-100 border border-orange-300/20"
                                   :title="summaryActivityMeta(cafe, activeLocation)"
                                   x-text="cafe.name"></span>
                         </template>
@@ -3136,13 +3151,21 @@
                     return `Cuối tuần: ${labels.join(', ')}${more}`;
                 },
 
-                calendarEventClass(type) {
+                calendarEventClass(eventOrType) {
+                    const activityType = typeof eventOrType === 'object'
+                        ? (eventOrType?.activityType || eventOrType?.type)
+                        : eventOrType;
+                    const eventType = typeof eventOrType === 'object' ? eventOrType?.type : eventOrType;
                     const classes = {
-                        transport: 'bg-sky-200/95 border-sky-500/45 text-sky-950 shadow-lg shadow-sky-700/15 hover:bg-sky-300/95',
-                        visit: 'bg-emerald-200/95 border-emerald-500/45 text-emerald-950 shadow-lg shadow-emerald-700/15 hover:bg-emerald-300/95',
+                        food: 'bg-red-200/95 border-red-500/45 text-red-950 shadow-lg shadow-red-700/15 hover:bg-red-300/95',
+                        cafe: 'bg-orange-200/95 border-orange-500/45 text-orange-950 shadow-lg shadow-orange-700/15 hover:bg-orange-300/95',
+                        transport: 'bg-slate-200/95 border-slate-500/45 text-slate-950 shadow-lg shadow-slate-700/15 hover:bg-slate-300/95',
+                        sightseeing: 'bg-blue-200/95 border-blue-500/45 text-blue-950 shadow-lg shadow-blue-700/15 hover:bg-blue-300/95',
+                        visit: 'bg-blue-200/95 border-blue-500/45 text-blue-950 shadow-lg shadow-blue-700/15 hover:bg-blue-300/95',
                         stay: 'bg-slate-200/95 border-slate-500/35 text-slate-950 shadow-lg shadow-slate-700/15 hover:bg-slate-300/95',
+                        accommodation: 'bg-slate-200/95 border-slate-500/35 text-slate-950 shadow-lg shadow-slate-700/15 hover:bg-slate-300/95',
                     };
-                    return classes[type] || classes.stay;
+                    return classes[activityType] || classes[eventType] || classes.stay;
                 },
 
                 calendarEventIcon(event) {
@@ -3228,11 +3251,11 @@
                     const classes = {
                         accommodation: 'bg-white/10 border-slate-300/25 text-slate-100',
                         location: 'bg-cyan-300/10 border-cyan-300/25 text-cyan-100',
-                        food: 'bg-amber-300/10 border-amber-300/25 text-amber-100',
-                        cafe: 'bg-rose-300/10 border-rose-300/25 text-rose-100',
-                        transport: 'bg-sky-300/10 border-sky-300/25 text-sky-100',
-                        sightseeing: 'bg-emerald-300/10 border-emerald-300/25 text-emerald-100',
-                        visit: 'bg-emerald-300/10 border-emerald-300/25 text-emerald-100',
+                        food: 'bg-red-300/10 border-red-300/25 text-red-100',
+                        cafe: 'bg-orange-300/10 border-orange-300/25 text-orange-100',
+                        transport: 'bg-slate-300/10 border-slate-300/25 text-slate-100',
+                        sightseeing: 'bg-blue-300/10 border-blue-300/25 text-blue-100',
+                        visit: 'bg-blue-300/10 border-blue-300/25 text-blue-100',
                     };
                     return classes[type] || 'bg-white/10 border-white/10 text-slate-100';
                 },
