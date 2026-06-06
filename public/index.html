@@ -524,18 +524,18 @@
                                                         <span class="absolute right-1 top-1 text-[10px] leading-none" x-text="calendarEventGlyph(event)"></span>
                                                         <div class="min-w-0 pr-4">
                                                             <p class="text-[9px] font-bold leading-snug whitespace-normal break-words min-w-0" x-text="event.title"></p>
-                                                            <p class="mt-0.5 text-[8px] font-semibold leading-snug text-slate-400">
+                                                            <p class="mt-0.5 text-[8px] font-semibold leading-snug text-slate-600">
                                                                 <span x-text="calendarWeekEventTimeLabel(event)"></span>
                                                                 <span x-show="event.durationLabel" class="mx-1 text-slate-500">·</span>
                                                                 <span x-show="event.durationLabel" x-text="event.durationLabel"></span>
                                                             </p>
-                                                            <span x-show="event.metaCost" class="mt-1 inline-flex max-w-full rounded-md border border-white/10 bg-white/10 px-1.5 py-0.5 text-[8px] font-bold leading-none text-slate-100" x-text="event.metaCost"></span>
-                                                            <p x-show="event.locationName" class="mt-0.5 text-[8px] font-semibold leading-snug text-slate-300 whitespace-normal break-words" x-text="event.locationName"></p>
+                                                            <span x-show="event.metaCost" class="mt-1 inline-flex max-w-full rounded-md border border-black/10 bg-white/65 px-1.5 py-0.5 text-[8px] font-bold leading-none text-slate-800" x-text="event.metaCost"></span>
+                                                            <p x-show="event.locationName" class="mt-0.5 text-[8px] font-semibold leading-snug text-slate-700 whitespace-normal break-words" x-text="event.locationName"></p>
                                                         </div>
                                                         <span x-show="calendarEditingEnabled(event)"
                                                               @pointerdown.stop.prevent="handleCalendarResizeStart($event, event)"
                                                               @click.stop
-                                                              class="absolute inset-x-0 bottom-0 flex h-3 cursor-ns-resize items-end justify-center bg-gradient-to-t from-black/20 to-transparent">
+                                                              class="absolute inset-x-0 bottom-0 flex h-3 cursor-ns-resize items-end justify-center bg-gradient-to-t from-black/10 to-transparent">
                                                             <span class="mb-0.5 h-0.5 w-8 rounded-full bg-current opacity-45"></span>
                                                         </span>
                                                     </button>
@@ -2984,9 +2984,9 @@
 
                 calendarEventClass(type) {
                     const classes = {
-                        transport: 'bg-sky-950/95 border-sky-300/55 text-sky-50 shadow-lg shadow-sky-950/30 hover:bg-sky-900/95',
-                        visit: 'bg-emerald-950/95 border-emerald-300/55 text-emerald-50 shadow-lg shadow-emerald-950/30 hover:bg-emerald-900/95',
-                        stay: 'bg-slate-950/95 border-slate-200/45 text-slate-50 shadow-lg shadow-slate-950/30 hover:bg-slate-900/95',
+                        transport: 'bg-sky-200/95 border-sky-500/45 text-sky-950 shadow-lg shadow-sky-700/15 hover:bg-sky-300/95',
+                        visit: 'bg-emerald-200/95 border-emerald-500/45 text-emerald-950 shadow-lg shadow-emerald-700/15 hover:bg-emerald-300/95',
+                        stay: 'bg-slate-200/95 border-slate-500/35 text-slate-950 shadow-lg shadow-slate-700/15 hover:bg-slate-300/95',
                     };
                     return classes[type] || classes.stay;
                 },
