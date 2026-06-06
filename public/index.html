@@ -302,6 +302,13 @@
                             class="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white backdrop-blur-md transition hover:bg-white/10">
                         <i data-lucide="x" class="h-5 w-5"></i>
                     </button>
+                    <button type="button"
+                            x-show="canCrudPlan() && eventHasEditableActivity(eventDetail().activity)"
+                            @click="requestDeleteEvent(eventDetail().activity)"
+                            class="absolute right-16 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-rose-300/25 bg-rose-500/20 text-rose-100 backdrop-blur-md transition hover:bg-rose-500/30"
+                            title="Xoá event">
+                        <i data-lucide="trash-2" class="h-5 w-5"></i>
+                    </button>
                     <a :href="activityGoogleMapsUrl(eventDetail().activity, eventDetail().location)"
                        target="_blank"
                        rel="noopener"
@@ -364,6 +371,12 @@
                                 <i data-lucide="pencil" class="h-4 w-4"></i>
                                 Sửa event này
                             </button>
+                            <button type="button"
+                                    @click="requestDeleteEvent(eventDetail().activity)"
+                                    class="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-rose-400/20 bg-rose-500/10 px-4 py-2.5 text-xs font-bold text-rose-100 transition hover:bg-rose-500/20">
+                                <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                Xoá event này
+                            </button>
                         </div>
                     </section>
                 </div>
@@ -379,6 +392,66 @@
             </div>
             </template>
         </aside>
+    </div>
+
+    <!-- Delete Event Confirm Modal -->
+    <div x-show="deleteEventConfirmOpen()"
+         x-cloak
+         class="fixed inset-0 z-[90] flex items-center justify-center p-4">
+        <button type="button"
+                class="absolute inset-0 bg-slate-950/70 backdrop-blur-sm"
+                aria-label="Huỷ xoá event"
+                @click="cancelDeleteEvent()"
+                x-transition:enter="transition ease-out duration-150"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="transition ease-in duration-100"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"></button>
+        <section class="relative w-full max-w-sm rounded-[1.5rem] border border-rose-300/20 bg-slate-950/95 p-5 shadow-2xl shadow-rose-950/30 backdrop-blur-xl"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-label="Xác nhận xoá event"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="translate-y-3 scale-[0.98] opacity-0"
+                 x-transition:enter-end="translate-y-0 scale-100 opacity-100"
+                 x-transition:leave="transition ease-in duration-100"
+                 x-transition:leave-start="translate-y-0 scale-100 opacity-100"
+                 x-transition:leave-end="translate-y-2 scale-[0.98] opacity-0">
+            <div class="flex items-start gap-3">
+                <div class="flex h-11 w-11 flex-none items-center justify-center rounded-2xl border border-rose-300/20 bg-rose-500/10 text-rose-200">
+                    <i data-lucide="alert-triangle" class="h-5 w-5"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-[10px] font-black uppercase tracking-[0.18em] text-rose-200">Xác nhận xoá</p>
+                    <h3 class="mt-1 text-base font-bold leading-snug text-white">Xoá event này?</h3>
+                    <p class="mt-2 text-sm leading-relaxed text-slate-300">
+                        Event <span class="font-bold text-white" x-text="deleteEventTarget?.name || 'này'"></span> sẽ bị xoá khỏi kế hoạch. Thao tác này không thể hoàn tác.
+                    </p>
+                </div>
+            </div>
+            <div class="mt-5 flex gap-2">
+                <button type="button"
+                        @click="cancelDeleteEvent()"
+                        :disabled="crudSaving"
+                        class="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-bold text-slate-200 transition hover:bg-white/10 disabled:opacity-50">
+                    Huỷ
+                </button>
+                <button type="button"
+                        @click="confirmDeleteEvent()"
+                        :disabled="crudSaving"
+                        class="flex-1 rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-rose-500 disabled:opacity-50">
+                    <span x-show="!crudSaving" class="inline-flex items-center justify-center gap-2">
+                        <i data-lucide="trash-2" class="h-4 w-4"></i>
+                        Xoá event
+                    </span>
+                    <span x-show="crudSaving" class="inline-flex items-center justify-center gap-2">
+                        <i data-lucide="loader-2" class="h-4 w-4 animate-spin"></i>
+                        Đang xoá
+                    </span>
+                </button>
+            </div>
+        </section>
     </div>
 
     <!-- Top Navigation -->
@@ -1243,6 +1316,12 @@
                                             title="Sửa activity">
                                         <i data-lucide="pencil" class="h-3 w-3"></i>
                                     </button>
+                                    <button x-show="canCrudPlan()"
+                                            @click="requestDeleteEvent(sub)"
+                                            class="mt-0.5 flex h-7 w-7 items-center justify-center rounded-full bg-rose-500/10 text-rose-300 transition-all hover:bg-rose-500/20 hover:text-rose-100"
+                                            title="Xoá event">
+                                        <i data-lucide="trash-2" class="h-3 w-3"></i>
+                                    </button>
                                     <button @click="toggleSub(sub.id)"
                                             class="mt-0.5 flex h-7 w-7 items-center justify-center rounded-full text-sm transition-all"
                                             :class="excludedSubs[sub.id]
@@ -1667,6 +1746,7 @@
                 showLocationForm: false,
                 editingActivityId: null,
                 selectedActivityId: null,
+                deleteEventTarget: null,
                 activityDraft: {},
                 locationDraft: {},
                 calendarDragEvent: null,
@@ -2627,6 +2707,30 @@
                     this.activityDraft = {};
                 },
 
+                deleteEventConfirmOpen() {
+                    return !!this.deleteEventTarget;
+                },
+
+                requestDeleteEvent(activity = null) {
+                    if (!this.canCrudPlan() || this.crudSaving) return;
+                    const detail = activity ? { activity, location: this.activeLocation } : this.eventDetail();
+                    const targetActivity = detail?.activity || activity;
+                    const targetLocation = detail?.location || this.activeLocation;
+                    if (!this.eventHasEditableActivity(targetActivity) || !targetLocation?.id) return;
+                    this.deleteEventTarget = {
+                        activityId: Number(targetActivity.id),
+                        locationId: targetLocation.id,
+                        name: targetActivity.name || 'event này',
+                    };
+                    this.$nextTick(() => lucide.createIcons());
+                },
+
+                cancelDeleteEvent() {
+                    if (this.crudSaving) return;
+                    this.deleteEventTarget = null;
+                    this.$nextTick(() => lucide.createIcons());
+                },
+
                 activityPayloadFromDraft() {
                     const scheduledTime = String(this.activityDraft.scheduledTime || '').trim();
                     return {
@@ -2684,23 +2788,44 @@
 
                 async deleteActivityDraft() {
                     if (!this.canCrudPlan() || !this.activeLocation?.id || !this.editingActivityId || this.crudSaving) return;
-                    if (!window.confirm('Xoá activity này khỏi kế hoạch?')) return;
+                    this.deleteEventTarget = {
+                        activityId: Number(this.editingActivityId),
+                        locationId: this.activeLocation.id,
+                        name: this.activityDraft?.name || 'event này',
+                    };
+                    this.$nextTick(() => lucide.createIcons());
+                },
+
+                async confirmDeleteEvent() {
+                    if (!this.canCrudPlan() || !this.deleteEventTarget || this.crudSaving) return;
+                    const target = this.deleteEventTarget;
                     this.crudSaving = true;
                     this.crudStatus = '';
                     try {
-                        const res = await fetch(`${this.planWriteBase()}/locations/${this.activeLocation.id}/sub-locations/${this.editingActivityId}`, {
+                        const res = await fetch(`${this.planWriteBase()}/locations/${target.locationId}/sub-locations/${target.activityId}`, {
                             method: 'DELETE',
                             headers: this.crudHeaders(),
                         });
                         if (!await this.handleCrudResponse(res)) return;
                         await this.reloadCurrentPlan();
                         this.showActivityForm = false;
-                        this.editingActivityId = null;
-                        this.crudStatus = 'Đã xoá activity';
+                        if (Number(this.editingActivityId) === Number(target.activityId)) {
+                            this.editingActivityId = null;
+                            this.activityDraft = {};
+                        }
+                        const selectedEventKey = String(this.selectedEventId || '').replace(/^(activity|event|sub)-/, '');
+                        if (Number(this.selectedActivityId) === Number(target.activityId) || selectedEventKey === String(target.activityId)) {
+                            this.closeEventDetail(false);
+                        }
+                        this.selectedActivityId = null;
+                        this.deleteEventTarget = null;
+                        this.syncPlanSlugToUrl();
+                        this.crudStatus = 'Đã xoá event';
                     } catch (e) {
                         this.crudStatus = `Không xoá được: ${e instanceof Error ? e.message : String(e)}`;
                     } finally {
                         this.crudSaving = false;
+                        this.$nextTick(() => lucide.createIcons());
                     }
                 },
 
