@@ -1,0 +1,41 @@
+name: Publish GitHub Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - RELEASE_NOTES.md
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: github-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract latest release notes
+        id: notes
+        run: node scripts/extract-latest-release-notes.mjs RELEASE_NOTES.md release-notes-latest.md
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TITLE: ${{ steps.notes.outputs.title }}
+          RELEASE_NOTES_PATH: ${{ steps.notes.outputs.body_path }}
+        run: |
+          tag="release-$(date -u +'%Y%m%d-%H%M%S')-${GITHUB_SHA::7}"
+          gh release create "$tag" \
+            --target "$GITHUB_SHA" \
+            --title "$RELEASE_TITLE" \
+            --notes-file "$RELEASE_NOTES_PATH"

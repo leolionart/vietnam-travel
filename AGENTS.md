@@ -41,6 +41,10 @@ documentation.
   `/Volumes/DATA/Coding Projects/.codex-tools/git-hooks`. If pushed commits do
   not include release notes, the hook auto-generates them, commits `Add release
   notes`, and pushes the updated branch.
+- GitHub Releases are published by `.github/workflows/github-release.yml` when
+  `RELEASE_NOTES.md` is pushed to `main`. The workflow extracts the newest
+  section from `RELEASE_NOTES.md`, creates an automatic release tag, and
+  publishes that section as the GitHub Release body.
 - Accepted paths: `CHANGELOG.md`, `Changelog.md`, `changelog.md`,
   `RELEASE_NOTES.md`, `RELEASE-NOTES.md`, `docs/releases/*.md`,
   `docs/release-notes/*.md`.
