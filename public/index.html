@@ -382,7 +382,7 @@
 
                 <template x-if="calendarDays().length > 0">
                     <div class="space-y-3">
-                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
+                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-2">
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Tổng chi phí</p>
                                 <p class="mt-1 text-base lg:text-xl font-bold text-white font-display" x-text="formatCurrency(totalPlanCost)"></p>
@@ -407,6 +407,14 @@
                                 <p class="mt-1 text-[9px] font-bold text-orange-300" x-text="costPercentLabel(planActivityTotal(['food']))"></p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
                                     <div class="h-full rounded-full bg-orange-300" :style="`width:${costBarWidth(planActivityTotal(['food']))}%`"></div>
+                                </div>
+                            </div>
+                            <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+                                <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Cafe</p>
+                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['cafe']))"></p>
+                                <p class="mt-1 text-[9px] font-bold text-rose-300" x-text="costPercentLabel(planActivityTotal(['cafe']))"></p>
+                                <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
+                                    <div class="h-full rounded-full bg-rose-300" :style="`width:${costBarWidth(planActivityTotal(['cafe']))}%`"></div>
                                 </div>
                             </div>
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
@@ -622,7 +630,7 @@
 
                 <template x-if="calendarDays().length > 0">
                     <div class="space-y-3">
-                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
+                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-2">
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Tổng chi phí</p>
                                 <p class="mt-1 text-base lg:text-xl font-bold text-white font-display" x-text="formatCurrency(totalPlanCost)"></p>
@@ -647,6 +655,14 @@
                                 <p class="mt-1 text-[9px] font-bold text-orange-300" x-text="costPercentLabel(planActivityTotal(['food']))"></p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
                                     <div class="h-full rounded-full bg-orange-300" :style="`width:${costBarWidth(planActivityTotal(['food']))}%`"></div>
+                                </div>
+                            </div>
+                            <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+                                <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Cafe</p>
+                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['cafe']))"></p>
+                                <p class="mt-1 text-[9px] font-bold text-rose-300" x-text="costPercentLabel(planActivityTotal(['cafe']))"></p>
+                                <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
+                                    <div class="h-full rounded-full bg-rose-300" :style="`width:${costBarWidth(planActivityTotal(['cafe']))}%`"></div>
                                 </div>
                             </div>
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
@@ -917,6 +933,7 @@
                                 <option value="sightseeing">Tham quan</option>
                                 <option value="transport">Di chuyển</option>
                                 <option value="food">Ăn uống</option>
+                                <option value="cafe">Cafe</option>
                                 <option value="accommodation">Lưu trú</option>
                                 <option value="other">Khác</option>
                             </select>
@@ -1231,6 +1248,17 @@
                             <span class="px-3 py-1.5 bg-white/5 rounded-full text-[9px] lg:text-[10px] font-bold text-slate-300 border border-white/5"
                                   :title="summaryActivityMeta(food, activeLocation)"
                                   x-text="food.name"></span>
+                        </template>
+                    </div>
+                </div>
+
+                <div x-show="summaryActivitiesByType(activeLocation, ['cafe']).length">
+                    <h4 class="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 lg:mb-4">Cafe trong lịch trình</h4>
+                    <div class="flex flex-wrap gap-2">
+                        <template x-for="cafe in summaryActivitiesByType(activeLocation, ['cafe'])" :key="cafe.id">
+                            <span class="px-3 py-1.5 bg-rose-300/10 rounded-full text-[9px] lg:text-[10px] font-bold text-rose-100 border border-rose-300/20"
+                                  :title="summaryActivityMeta(cafe, activeLocation)"
+                                  x-text="cafe.name"></span>
                         </template>
                     </div>
                 </div>
@@ -2512,6 +2540,7 @@
                         sightseeing: 'Tham quan',
                         accommodation: 'Lưu trú',
                         food: 'Ăn uống',
+                        cafe: 'Cafe',
                         transport: 'Di chuyển',
                         other: 'Khác',
                     }[type || 'sightseeing'] || 'Khác';
@@ -2560,7 +2589,7 @@
                 },
 
                 locationActivityTypeStats(loc) {
-                    const types = ['sightseeing', 'accommodation', 'food', 'transport', 'other'];
+                    const types = ['sightseeing', 'accommodation', 'food', 'cafe', 'transport', 'other'];
                     return types
                         .map(type => {
                             const items = this.summaryActivitiesByType(loc, [type]);
@@ -2999,6 +3028,7 @@
                     if (event?.activityType === 'accommodation' || (event?.type === 'stay' && event?.subLocationId)) return 'bed';
                     if (event?.type === 'stay') return 'map-pin';
                     if (event?.activityType === 'food') return 'utensils';
+                    if (event?.activityType === 'cafe') return 'coffee';
                     if (event?.type === 'transport' || event?.activityType === 'transport') return this.getTransportIcon(this.calendarTransportType(event));
                     if (event?.activityType === 'sightseeing' || event?.type === 'visit') return 'ticket';
                     return 'circle-dot';
@@ -3008,6 +3038,7 @@
                     if (event?.activityType === 'accommodation' || (event?.type === 'stay' && event?.subLocationId)) return '🏨';
                     if (event?.type === 'stay') return '📍';
                     if (event?.activityType === 'food') return '🍽';
+                    if (event?.activityType === 'cafe') return '☕';
                     if (event?.type === 'transport' || event?.activityType === 'transport') return this.transportGlyph(this.calendarTransportType(event));
                     if (event?.activityType === 'sightseeing' || event?.type === 'visit') return '🎟';
                     return '•';
@@ -3044,6 +3075,7 @@
                     if (event?.activityType === 'accommodation' || (event?.type === 'stay' && event?.subLocationId)) return 'Ở';
                     if (event?.type === 'stay') return 'ĐĐ';
                     if (event?.activityType === 'food') return 'Ăn';
+                    if (event?.activityType === 'cafe') return 'Cf';
                     if (event?.type === 'transport' || event?.activityType === 'transport') return 'Xe';
                     if (event?.activityType === 'sightseeing' || event?.type === 'visit') return 'Vé';
                     return 'Kh';
@@ -3076,6 +3108,7 @@
                         accommodation: 'bg-white/10 border-slate-300/25 text-slate-100',
                         location: 'bg-cyan-300/10 border-cyan-300/25 text-cyan-100',
                         food: 'bg-amber-300/10 border-amber-300/25 text-amber-100',
+                        cafe: 'bg-rose-300/10 border-rose-300/25 text-rose-100',
                         transport: 'bg-sky-300/10 border-sky-300/25 text-sky-100',
                         sightseeing: 'bg-emerald-300/10 border-emerald-300/25 text-emerald-100',
                         visit: 'bg-emerald-300/10 border-emerald-300/25 text-emerald-100',
@@ -3230,6 +3263,7 @@
                 handleCalendarDragStart(event, calendarEvent) {
                     if (!this.calendarEditingEnabled(calendarEvent)) return;
                     this.calendarDragEvent = {
+                        eventId: calendarEvent.id,
                         subLocationId: calendarEvent.subLocationId,
                         locationId: calendarEvent.locationId,
                     };
@@ -3902,7 +3936,7 @@
 
                 calculateLocationCost(loc) {
                     if (!loc) return 0;
-                    return this.subActivityTotal(loc, ['sightseeing', 'accommodation', 'food', 'transport', 'other']);
+                    return this.subActivityTotal(loc, ['sightseeing', 'accommodation', 'food', 'cafe', 'transport', 'other']);
                 },
 
                 calculateTotalPlanCost(plan = this.currentPlan) {
@@ -4003,8 +4037,10 @@
                                 <td class="money">${formatMoney(this.subActivityTotal(loc, ['transport']))}</td>
                                 <td class="money">${formatMoney(this.subActivityTotal(loc, ['accommodation']))}</td>
                                 <td class="money">${formatMoney(this.subActivityTotal(loc, ['food']))}</td>
+                                <td class="money">${formatMoney(this.subActivityTotal(loc, ['cafe']))}</td>
                                 <td>${escapeHtml(this.summaryActivitiesByType(loc, ['sightseeing', 'transport', 'other']).map(item => item.name).join(', '))}</td>
                                 <td>${escapeHtml(this.summaryActivitiesByType(loc, ['food']).map(item => item.name).join(', '))}</td>
+                                <td>${escapeHtml(this.summaryActivitiesByType(loc, ['cafe']).map(item => item.name).join(', '))}</td>
                                 <td class="money">${formatMoney(cost)}</td>
                             </tr>
                         `;
@@ -4142,8 +4178,10 @@
           <th style="width:70px">Phí di chuyển</th>
           <th style="width:72px">Lưu trú activity</th>
           <th style="width:72px">Ăn uống activity</th>
+          <th style="width:60px">Cafe activity</th>
           <th>Hoạt động</th>
           <th>Ẩm thực</th>
+          <th>Cafe</th>
           <th style="width:86px">Thành tiền</th>
         </tr>
       </thead>
