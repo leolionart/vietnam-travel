@@ -4221,7 +4221,8 @@
                         transport: 'transport',
                         other: 'other',
                     };
-                    return `/assets/event-previews/${files[normalized] || 'other'}.webp`;
+                    const cdnBase = 'https://cdn.jsdelivr.net/gh/leolionart/vietnam-travel@v1.0.3/public/assets/event-previews';
+                    return `${cdnBase}/${files[normalized] || 'other'}.webp`;
                 },
 
                 visibleDetailActivities(loc) {

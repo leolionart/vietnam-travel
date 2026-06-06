@@ -44,6 +44,9 @@ documentation.
 - GitHub Releases are created manually with GitHub CLI after the relevant
   changes are pushed. Use `gh release create` with release notes tailored to
   the current update instead of auto-publishing from `RELEASE_NOTES.md`.
+- GitHub Release notes should embed a screenshot link whenever the update has
+  a visible UI change. Upload the screenshot as a release asset with `gh release
+  upload`, then reference the release asset URL in the Markdown body.
 - Accepted paths: `CHANGELOG.md`, `Changelog.md`, `changelog.md`,
   `RELEASE_NOTES.md`, `RELEASE-NOTES.md`, `docs/releases/*.md`,
   `docs/release-notes/*.md`.

@@ -1,5 +1,16 @@
 # Release Notes
 
+## v1.0.4 - CDN Event Preview Images and Screenshot Release Notes
+
+![v1.0.4 preview](https://github.com/leolionart/vietnam-travel/releases/download/v1.0.4/v1.0.4-preview.png)
+
+- Switched event detail preview images from local `/assets/...` paths to stable
+  jsDelivr CDN URLs backed by the generated preview assets in repo tag
+  `v1.0.3`.
+- Verified all generated event preview CDN URLs return `200 image/webp`.
+- Documented the release-note convention: visible UI updates should include an
+  embedded screenshot link uploaded as a GitHub Release asset.
+
 ## v1.0.3 - Compact Week Event Metadata
 
 - Tightened spacing between week event time, dot divider, and duration so the
