@@ -1,5 +1,12 @@
 # Release Notes
 
+## Unreleased - 2026-06-06 16:16 +07
+
+Generated before push from commits:
+
+- `726d572` Add cafe activity type
+- `4f349ea` Document release notes push policy
+
 ## Unreleased - 2026-06-06 16:15 +07
 
 Generated before push from commits:
