@@ -1,5 +1,11 @@
 # Release Notes
 
+## Unreleased - 2026-06-06 16:25 +07
+
+Generated before push from commits:
+
+- `490376a` Add calendar event detail page
+
 ## Unreleased - 2026-06-06 16:16 +07
 
 Generated before push from commits:
