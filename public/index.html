@@ -297,7 +297,7 @@
                         Maps
                     </a>
                     <div class="absolute bottom-5 left-5 right-5">
-                        <p class="text-[10px] font-black uppercase tracking-[0.18em] text-slate-300" x-text="activityTypeLabel(eventDetail().activity?.activityType || 'other')"></p>
+                        <p class="text-[10px] font-black uppercase tracking-[0.18em] text-slate-300" x-text="activityTypeLabel(eventDetail().activity?.activityType || 'sightseeing')"></p>
                         <h2 class="mt-2 text-2xl font-bold leading-tight text-white" x-text="eventDetail().activity?.name || eventDetail().location?.name"></h2>
                         <p class="mt-2 text-sm font-semibold text-slate-300" x-show="eventDetail().location?.name" x-text="eventDetail().location?.name"></p>
                     </div>
@@ -544,7 +544,7 @@
 
                 <template x-if="calendarDays().length > 0">
                     <div class="space-y-3">
-                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-2">
+                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Tổng chi phí</p>
                                 <p class="mt-1 text-base lg:text-xl font-bold text-white font-display" x-text="formatCurrency(totalPlanCost)"></p>
@@ -593,14 +593,6 @@
                                 <p class="mt-1 text-[9px] font-bold text-blue-300" x-text="costPercentLabel(planActivityTotal(['sightseeing']))"></p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
                                     <div class="h-full rounded-full bg-blue-300" :style="`width:${costBarWidth(planActivityTotal(['sightseeing']))}%`"></div>
-                                </div>
-                            </div>
-                            <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-                                <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Khác</p>
-                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['other']))"></p>
-                                <p class="mt-1 text-[9px] font-bold text-violet-300" x-text="costPercentLabel(planActivityTotal(['other']))"></p>
-                                <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
-                                    <div class="h-full rounded-full bg-violet-300" :style="`width:${costBarWidth(planActivityTotal(['other']))}%`"></div>
                                 </div>
                             </div>
                         </div>
@@ -801,7 +793,7 @@
 
                 <template x-if="calendarDays().length > 0">
                     <div class="space-y-3">
-                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-2">
+                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Tổng chi phí</p>
                                 <p class="mt-1 text-base lg:text-xl font-bold text-white font-display" x-text="formatCurrency(totalPlanCost)"></p>
@@ -850,14 +842,6 @@
                                 <p class="mt-1 text-[9px] font-bold text-blue-300" x-text="costPercentLabel(planActivityTotal(['sightseeing']))"></p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
                                     <div class="h-full rounded-full bg-blue-300" :style="`width:${costBarWidth(planActivityTotal(['sightseeing']))}%`"></div>
-                                </div>
-                            </div>
-                            <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-                                <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Khác</p>
-                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['other']))"></p>
-                                <p class="mt-1 text-[9px] font-bold text-violet-300" x-text="costPercentLabel(planActivityTotal(['other']))"></p>
-                                <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
-                                    <div class="h-full rounded-full bg-violet-300" :style="`width:${costBarWidth(planActivityTotal(['other']))}%`"></div>
                                 </div>
                             </div>
                         </div>
@@ -1106,7 +1090,6 @@
                                 <option value="food">Ăn uống</option>
                                 <option value="cafe">Cafe</option>
                                 <option value="accommodation">Lưu trú</option>
-                                <option value="other">Khác</option>
                             </select>
                         </label>
                         <label class="space-y-1">
@@ -1396,10 +1379,10 @@
                 </div>
 
                 <!-- Activities from schedule -->
-                <div x-show="summaryActivitiesByType(activeLocation, ['sightseeing', 'transport', 'other']).length">
+                <div x-show="summaryActivitiesByType(activeLocation, ['sightseeing', 'transport']).length">
                     <h4 class="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 lg:mb-4">Hoạt động từ lịch trình</h4>
                     <div class="space-y-2 lg:space-y-3">
-                        <template x-for="act in summaryActivitiesByType(activeLocation, ['sightseeing', 'transport', 'other'])" :key="act.id">
+                        <template x-for="act in summaryActivitiesByType(activeLocation, ['sightseeing', 'transport'])" :key="act.id">
                             <div class="flex items-center gap-3 text-xs lg:text-sm text-slate-300">
                                 <div class="w-1.5 h-1.5 rounded-full bg-blue-500 flex-none"></div>
                                 <div class="min-w-0">
@@ -2718,7 +2701,9 @@
                 },
 
                 subActivityType(sub) {
-                    return sub.activityType || 'sightseeing';
+                    const type = sub.activityType || 'sightseeing';
+                    const allowed = ['sightseeing', 'accommodation', 'food', 'cafe', 'transport'];
+                    return allowed.includes(type) ? type : 'sightseeing';
                 },
 
                 activityTypeLabel(type) {
@@ -2728,8 +2713,7 @@
                         food: 'Ăn uống',
                         cafe: 'Cafe',
                         transport: 'Di chuyển',
-                        other: 'Khác',
-                    }[type || 'sightseeing'] || 'Khác';
+                    }[type || 'sightseeing'] || 'Tham quan';
                 },
 
                 activityDurationLabel(sub) {
@@ -2775,7 +2759,7 @@
                 },
 
                 locationActivityTypeStats(loc) {
-                    const types = ['sightseeing', 'accommodation', 'food', 'cafe', 'transport', 'other'];
+                    const types = ['sightseeing', 'accommodation', 'food', 'cafe', 'transport'];
                     return types
                         .map(type => {
                             const items = this.summaryActivitiesByType(loc, [type]);
@@ -4170,7 +4154,7 @@
                         id: `location-${loc?.id || ''}`,
                         name: loc?.name || 'Địa điểm',
                         address: loc?.name || '',
-                        activityType: 'other',
+                        activityType: 'accommodation',
                         durationDays: loc?.duration || 0,
                         scheduledDate: '',
                         scheduledTime: '',
@@ -4234,7 +4218,7 @@
 
                 calculateLocationCost(loc) {
                     if (!loc) return 0;
-                    return this.subActivityTotal(loc, ['sightseeing', 'accommodation', 'food', 'cafe', 'transport', 'other']);
+                    return this.subActivityTotal(loc, ['sightseeing', 'accommodation', 'food', 'cafe', 'transport']);
                 },
 
                 calculateTotalPlanCost(plan = this.currentPlan) {
@@ -4329,7 +4313,7 @@
                                 <td class="money">${formatMoney(this.subActivityTotal(loc, ['accommodation']))}</td>
                                 <td class="money">${formatMoney(this.subActivityTotal(loc, ['food']))}</td>
                                 <td class="money">${formatMoney(this.subActivityTotal(loc, ['cafe']))}</td>
-                                <td>${escapeHtml(this.summaryActivitiesByType(loc, ['sightseeing', 'transport', 'other']).map(item => item.name).join(', '))}</td>
+                                <td>${escapeHtml(this.summaryActivitiesByType(loc, ['sightseeing', 'transport']).map(item => item.name).join(', '))}</td>
                                 <td>${escapeHtml(this.summaryActivitiesByType(loc, ['food']).map(item => item.name).join(', '))}</td>
                                 <td>${escapeHtml(this.summaryActivitiesByType(loc, ['cafe']).map(item => item.name).join(', '))}</td>
                                 <td class="money">${formatMoney(cost)}</td>

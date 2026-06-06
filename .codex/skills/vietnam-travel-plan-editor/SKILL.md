@@ -213,7 +213,7 @@ Full setup notes for other AI systems live in `docs/ai-integration.md`.
 
 Cost details belong on activities (`sub_locations`), not fixed location fields.
 
-- `activityType`: `sightseeing`, `accommodation`, `food`, `transport`, `other`
+- `activityType`: `sightseeing`, `accommodation`, `food`, `cafe`, `transport`
 - `pricingMode`: `per_person`, `per_room`, `per_group`
 - Use `address` on activities for the concrete street/place address shown on
   calendar event cards and Google Maps searches. If `address` is missing, the

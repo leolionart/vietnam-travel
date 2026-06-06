@@ -28,7 +28,7 @@ Chi phí location = Vé tham quan + Lưu trú + Ăn uống + Di chuyển
 
 | Field | Ý nghĩa |
 |---|---|
-| `activityType` | `sightseeing`, `accommodation`, `food`, `transport`, `other` |
+| `activityType` | `sightseeing`, `accommodation`, `food`, `cafe`, `transport` |
 | `pricingMode` | `per_person`, `per_room`, `per_group` |
 | `adultPrice` / `childPrice` | Giá theo người khi `pricingMode = per_person` |
 | `unitPrice` | Giá theo phòng/đơn vị/nhóm |

@@ -1,5 +1,13 @@
 # Release Notes
 
+## v1.0.6 - Remove Unclassified Cost Category
+
+- Removed the "Khác" cost category from week and month cost overview cards.
+- Removed "Khác" from the activity type picker so new activities must use a
+  classified category.
+- Normalized unknown or legacy activity types into the sightseeing category so
+  all declared activity costs continue to be counted.
+
 ## v1.0.5 - Simplify Cost Overview Cards
 
 - Removed the 60% lodging target note from week and month cost overview cards.
