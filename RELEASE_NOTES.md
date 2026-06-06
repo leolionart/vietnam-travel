@@ -1,5 +1,12 @@
 # Release Notes
 
+## Manual Release - 2026-06-06 16:55 +07
+
+- Switched calendar event detail from a dedicated `/event` page to an overlay drawer on the current calendar/map view.
+- Kept deep links shareable through the `event=<id>` query parameter while preserving the active view path.
+- Added drawer content for event thumbnail, schedule, duration, cost, participants, notes, location, and Google Maps.
+- Removed the GitHub Actions workflow that auto-published GitHub Releases from `RELEASE_NOTES.md`; releases are now created manually with GitHub CLI.
+
 ## Unreleased - 2026-06-06 16:49 +07
 
 Generated before push from commits:
