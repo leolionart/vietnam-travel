@@ -4157,17 +4157,7 @@
                 eventThumbnailUrl(activity, loc) {
                     const direct = activity?.imageUrl || activity?.photoUrl || activity?.thumbnailUrl || activity?.thumbUrl;
                     if (direct) return direct;
-                    const params = new URLSearchParams();
-                    const lat = Number(activity?.lat || loc?.lat);
-                    const lng = Number(activity?.lng || loc?.lng);
-                    if (Number.isFinite(lat) && Number.isFinite(lng) && (lat !== 0 || lng !== 0)) {
-                        params.set('lat', String(lat));
-                        params.set('lng', String(lng));
-                    }
-                    if (activity?.address) params.set('address', activity.address);
-                    if (activity?.name) params.set('name', activity.name);
-                    if (loc?.name) params.set('location', loc.name);
-                    return `/api/maps/thumbnail?${params.toString()}`;
+                    return this.locationImg(activity?.address || activity?.name || loc?.name);
                 },
 
                 visibleDetailActivities(loc) {
