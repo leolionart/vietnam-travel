@@ -437,7 +437,7 @@
 
                         <div class="space-y-3">
                             <template x-for="week in calendarWeeks()" :key="week.key">
-                                <section class="rounded-xl border border-white/10 bg-white/[0.025] p-2">
+                                <section class="rounded-xl border border-white/10 bg-white/[0.012] p-2">
                                     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-2 mb-2 px-1">
                                         <div>
                                             <h3 class="text-sm lg:text-lg font-bold text-white" x-text="week.label"></h3>
@@ -456,7 +456,7 @@
                                     </div>
 
                                     <div class="grid grid-cols-[56px_repeat(7,minmax(132px,1fr))] gap-1.5">
-                                        <div class="rounded-lg border border-white/5 bg-white/[0.02] px-1.5 py-2 text-[9px] font-bold text-slate-500 flex items-center justify-center">Cả ngày</div>
+                                        <div class="rounded-lg border border-white/5 bg-white/[0.012] px-1.5 py-2 text-[9px] font-bold text-slate-500 flex items-center justify-center">Cả ngày</div>
                                         <template x-for="day in week.days" :key="`all-${day.key}`">
                                             <article class="relative rounded-lg border p-1.5 min-h-[82px]"
                                                      :class="calendarDayClass(day)"
@@ -504,7 +504,7 @@
                                             </template>
                                         </div>
                                         <template x-for="day in week.days" :key="`time-${day.key}`">
-                                            <article class="relative h-[896px] rounded-lg border border-white/10 bg-white/[0.02] overflow-hidden"
+                                            <article class="relative h-[896px] rounded-lg border border-white/10 bg-white/[0.012] overflow-hidden"
                                                      @dragover.prevent="calendarEditingEnabled()"
                                                      @drop.prevent="handleCalendarDrop($event, day, calendarDropPeriod($event))"
                                                      :class="day.isBlank ? 'opacity-35' : ''"
@@ -674,7 +674,7 @@
                         </div>
 
                         <template x-for="month in calendarMonths()" :key="month.key">
-                            <section class="rounded-xl border border-white/10 bg-white/[0.025] p-2">
+                            <section class="rounded-xl border border-white/10 bg-white/[0.012] p-2">
                                 <div class="flex items-center justify-between gap-3 mb-2 px-1">
                                     <h3 class="text-sm lg:text-base font-bold text-white" x-text="month.label"></h3>
                                     <p class="text-[9px] font-bold text-slate-500" x-text="month.range"></p>
@@ -740,7 +740,7 @@
                                                                              class="rounded-md border min-h-[40px] p-1.5"
                                                                              @dragover.prevent="calendarEditingEnabled()"
                                                                              @drop.prevent="handleCalendarDrop($event, day, part)"
-                                                                             :class="part === 'morning' ? 'bg-sky-400/10 border-sky-300/20' : (part === 'afternoon' ? 'bg-orange-400/10 border-orange-300/20' : 'bg-violet-400/10 border-violet-300/20')"
+                                                                             :class="part === 'morning' ? 'bg-sky-400/5 border-sky-300/15' : (part === 'afternoon' ? 'bg-orange-400/5 border-orange-300/15' : 'bg-violet-400/5 border-violet-300/15')"
                                                                              :style="calendarDayAccentStyle(day, part)">
                                                                             <div class="flex items-center justify-between gap-2 text-[8px] font-bold uppercase leading-none mb-1"
                                                                                  :class="part === 'morning' ? 'text-sky-200' : (part === 'afternoon' ? 'text-orange-200' : 'text-violet-200')">
@@ -2984,9 +2984,9 @@
 
                 calendarEventClass(type) {
                     const classes = {
-                        transport: 'bg-sky-500/10 border-sky-500/20 text-sky-100 hover:bg-sky-500/15',
-                        visit: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-100 hover:bg-emerald-500/15',
-                        stay: 'bg-white/5 border-white/10 text-slate-200 hover:bg-white/10',
+                        transport: 'bg-sky-950/95 border-sky-300/55 text-sky-50 shadow-lg shadow-sky-950/30 hover:bg-sky-900/95',
+                        visit: 'bg-emerald-950/95 border-emerald-300/55 text-emerald-50 shadow-lg shadow-emerald-950/30 hover:bg-emerald-900/95',
+                        stay: 'bg-slate-950/95 border-slate-200/45 text-slate-50 shadow-lg shadow-slate-950/30 hover:bg-slate-900/95',
                     };
                     return classes[type] || classes.stay;
                 },
@@ -3082,24 +3082,24 @@
                 locationPalette(code) {
                     const palettes = {
                         HN: {
-                            dark: { bg: 'rgba(59,130,246,0.16)', soft: 'rgba(59,130,246,0.11)', border: 'rgba(147,197,253,0.35)', shadow: 'rgba(59,130,246,0.10)' },
+                            dark: { bg: 'rgba(59,130,246,0.08)', soft: 'rgba(59,130,246,0.05)', border: 'rgba(147,197,253,0.22)', shadow: 'rgba(59,130,246,0.05)' },
                             light: { bg: 'rgba(219,234,254,0.86)', soft: 'rgba(219,234,254,0.62)', border: 'rgba(59,130,246,0.30)', shadow: 'rgba(59,130,246,0.08)' },
                         },
                         NA: {
-                            dark: { bg: 'rgba(20,184,166,0.16)', soft: 'rgba(20,184,166,0.11)', border: 'rgba(94,234,212,0.35)', shadow: 'rgba(20,184,166,0.10)' },
+                            dark: { bg: 'rgba(20,184,166,0.08)', soft: 'rgba(20,184,166,0.05)', border: 'rgba(94,234,212,0.22)', shadow: 'rgba(20,184,166,0.05)' },
                             light: { bg: 'rgba(204,251,241,0.86)', soft: 'rgba(204,251,241,0.62)', border: 'rgba(20,184,166,0.30)', shadow: 'rgba(20,184,166,0.08)' },
                         },
                         NB: {
-                            dark: { bg: 'rgba(168,85,247,0.16)', soft: 'rgba(168,85,247,0.11)', border: 'rgba(216,180,254,0.35)', shadow: 'rgba(168,85,247,0.10)' },
+                            dark: { bg: 'rgba(168,85,247,0.08)', soft: 'rgba(168,85,247,0.05)', border: 'rgba(216,180,254,0.22)', shadow: 'rgba(168,85,247,0.05)' },
                             light: { bg: 'rgba(243,232,255,0.86)', soft: 'rgba(243,232,255,0.62)', border: 'rgba(168,85,247,0.30)', shadow: 'rgba(168,85,247,0.08)' },
                         },
                         HL: {
-                            dark: { bg: 'rgba(245,158,11,0.15)', soft: 'rgba(245,158,11,0.10)', border: 'rgba(252,211,77,0.36)', shadow: 'rgba(245,158,11,0.10)' },
+                            dark: { bg: 'rgba(245,158,11,0.08)', soft: 'rgba(245,158,11,0.05)', border: 'rgba(252,211,77,0.22)', shadow: 'rgba(245,158,11,0.05)' },
                             light: { bg: 'rgba(254,243,199,0.88)', soft: 'rgba(254,243,199,0.62)', border: 'rgba(245,158,11,0.34)', shadow: 'rgba(245,158,11,0.08)' },
                         },
                     };
                     const fallback = {
-                        dark: { bg: 'rgba(148,163,184,0.14)', soft: 'rgba(148,163,184,0.09)', border: 'rgba(203,213,225,0.28)', shadow: 'rgba(148,163,184,0.08)' },
+                        dark: { bg: 'rgba(148,163,184,0.07)', soft: 'rgba(148,163,184,0.04)', border: 'rgba(203,213,225,0.18)', shadow: 'rgba(148,163,184,0.04)' },
                         light: { bg: 'rgba(241,245,249,0.9)', soft: 'rgba(241,245,249,0.65)', border: 'rgba(100,116,139,0.22)', shadow: 'rgba(100,116,139,0.06)' },
                     };
                     return palettes[code] || fallback;
@@ -3123,12 +3123,12 @@
                 },
 
                 calendarDayClass(day) {
-                    if (day.isBlank) return 'bg-white/[0.015] border-white/5 opacity-40';
-                    if (day.hasCheckin && day.hasCheckout) return 'bg-violet-500/20 border-violet-300/45 shadow-[0_0_0_1px_rgba(196,181,253,0.16)]';
-                    if (day.hasCheckin) return 'bg-cyan-500/20 border-cyan-300/45 shadow-[0_0_0_1px_rgba(103,232,249,0.14)]';
-                    if (day.hasCheckout) return 'bg-rose-500/20 border-rose-300/45 shadow-[0_0_0_1px_rgba(253,164,175,0.14)]';
-                    if (day.isWeekend) return 'bg-amber-400/10 border-amber-400/25';
-                    return 'bg-white/5 border-white/10';
+                    if (day.isBlank) return 'bg-white/[0.008] border-white/5 opacity-35';
+                    if (day.hasCheckin && day.hasCheckout) return 'bg-violet-500/10 border-violet-300/30 shadow-[0_0_0_1px_rgba(196,181,253,0.08)]';
+                    if (day.hasCheckin) return 'bg-cyan-500/10 border-cyan-300/30 shadow-[0_0_0_1px_rgba(103,232,249,0.08)]';
+                    if (day.hasCheckout) return 'bg-rose-500/10 border-rose-300/30 shadow-[0_0_0_1px_rgba(253,164,175,0.08)]';
+                    if (day.isWeekend) return 'bg-amber-400/5 border-amber-400/15';
+                    return 'bg-white/[0.025] border-white/10';
                 },
 
                 calendarStayEvents(day) {
