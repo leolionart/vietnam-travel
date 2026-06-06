@@ -382,7 +382,7 @@
 
                 <template x-if="calendarDays().length > 0">
                     <div class="space-y-3">
-                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Tổng chi phí</p>
                                 <p class="mt-1 text-base lg:text-xl font-bold text-white font-display" x-text="formatCurrency(totalPlanCost)"></p>
@@ -402,11 +402,19 @@
                                 </div>
                             </div>
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-                                <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Ăn uống/đi lại</p>
-                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['food', 'transport', 'other']))"></p>
-                                <p class="mt-1 text-[9px] font-bold text-sky-300" x-text="costPercentLabel(planActivityTotal(['food', 'transport', 'other']))"></p>
+                                <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Ăn uống</p>
+                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['food']))"></p>
+                                <p class="mt-1 text-[9px] font-bold text-orange-300" x-text="costPercentLabel(planActivityTotal(['food']))"></p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
-                                    <div class="h-full rounded-full bg-sky-300" :style="`width:${costBarWidth(planActivityTotal(['food', 'transport', 'other']))}%`"></div>
+                                    <div class="h-full rounded-full bg-orange-300" :style="`width:${costBarWidth(planActivityTotal(['food']))}%`"></div>
+                                </div>
+                            </div>
+                            <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+                                <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Di chuyển</p>
+                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['transport']))"></p>
+                                <p class="mt-1 text-[9px] font-bold text-sky-300" x-text="costPercentLabel(planActivityTotal(['transport']))"></p>
+                                <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
+                                    <div class="h-full rounded-full bg-sky-300" :style="`width:${costBarWidth(planActivityTotal(['transport']))}%`"></div>
                                 </div>
                             </div>
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
@@ -415,6 +423,14 @@
                                 <p class="mt-1 text-[9px] font-bold text-emerald-300" x-text="costPercentLabel(planActivityTotal(['sightseeing']))"></p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
                                     <div class="h-full rounded-full bg-emerald-300" :style="`width:${costBarWidth(planActivityTotal(['sightseeing']))}%`"></div>
+                                </div>
+                            </div>
+                            <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+                                <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Khác</p>
+                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['other']))"></p>
+                                <p class="mt-1 text-[9px] font-bold text-violet-300" x-text="costPercentLabel(planActivityTotal(['other']))"></p>
+                                <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
+                                    <div class="h-full rounded-full bg-violet-300" :style="`width:${costBarWidth(planActivityTotal(['other']))}%`"></div>
                                 </div>
                             </div>
                         </div>
@@ -598,7 +614,7 @@
 
                 <template x-if="calendarDays().length > 0">
                     <div class="space-y-3">
-                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Tổng chi phí</p>
                                 <p class="mt-1 text-base lg:text-xl font-bold text-white font-display" x-text="formatCurrency(totalPlanCost)"></p>
@@ -618,11 +634,19 @@
                                 </div>
                             </div>
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-                                <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Ăn uống/đi lại</p>
-                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['food', 'transport', 'other']))"></p>
-                                <p class="mt-1 text-[9px] font-bold text-sky-300" x-text="costPercentLabel(planActivityTotal(['food', 'transport', 'other']))"></p>
+                                <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Ăn uống</p>
+                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['food']))"></p>
+                                <p class="mt-1 text-[9px] font-bold text-orange-300" x-text="costPercentLabel(planActivityTotal(['food']))"></p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
-                                    <div class="h-full rounded-full bg-sky-300" :style="`width:${costBarWidth(planActivityTotal(['food', 'transport', 'other']))}%`"></div>
+                                    <div class="h-full rounded-full bg-orange-300" :style="`width:${costBarWidth(planActivityTotal(['food']))}%`"></div>
+                                </div>
+                            </div>
+                            <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+                                <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Di chuyển</p>
+                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['transport']))"></p>
+                                <p class="mt-1 text-[9px] font-bold text-sky-300" x-text="costPercentLabel(planActivityTotal(['transport']))"></p>
+                                <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
+                                    <div class="h-full rounded-full bg-sky-300" :style="`width:${costBarWidth(planActivityTotal(['transport']))}%`"></div>
                                 </div>
                             </div>
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
@@ -631,6 +655,14 @@
                                 <p class="mt-1 text-[9px] font-bold text-emerald-300" x-text="costPercentLabel(planActivityTotal(['sightseeing']))"></p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
                                     <div class="h-full rounded-full bg-emerald-300" :style="`width:${costBarWidth(planActivityTotal(['sightseeing']))}%`"></div>
+                                </div>
+                            </div>
+                            <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+                                <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Khác</p>
+                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['other']))"></p>
+                                <p class="mt-1 text-[9px] font-bold text-violet-300" x-text="costPercentLabel(planActivityTotal(['other']))"></p>
+                                <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
+                                    <div class="h-full rounded-full bg-violet-300" :style="`width:${costBarWidth(planActivityTotal(['other']))}%`"></div>
                                 </div>
                             </div>
                         </div>
