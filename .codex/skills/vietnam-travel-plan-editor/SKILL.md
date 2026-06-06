@@ -113,7 +113,7 @@ Activity commands:
 ```bash
 npm --prefix api run cli -- add-activity <slug> <locationId> \
   --api-url https://trips.naai.studio \
-  --json '{"name":"Hotel","activityType":"accommodation","pricingMode":"per_room","unitPrice":900000,"quantity":1,"surcharge":0,"durationDays":2}'
+  --json '{"name":"Hotel","address":"123 Tràng An, Ninh Bình","activityType":"accommodation","pricingMode":"per_room","unitPrice":900000,"quantity":1,"surcharge":0,"durationDays":2}'
 
 npm --prefix api run cli -- update-activity <slug> <locationId> <activityId> \
   --api-url https://trips.naai.studio \
@@ -215,6 +215,9 @@ Cost details belong on activities (`sub_locations`), not fixed location fields.
 
 - `activityType`: `sightseeing`, `accommodation`, `food`, `transport`, `other`
 - `pricingMode`: `per_person`, `per_room`, `per_group`
+- Use `address` on activities for the concrete street/place address shown on
+  calendar event cards and Google Maps searches. If `address` is missing, the
+  UI falls back to the parent location name.
 - Hotels: use `activityType="accommodation"`, `pricingMode="per_room"`, `unitPrice` per room/night or stay unit, `quantity` for room/unit count, `surcharge` for fixed extra charges, default surcharge `0`, and `durationDays` for multi-day stay bars.
 - Tickets: use adult/child prices with `pricingMode="per_person"`.
 - Transport and meals should also be activities when they affect cost.

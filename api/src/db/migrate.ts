@@ -6,6 +6,7 @@ export function runMigration(): void {
     const addColumns = [
         'ALTER TABLE plans ADD COLUMN session_id TEXT',
         'ALTER TABLE sub_locations ADD COLUMN scheduled_date TEXT NOT NULL DEFAULT \'\'',
+        'ALTER TABLE sub_locations ADD COLUMN address TEXT NOT NULL DEFAULT \'\'',
         'ALTER TABLE sub_locations ADD COLUMN scheduled_period TEXT NOT NULL DEFAULT \'\'',
         'ALTER TABLE sub_locations ADD COLUMN scheduled_time TEXT NOT NULL DEFAULT \'\'',
         'ALTER TABLE sub_locations ADD COLUMN duration_days REAL NOT NULL DEFAULT 0',

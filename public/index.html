@@ -903,6 +903,10 @@
                             <span class="text-[9px] font-bold text-slate-500 uppercase">Tên activity</span>
                             <input x-model="activityDraft.name" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400" placeholder="Ví dụ: Tham quan phố cổ">
                         </label>
+                        <label class="space-y-1 col-span-2">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Địa chỉ cụ thể</span>
+                            <input x-model="activityDraft.address" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400" placeholder="Ví dụ: 123 Tràng An, Ninh Bình">
+                        </label>
                         <label class="space-y-1">
                             <span class="text-[9px] font-bold text-slate-500 uppercase">Loại</span>
                             <select x-model="activityDraft.activityType" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400">
@@ -1001,6 +1005,7 @@
                                     <p class="text-sm font-bold transition-colors"
                                        :class="excludedSubs[sub.id] ? 'text-slate-500 line-through' : 'text-white'"
                                        x-text="sub.name"></p>
+                                    <p x-show="sub.address" class="mt-0.5 text-[10px] text-slate-400 truncate" x-text="sub.address"></p>
                                     <div class="flex items-center gap-2 mt-0.5 flex-wrap">
                                         <p class="text-[10px] transition-colors"
                                            :class="excludedSubs[sub.id] ? 'text-slate-600' : 'text-emerald-400'"
@@ -2337,6 +2342,7 @@
                         unitPrice: 0,
                         quantity: 1,
                         surcharge: 0,
+                        address: '',
                         description: '',
                     };
                     this.showActivityForm = true;
@@ -2365,6 +2371,7 @@
                         unitPrice: Number(sub.unitPrice || 0),
                         quantity: Number(sub.quantity ?? 1),
                         surcharge: Number(sub.surcharge || 0),
+                        address: sub.address || '',
                         description: sub.description || '',
                     };
                     this.showActivityForm = true;
@@ -2398,6 +2405,7 @@
                         unitPrice: Number(this.activityDraft.unitPrice || 0),
                         quantity: Number(this.activityDraft.quantity ?? 1),
                         surcharge: Number(this.activityDraft.surcharge || 0),
+                        address: String(this.activityDraft.address || '').trim(),
                         description: this.activityDraft.description || '',
                         lat: Number(this.activeLocation.lat || 0),
                         lng: Number(this.activeLocation.lng || 0),
@@ -2582,6 +2590,10 @@
                     return parts.filter(Boolean).join(' · ');
                 },
 
+                activityLocationLabel(activity, loc) {
+                    return String(activity?.address || '').trim() || loc?.name || '';
+                },
+
                 activityGoogleMapsUrl(activity, loc) {
                     const lat = Number(activity?.lat);
                     const lng = Number(activity?.lng);
@@ -2589,6 +2601,7 @@
                         return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
                     }
                     const query = [
+                        activity?.address,
                         activity?.name,
                         loc?.name,
                         loc?.province,
@@ -3632,7 +3645,7 @@
                                     activityType,
                                     transportType: sub.transportType || '',
                                     title: sub.name,
-                                    locationName: loc.name,
+                                    locationName: this.activityLocationLabel(sub, loc),
                                     meta: [loc.name, this.activityTypeLabel(activityType), durationLabel, costLabel].filter(Boolean).join(' · '),
                                     durationLabel,
                                     durationMinutes,

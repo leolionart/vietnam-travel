@@ -7,6 +7,7 @@ interface DbSubLocation {
     location_id: number;
     sort_order: number;
     name: string;
+    address: string;
     lat: number;
     lng: number;
     duration_minutes: number;
@@ -56,6 +57,7 @@ function subToPublic(sub: DbSubLocation) {
     return {
         id: sub.id,
         name: sub.name,
+        address: sub.address || '',
         lat: sub.lat,
         lng: sub.lng,
         durationMinutes: sub.duration_minutes,
