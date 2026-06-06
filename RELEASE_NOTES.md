@@ -1,11 +1,94 @@
 # Release Notes
 
-## Manual Release - 2026-06-06 16:55 +07
+## v1.0.1 - Calendar Planning, Activity Costs, and MCP Plan Editing
 
-- Switched calendar event detail from a dedicated `/event` page to an overlay drawer on the current calendar/map view.
-- Kept deep links shareable through the `event=<id>` query parameter while preserving the active view path.
-- Added drawer content for event thumbnail, schedule, duration, cost, participants, notes, location, and Google Maps.
-- Removed the GitHub Actions workflow that auto-published GitHub Releases from `RELEASE_NOTES.md`; releases are now created manually with GitHub CLI.
+This release summarizes the user-facing and integration changes since the
+previous GitHub Release.
+
+### Calendar planning
+
+- Added public week and month calendar views for trip plans.
+- Added Google Calendar-style time rows in week view.
+- Added exact activity scheduling with `scheduledTime` and activity
+  `durationMinutes`, instead of anchoring items only to morning/afternoon.
+- Added drag/drop and resize interactions for activities on calendar views.
+- Snapped calendar edits to 30-minute intervals.
+- Added explicit calendar save/discard controls so drag edits do not save
+  immediately.
+- Kept overlapping calendar events independent when moving one event.
+- Improved overlapping event layout so short overlaps render side-by-side/on top
+  instead of dragging attached events together.
+- Stacked month-view time blocks vertically and hid empty blocks to avoid layout
+  overflow.
+- Added event cost display on calendar cards.
+- Simplified week event cards to show event name, time/duration, cost chip, and
+  location when present.
+- Updated event colors by activity type: food red, transport gray, cafe orange,
+  sightseeing blue.
+- Changed accommodation icon from hotel to bed.
+- Tuned calendar backgrounds and light-mode event cards for clearer contrast.
+- Changed event detail from a dedicated `/event` page to a right-side drawer
+  overlay on the current calendar/map view.
+- Kept event deep links through `event=<id>` while preserving the active view
+  path.
+- Added drawer details for thumbnail, schedule, duration, cost, participants,
+  notes, location, and Google Maps link.
+
+### Activity data and cost model
+
+- Moved participant counts and pricing logic to individual activities instead
+  of fixed location-level values.
+- Added activity-based pricing controls for tickets, accommodation, food, cafe,
+  transport, and other costs.
+- Split cost summaries into transport, accommodation, food, cafe, sightseeing,
+  and other categories.
+- Derived location overview text from the detailed activities in the itinerary
+  so summaries stay current.
+- Added a separate cafe activity type so coffee/snack stops no longer appear
+  under food.
+- Added map links and address display for activity/accommodation summaries.
+- Added illustrative event thumbnails through the existing image service.
+
+### Admin, public editing, and sharing
+
+- Replaced the old admin dashboard flow with calendar-based plan editing.
+- Added admin login gating before entering admin mode.
+- Added calendar/sidebar CRUD controls for locations and detailed activities.
+- Added explicit save controls for schedule edits.
+- Allowed public users to customize/share session plans without admin writes.
+- Improved stable share URLs by returning pretty `?slug=...` links for session
+  plans.
+- Allowed reading and updating session plans by slug so agents can revise the
+  same shared link.
+
+### MCP, API, and CLI
+
+- Added public MCP plan editing by share link.
+- Added prod MCP admin editing support and repo CLI commands for plan,
+  location, and activity operations.
+- Added admin password header support for API writes.
+- Fixed MCP SSE behavior and added activity API aliases for legacy
+  sub-location commands.
+- Added activity proximity analysis for planning nearby stops.
+- Added Vexere/search-oriented planning integration documentation.
+- Updated the project travel-plan skill and AI integration docs for the new
+  activity scheduling and cost model.
+
+### Map and itinerary polish
+
+- Added compact itinerary calendar view and check-in/check-out badges.
+- Added route drawing by road distance and separate colors for route legs.
+- Added full-stay calendar rendering with proximity hints.
+- Fixed weekday alignment and calendar boundary labels.
+- Improved public trip viewer controls and readability.
+- Added manual travel date editing.
+
+### Release process
+
+- Removed the GitHub Actions workflow that auto-published GitHub Releases from
+  `RELEASE_NOTES.md`.
+- GitHub Releases are now created manually with GitHub CLI so each release note
+  can be written for the actual update.
 
 ## Unreleased - 2026-06-06 16:49 +07
 
