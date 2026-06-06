@@ -1,5 +1,10 @@
 # Release Notes
 
+## v1.0.5 - Simplify Cost Overview Cards
+
+- Removed the 60% lodging target note from week and month cost overview cards.
+- Kept the main cost amount, percentage label, and progress bar.
+
 ## v1.0.4 - CDN Event Preview Images and Screenshot Release Notes
 
 ![v1.0.4 preview](https://github.com/leolionart/vietnam-travel/releases/download/v1.0.4/v1.0.4-preview.png)

@@ -558,7 +558,7 @@
                                 <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['accommodation']))"></p>
                                 <p class="mt-1 text-[9px] font-bold"
                                    :class="Math.abs(costPercent(planActivityTotal(['accommodation'])) - 60) <= 5 ? 'text-emerald-300' : 'text-amber-300'"
-                                   x-text="costPercentLabel(planActivityTotal(['accommodation'])) + ' · ' + lodgingTargetLabel()"></p>
+                                   x-text="costPercentLabel(planActivityTotal(['accommodation']))"></p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
                                     <div class="h-full rounded-full bg-slate-300" :style="`width:${costBarWidth(planActivityTotal(['accommodation']))}%`"></div>
                                 </div>
@@ -815,7 +815,7 @@
                                 <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['accommodation']))"></p>
                                 <p class="mt-1 text-[9px] font-bold"
                                    :class="Math.abs(costPercent(planActivityTotal(['accommodation'])) - 60) <= 5 ? 'text-emerald-300' : 'text-amber-300'"
-                                   x-text="costPercentLabel(planActivityTotal(['accommodation'])) + ' · ' + lodgingTargetLabel()"></p>
+                                   x-text="costPercentLabel(planActivityTotal(['accommodation']))"></p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
                                     <div class="h-full rounded-full bg-slate-300" :style="`width:${costBarWidth(planActivityTotal(['accommodation']))}%`"></div>
                                 </div>
@@ -4270,13 +4270,6 @@
 
                 costBarWidth(value) {
                     return Math.min(Math.max(this.costPercent(value), 0), 100);
-                },
-
-                lodgingTargetLabel() {
-                    const lodgingPct = this.costPercent(this.planActivityTotal(['accommodation']));
-                    const diff = lodgingPct - 60;
-                    if (Math.abs(diff) <= 5) return 'gần mốc đẹp 60%';
-                    return diff > 0 ? `cao hơn mốc 60% +${diff}%` : `dưới mốc 60% ${diff}%`;
                 },
 
                 sharePlan() {
