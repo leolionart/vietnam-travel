@@ -927,11 +927,11 @@
                         </label>
                         <label class="space-y-1">
                             <span class="text-[9px] font-bold text-slate-500 uppercase">Giờ</span>
-                            <input type="time" step="60" x-model="activityDraft.scheduledTime" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400">
+                            <input type="time" step="1800" x-model="activityDraft.scheduledTime" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400">
                         </label>
                         <label class="space-y-1">
                             <span class="text-[9px] font-bold text-slate-500 uppercase">Phút</span>
-                            <input type="number" min="1" step="1" x-model="activityDraft.durationMinutes" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400">
+                            <input type="number" min="30" step="30" x-model="activityDraft.durationMinutes" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400">
                         </label>
                         <label class="space-y-1">
                             <span class="text-[9px] font-bold text-slate-500 uppercase">Số ngày</span>
@@ -3275,7 +3275,8 @@
                     const endMinutes = 22 * 60;
                     const ratio = Math.min(Math.max((event.clientY - rect.top) / Math.max(rect.height, 1), 0), 1);
                     const raw = startMinutes + (ratio * (endMinutes - startMinutes));
-                    const minutes = Math.min(Math.max(Math.round(raw), startMinutes), endMinutes - 1);
+                    const snapped = Math.round(raw / 30) * 30;
+                    const minutes = Math.min(Math.max(snapped, startMinutes), endMinutes - 30);
                     return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
                 },
 
@@ -3318,9 +3319,10 @@
                     const startMinutes = 6 * 60;
                     const endMinutes = 22 * 60;
                     const ratio = Math.min(Math.max((event.clientY - active.columnTop) / Math.max(active.columnHeight, 1), 0), 1);
-                    const pointerMinutes = Math.round(startMinutes + (ratio * (endMinutes - startMinutes)));
+                    const rawPointerMinutes = startMinutes + (ratio * (endMinutes - startMinutes));
+                    const pointerMinutes = Math.round(rawPointerMinutes / 30) * 30;
                     const durationMinutes = Math.min(
-                        Math.max(pointerMinutes - active.startMinutes, 1),
+                        Math.max(pointerMinutes - active.startMinutes, 30),
                         endMinutes - active.startMinutes
                     );
                     this.calendarScheduleChangeForSub(active.subLocationId, active.locationId, { durationMinutes });
