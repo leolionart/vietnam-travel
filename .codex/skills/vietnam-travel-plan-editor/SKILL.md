@@ -14,7 +14,7 @@ tools over raw HTTP calls unless debugging the API itself.
 - Never write admin passwords, JWTs, or server secrets to tracked files, docs, commits, logs, or final replies.
 - Prefer `TRAVEL_ADMIN_PASSWORD` in the shell environment for CLI admin writes.
 - For MCP admin writes, pass `adminPassword` only as a tool argument for that call, or use `set_admin_password` for the current MCP session.
-- If the user has no admin password, create/edit a session plan and return the `?session=...` share URL.
+- If the user has no admin password, create/edit a session plan and return the `?slug=...` share URL.
 - Deploys must preserve DB data. Do not use deploy/migration to move local plan data to prod.
 - Do not edit deprecated root `index.html`, root `vite.config.ts`, or `dev-server.ts`.
 
@@ -178,8 +178,8 @@ Stdio MCP config can point to prod without storing the password:
 Then call `set_admin_password` in the MCP session before write tools.
 
 Without an admin password, MCP writes create/update a user session plan and
-return a `shareUrl` like `https://trips.naai.studio/?session=...`. Use that
-`shareUrl` or `sessionId` in follow-up tools. With an admin password, pass
+return a `shareUrl` like `https://trips.naai.studio/?slug=...`. Use that
+`shareUrl`, `slug`, or `sessionId` in follow-up tools. With an admin password, pass
 `adminPassword` and `planSlug` to edit the sample/admin plan directly.
 
 Read-only MCP tools available for planning:
@@ -196,7 +196,7 @@ Full setup notes for other AI systems live in `docs/ai-integration.md`.
 ## Recommended AI Workflow
 
 1. Identify target:
-   - `?session=...` or `sessionId`: edit the user's session plan.
+   - `?slug=...` returned by MCP, or `sessionId`: edit the user's session plan.
    - `?slug=...` with admin password: edit the sample/admin plan.
    - `?slug=...` without admin password: read the sample plan, then create a
      new session plan for user edits.

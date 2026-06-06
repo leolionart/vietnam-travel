@@ -122,7 +122,7 @@ export function listPlans() {
 
 export function getPlanBySlug(slug: string) {
     const db = getDb();
-    const plan = db.prepare('SELECT * FROM plans WHERE slug = ? AND session_id IS NULL').get(slug) as DbPlan | undefined;
+    const plan = db.prepare('SELECT * FROM plans WHERE slug = ?').get(slug) as DbPlan | undefined;
     if (!plan) return null;
 
     const locs = db.prepare(
@@ -139,6 +139,7 @@ export function getPlanBySlug(slug: string) {
         slug: plan.slug,
         name: plan.name,
         dateRange: plan.date_range,
+        sessionId: plan.session_id,
         locations,
     };
 }
@@ -202,6 +203,7 @@ export function getPlanBySessionId(sessionId: string) {
         slug: plan.slug,
         name: plan.name,
         dateRange: plan.date_range,
+        sessionId: plan.session_id,
         locations,
     };
 }

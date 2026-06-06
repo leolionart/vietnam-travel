@@ -8,7 +8,7 @@ AI systems can inspect and edit travel plans without direct database access.
 - Public app: `https://trips.naai.studio`
 - MCP endpoint: `https://trips.naai.studio/mcp`
 - Public plan URL: `https://trips.naai.studio/?slug=<slug>`
-- Session plan URL: `https://trips.naai.studio/?session=<sessionId>`
+- Session plan URL: `https://trips.naai.studio/?slug=<pretty-slug>`
 
 ## MCP Setup
 
@@ -42,8 +42,8 @@ current MCP session.
 ## Editing Modes
 
 - No admin password: `create_plan` creates a session plan and returns
-  `shareUrl` with `?session=...`. Follow-up write tools should pass
-  `shareUrl` or `sessionId`.
+  `shareUrl` with `?slug=...`. Follow-up write tools should pass
+  `shareUrl`, `slug`, or `sessionId`.
 - With admin password: write tools can edit admin/sample plans by passing
   `adminPassword` and `planSlug`.
 - Read-only tools do not need an admin password.

@@ -1491,10 +1491,8 @@
                         }
 
                         if (!sessionPlanLoaded) {
-                            if (!this.planList.length) return;
-                            const initialSlug = (slugParam && this.planList.find(p => p.slug === slugParam))
-                                ? slugParam
-                                : this.planList[0].slug;
+                            if (!slugParam && !this.planList.length) return;
+                            const initialSlug = slugParam || this.planList[0].slug;
                             await this.changePlan(initialSlug); // lazy load plan đầu tiên
                             // Nếu có ?session= trong URL → load user customization (override localStorage)
                             if (sessionParam) {
@@ -2071,7 +2069,7 @@
                 },
 
                 async changePlan(planId) {
-                    if (!planId) return;
+                    if (!planId) return false;
 
                     // Lazy fetch nếu chưa có trong cache
                     if (!this.plans[planId]) {
@@ -2084,11 +2082,12 @@
                                 name: full.name,
                                 slug: full.slug,
                                 dateRange: full.dateRange,
+                                sessionId: full.sessionId || null,
                                 locations: full.locations,
                             };
                         } catch (e) {                            console.error('Lỗi tải plan:', e);
                             this.planLoading = false;
-                            return;
+                            return false;
                         }
                         this.planLoading = false;
                     }
@@ -2096,6 +2095,7 @@
                     this.currentPlanId = planId;
                     this.mySessionId = null;
                     this.sessionSourceId = null;
+                    this.isSessionPlan = !!this.currentPlan.sessionId;
                     this.excludedSubs = {};
                     this.excludedLocations = {};
                     this.scheduleOverrides = {};
@@ -2111,6 +2111,7 @@
                         if (!this.map) this.initMap();
                         else this.updateMap(true);
                     });
+                    return true;
                 },
 
                 syncPlanSlugToUrl() {
@@ -2169,19 +2170,18 @@
 
                 async reloadCurrentPlan() {
                     const activeId = this.activeId;
-                    const sessionId = this.isSessionPlan ? this.currentPlanId : null;
                     const slug = this.currentPlan.slug || this.currentPlanId;
-                    const res = this.isSessionPlan
-                        ? await fetch(`/api/sessions/plan/${encodeURIComponent(sessionId)}`)
-                        : await fetch(`/api/plans/${encodeURIComponent(slug)}`);
+                    const res = await fetch(`/api/plans/${encodeURIComponent(slug)}`);
                     if (!res.ok) throw new Error(await this.calendarSaveErrorMessage(res));
                     const full = await res.json();
                     this.plans[this.currentPlanId] = {
                         name: full.name,
                         slug: full.slug,
                         dateRange: full.dateRange,
+                        sessionId: full.sessionId || null,
                         locations: full.locations,
                     };
+                    this.isSessionPlan = !!full.sessionId;
                     const sameLocation = this.currentPlan.locations.find(loc => loc.id === activeId);
                     this.activeId = sameLocation?.id ?? this.currentPlan.locations?.[0]?.id ?? null;
                     this.resetScheduleEditState();

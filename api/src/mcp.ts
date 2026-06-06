@@ -139,6 +139,17 @@ function extractSessionId(input: unknown): string | null {
     }
 }
 
+function extractSlug(input: unknown): string | null {
+    if (typeof input !== 'string' || !input.trim()) return null;
+    const value = input.trim();
+    try {
+        const url = new URL(value);
+        return url.searchParams.get('slug') || url.searchParams.get('plan') || null;
+    } catch {
+        return value;
+    }
+}
+
 // ─── MCP Server ───────────────────────────────────────────────────────────────
 
 const server = new Server(
@@ -458,10 +469,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 case 'get_plan':
                     if (args.sessionId || args.shareUrl) {
                         const sessionId = extractSessionId(args.sessionId) || extractSessionId(args.shareUrl);
-                        if (!sessionId) return err('Invalid sessionId/shareUrl');
-                        return ok(await client.get(`/api/sessions/plan/${sessionId}`));
+                        if (sessionId) return ok(await client.get(`/api/sessions/plan/${sessionId}`));
                     }
-                    return ok(await client.get(`/api/plans/${slug}`));
+                    return ok(await client.get(`/api/plans/${extractSlug(args.shareUrl) || slug}`));
 
                 case 'analyze_activity_proximity': {
                     const qs = new URLSearchParams();
@@ -486,9 +496,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
                 case 'create_plan': {
                     const result = await client.post('/api/plans', stripMcpMeta({ slug: args.slug, name: args.name, dateRange: args.dateRange })) as { slug: string; sessionId?: string };
-                    const shareUrl = result.sessionId
-                        ? `${REMOTE_API_URL}/?session=${result.sessionId}`
-                        : `${REMOTE_API_URL}/?slug=${result.slug}`;
+                    const shareUrl = `${REMOTE_API_URL}/?slug=${result.slug}`;
                     return ok({ ...result, shareUrl });
                 }
 

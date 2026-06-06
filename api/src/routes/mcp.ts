@@ -101,7 +101,8 @@ function getEditablePlanRef(args: Record<string, unknown>): SessionPlanRef | nul
 
 function planPayload(ref: SessionPlanRef) {
     if (ref.sessionId) {
-        return { ...getPlanBySessionId(ref.sessionId), sessionId: ref.sessionId, shareUrl: `${APP_URL}/?session=${ref.sessionId}` };
+        const plan = getPlanBySessionId(ref.sessionId);
+        return { ...plan, sessionId: ref.sessionId, shareUrl: `${APP_URL}/?slug=${plan?.slug || ref.slug}` };
     }
     const plan = getPlanBySlug(ref.slug);
     return { ...plan, shareUrl: `${APP_URL}/?slug=${ref.slug}` };
@@ -138,7 +139,7 @@ const TOOL_DEFINITIONS = [
         inputSchema: {
             type: 'object',
             properties: {
-                shareUrl: { type: 'string', description: 'Link share dạng https://trips.naai.studio/?session=...' },
+                shareUrl: { type: 'string', description: 'Link share dạng https://trips.naai.studio/?slug=...' },
                 sessionId: { type: 'string' },
                 slug: { type: 'string' },
             },
@@ -150,7 +151,7 @@ const TOOL_DEFINITIONS = [
         inputSchema: {
             type: 'object',
             properties: {
-                shareUrl: { type: 'string', description: 'Link share dạng https://trips.naai.studio/?session=...' },
+                shareUrl: { type: 'string', description: 'Link share dạng https://trips.naai.studio/?slug=...' },
                 sessionId: { type: 'string' },
                 slug: { type: 'string', description: 'Slug plan mẫu/admin để đọc' },
                 planSlug: { type: 'string' },
@@ -391,14 +392,15 @@ function buildServer(): Server {
                             dateRange: a.dateRange as string | undefined,
                             sessionId,
                         });
-                        return ok({ ...plan, sessionId, shareUrl: `${APP_URL}/?session=${sessionId}` });
+                        return ok({ ...plan, sessionId, shareUrl: `${APP_URL}/?slug=${plan.slug}` });
                     }
                 }
 
                 case 'get_plan': {
                     const sessionPlan = getSessionPlanRef(a);
                     if (sessionPlan?.sessionId) {
-                        return ok({ ...getPlanBySessionId(sessionPlan.sessionId), sessionId: sessionPlan.sessionId, shareUrl: `${APP_URL}/?session=${sessionPlan.sessionId}` });
+                        const plan = getPlanBySessionId(sessionPlan.sessionId);
+                        return ok({ ...plan, sessionId: sessionPlan.sessionId, shareUrl: `${APP_URL}/?slug=${plan?.slug || sessionPlan.slug}` });
                     }
 
                     if (typeof a.slug !== 'string') return err('Provide shareUrl, sessionId, or slug');
@@ -458,7 +460,7 @@ function buildServer(): Server {
                     const ref = getEditablePlanRef(a);
                     if (!ref) return err('Plan not found or admin password missing. Provide session shareUrl/sessionId, or adminPassword with slug/planSlug.');
                     const id = addLocation(ref.id, stripMcpMeta(a) as unknown as CreateLocationInput);
-                    return ok({ id, planSlug: ref.slug, sessionId: ref.sessionId ?? undefined, shareUrl: ref.sessionId ? `${APP_URL}/?session=${ref.sessionId}` : `${APP_URL}/?slug=${ref.slug}` });
+                    return ok({ id, planSlug: ref.slug, sessionId: ref.sessionId ?? undefined, shareUrl: `${APP_URL}/?slug=${ref.slug}` });
                 }
 
                 case 'update_location': {
@@ -492,7 +494,7 @@ function buildServer(): Server {
                     const result = db.prepare(
                         'INSERT INTO sub_locations (location_id, sort_order, name, lat, lng, duration_minutes, duration_days, scheduled_date, scheduled_period, scheduled_time, description, activity_type, transport_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price, participant_adults, participant_children) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
                     ).run(a.locationId, a.sortOrder ?? maxOrder + 1, a.name, a.lat ?? 0, a.lng ?? 0, a.durationMinutes ?? 60, a.durationDays ?? 0, a.scheduledDate ?? '', a.scheduledPeriod ?? '', a.scheduledTime ?? '', a.description ?? '', a.activityType ?? 'sightseeing', a.transportType ?? '', a.pricingMode ?? 'per_person', a.unitPrice ?? 0, a.quantity ?? 1, a.surcharge ?? 0, a.adultPrice ?? 0, a.childPrice ?? 0, a.participantAdults ?? null, a.participantChildren ?? null);
-                    return ok({ id: result.lastInsertRowid, planSlug: ref.slug, sessionId: ref.sessionId ?? undefined, shareUrl: ref.sessionId ? `${APP_URL}/?session=${ref.sessionId}` : `${APP_URL}/?slug=${ref.slug}` });
+                    return ok({ id: result.lastInsertRowid, planSlug: ref.slug, sessionId: ref.sessionId ?? undefined, shareUrl: `${APP_URL}/?slug=${ref.slug}` });
                 }
 
                 case 'update_sub_location': {
