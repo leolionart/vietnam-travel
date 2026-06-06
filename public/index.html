@@ -212,6 +212,108 @@
         </div>
     </div>
 
+    <!-- Event Detail Page -->
+    <main x-show="viewMode === 'event'"
+          x-cloak
+          x-transition:enter="transition ease-out duration-200"
+          x-transition:enter-start="opacity-0 translate-y-3"
+          x-transition:enter-end="opacity-100 translate-y-0"
+          class="fixed inset-x-3 top-24 bottom-3 z-40 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/85 shadow-2xl backdrop-blur-xl lg:inset-x-8 lg:top-24 lg:bottom-6">
+        <template x-if="eventDetail()">
+            <article class="mx-auto flex min-h-full max-w-5xl flex-col">
+                <div class="relative h-56 flex-none overflow-hidden rounded-t-2xl lg:h-80">
+                    <img :src="eventThumbnailUrl(eventDetail().activity, eventDetail().location)"
+                         @error="$event.target.src = locationImg(eventDetail().location?.name || eventDetail().activity?.name)"
+                         referrerpolicy="no-referrer"
+                         class="h-full w-full object-cover"
+                         :alt="eventDetail().activity?.name || eventDetail().location?.name">
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-slate-950/10"></div>
+                    <button type="button"
+                            @click="closeEventDetail()"
+                            class="absolute left-4 top-4 inline-flex items-center gap-2 rounded-xl border border-white/15 bg-black/45 px-3 py-2 text-xs font-bold text-white backdrop-blur-md transition hover:bg-white/10">
+                        <i data-lucide="arrow-left" class="h-4 w-4"></i>
+                        Quay lại
+                    </button>
+                    <a :href="activityGoogleMapsUrl(eventDetail().activity, eventDetail().location)"
+                       target="_blank"
+                       rel="noopener"
+                       class="absolute right-4 top-4 inline-flex items-center gap-2 rounded-xl border border-sky-300/20 bg-sky-400/15 px-3 py-2 text-xs font-bold text-sky-100 backdrop-blur-md transition hover:bg-sky-400/25">
+                        <i data-lucide="map-pin" class="h-4 w-4"></i>
+                        Google Maps
+                    </a>
+                    <div class="absolute bottom-5 left-5 right-5">
+                        <p class="text-[10px] font-black uppercase tracking-[0.18em] text-slate-300" x-text="activityTypeLabel(eventDetail().activity?.activityType || 'other')"></p>
+                        <h2 class="mt-2 max-w-3xl text-3xl font-bold leading-tight text-white lg:text-5xl" x-text="eventDetail().activity?.name || eventDetail().location?.name"></h2>
+                        <p class="mt-2 text-sm font-semibold text-slate-300" x-show="eventDetail().location?.name" x-text="eventDetail().location?.name"></p>
+                    </div>
+                </div>
+
+                <div class="grid flex-1 gap-4 p-4 lg:grid-cols-[1.4fr_0.8fr] lg:p-6">
+                    <section class="space-y-4">
+                        <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                            <div class="grid gap-3 sm:grid-cols-2">
+                                <div class="rounded-xl border border-white/5 bg-black/15 px-3 py-3">
+                                    <p class="text-[9px] font-black uppercase tracking-wider text-slate-500">Thời gian</p>
+                                    <p class="mt-1 text-sm font-bold text-white" x-text="eventScheduleLabel(eventDetail().activity)"></p>
+                                </div>
+                                <div class="rounded-xl border border-white/5 bg-black/15 px-3 py-3">
+                                    <p class="text-[9px] font-black uppercase tracking-wider text-slate-500">Thời lượng</p>
+                                    <p class="mt-1 text-sm font-bold text-white" x-text="activityDurationLabel(eventDetail().activity)"></p>
+                                </div>
+                                <div class="rounded-xl border border-white/5 bg-black/15 px-3 py-3">
+                                    <p class="text-[9px] font-black uppercase tracking-wider text-slate-500">Chi phí</p>
+                                    <p class="mt-1 text-sm font-bold text-amber-200" x-text="eventCostLabel(eventDetail().activity, eventDetail().location)"></p>
+                                </div>
+                                <div class="rounded-xl border border-white/5 bg-black/15 px-3 py-3">
+                                    <p class="text-[9px] font-black uppercase tracking-wider text-slate-500">Người tham gia</p>
+                                    <p class="mt-1 text-sm font-bold text-white" x-text="eventParticipantsLabel(eventDetail().activity)"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                            <p class="text-[9px] font-black uppercase tracking-wider text-slate-500">Ghi chú</p>
+                            <p class="mt-2 text-sm leading-relaxed text-slate-200" x-text="eventDetail().activity?.description || 'Chưa có ghi chú cho event này.'"></p>
+                        </div>
+                    </section>
+
+                    <aside class="space-y-4">
+                        <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                            <p class="text-[9px] font-black uppercase tracking-wider text-slate-500">Địa điểm</p>
+                            <p class="mt-2 text-base font-bold text-white" x-text="eventDetail().activity?.address || eventDetail().activity?.name || eventDetail().location?.name"></p>
+                            <p class="mt-1 text-xs text-slate-400" x-text="[eventDetail().location?.name, eventDetail().location?.province].filter(Boolean).join(' · ')"></p>
+                            <a :href="activityGoogleMapsUrl(eventDetail().activity, eventDetail().location)"
+                               target="_blank"
+                               rel="noopener"
+                               class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-sky-400">
+                                <i data-lucide="external-link" class="h-4 w-4"></i>
+                                Mở trên Google Maps
+                            </a>
+                        </div>
+                        <div x-show="canCrudPlan() && eventHasEditableActivity(eventDetail().activity)" class="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                            <p class="text-[9px] font-black uppercase tracking-wider text-slate-500">Chỉnh sửa</p>
+                            <button type="button"
+                                    @click="startEditActivity(eventDetail().activity); viewMode = eventReturnMode || 'calendar'; calendarSidebarOpen = true; syncPlanSlugToUrl()"
+                                    class="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/8 px-4 py-2.5 text-xs font-bold text-slate-100 transition hover:bg-white/12">
+                                <i data-lucide="pencil" class="h-4 w-4"></i>
+                                Sửa event này
+                            </button>
+                        </div>
+                    </aside>
+                </div>
+            </article>
+        </template>
+        <template x-if="!eventDetail()">
+            <div class="flex min-h-full items-center justify-center p-6 text-center">
+                <div>
+                    <i data-lucide="calendar-x" class="mx-auto mb-4 h-10 w-10 text-slate-500"></i>
+                    <p class="text-sm font-bold text-slate-200">Không tìm thấy event</p>
+                    <button type="button" @click="closeEventDetail()" class="mt-4 rounded-xl bg-white px-4 py-2 text-xs font-bold text-slate-900">Quay lại lịch</button>
+                </div>
+            </div>
+        </template>
+    </main>
+
     <!-- Top Navigation -->
     <header class="fixed top-0 left-0 w-full z-50 p-4 lg:p-6 flex flex-col lg:flex-row justify-between items-center gap-4 pointer-events-none">
         <div class="glass px-3 py-2 rounded-2xl flex items-center gap-3 pointer-events-auto w-full lg:w-auto cursor-pointer" @click="closeDetailPanel()">
@@ -1458,6 +1560,8 @@
                 detailScrolled: false,
                 detailMode: 'overview',
                 calendarSidebarOpen: false,
+                selectedEventId: null,
+                eventReturnMode: 'calendar',
                 map: null,
                 markers: {},
                 polyline: null,
@@ -1509,6 +1613,10 @@
 
                 setViewMode(mode, options = {}) {
                     this.viewMode = mode;
+                    if (mode !== 'event') {
+                        this.selectedEventId = null;
+                        this.selectedActivityId = null;
+                    }
                     if (!options.skipUrl) this.syncPlanSlugToUrl();
                     if (mode === 'map') {
                         this.$nextTick(() => {
@@ -1580,6 +1688,7 @@
                         const requestedWeek = Math.max(0, Number(url.searchParams.get('week') || 1) - 1);
                         const slugParam = url.searchParams.get('slug') || url.searchParams.get('plan');
                         const sessionParam = url.searchParams.get('session');
+                        const eventParam = url.searchParams.get('event');
 
                         // Thử load session plan (tạo bởi public MCP) trước
                         let sessionPlanLoaded = false;
@@ -1605,6 +1714,7 @@
                         }
                         this.calendarWeekIndex = Number.isFinite(requestedWeek) ? requestedWeek : 0;
                         this.clampCalendarWeek();
+                        if (eventParam) this.openEventFromUrl(eventParam, pathViewMode);
                     } catch (e) {
                         console.error("Lỗi khi tải dữ liệu kế hoạch:", e);
                     }
@@ -1646,6 +1756,7 @@
                     const requested = params.get('view');
                     if (requested === 'calendar' || requested === 'map' || requested === 'month') return requested;
                     const cleanPath = String(pathname || '').replace(/\/+$/, '') || '/';
+                    if (cleanPath === '/event') return 'event';
                     if (cleanPath === '/calendar') return 'calendar';
                     if (cleanPath === '/month') return 'month';
                     if (cleanPath === '/map') return 'map';
@@ -1966,14 +2077,20 @@
 
                 setActive(id) {
                     this.selectedActivityId = null;
+                    this.selectedEventId = null;
                     this.activeId = id;
                     this.updateMap(false);
                 },
 
                 closeDetailPanel() {
+                    if (this.viewMode === 'event') {
+                        this.closeEventDetail();
+                        return;
+                    }
                     this.calendarSidebarOpen = false;
                     this.activeId = null;
                     this.selectedActivityId = null;
+                    this.selectedEventId = null;
                     this.detailMode = 'overview';
                     this.detailScrolled = false;
                     this.markerPopup = null;
@@ -2229,15 +2346,19 @@
                     const slug = plan.slug || (this.isSessionPlan ? url.searchParams.get('slug') : this.currentPlanId);
                     if (slug) url.searchParams.set('slug', slug);
                     if (!this.mySessionId) url.searchParams.delete('session');
+                    if (this.viewMode === 'event' && this.selectedEventId) url.searchParams.set('event', this.selectedEventId);
+                    else url.searchParams.delete('event');
                     window.history.replaceState({}, '', this.urlForView(this.viewMode, url));
                 },
 
                 urlForView(mode = this.viewMode, sourceUrl = new URL(window.location.href)) {
                     const url = new URL(sourceUrl.toString());
-                    if (mode === 'month') url.pathname = '/month';
+                    if (mode === 'event') url.pathname = '/event';
+                    else if (mode === 'month') url.pathname = '/month';
                     else url.pathname = mode === 'calendar' ? '/calendar' : '/map';
                     url.searchParams.delete('view');
                     url.searchParams.delete('week');
+                    if (mode !== 'event') url.searchParams.delete('event');
                     return url.toString();
                 },
 
@@ -3035,7 +3156,7 @@
                 },
 
                 calendarEventGlyph(event) {
-                    if (event?.activityType === 'accommodation' || (event?.type === 'stay' && event?.subLocationId)) return '🏨';
+                    if (event?.activityType === 'accommodation' || (event?.type === 'stay' && event?.subLocationId)) return '🛏';
                     if (event?.type === 'stay') return '📍';
                     if (event?.activityType === 'food') return '🍽';
                     if (event?.activityType === 'cafe') return '☕';
@@ -3445,31 +3566,34 @@
                     const events = this.calendarTimedEvents(day)
                         .slice()
                         .sort((a, b) => this.calendarEventStartMinutes(a) - this.calendarEventStartMinutes(b) || (a.order || 0) - (b.order || 0));
-                    const active = [];
-                    let clusterEvents = [];
-                    let clusterLaneCount = 0;
-                    return events.map(event => {
+                    const clusters = [];
+                    let current = null;
+                    events.forEach(event => {
                         const start = this.calendarEventStartMinutes(event);
                         const end = start + this.calendarEventDurationMinutes(event);
-                        for (let index = active.length - 1; index >= 0; index -= 1) {
-                            if (active[index].end <= start) active.splice(index, 1);
+                        const item = { ...event, weekStart: start, weekEnd: end };
+                        if (!current || start >= current.end) {
+                            current = { end, events: [item] };
+                            clusters.push(current);
+                        } else {
+                            current.events.push(item);
+                            current.end = Math.max(current.end, end);
                         }
-                        if (!active.length) {
-                            clusterEvents = [];
-                            clusterLaneCount = 0;
-                        }
-                        const usedLanes = new Set(active.map(item => item.lane));
-                        let lane = 0;
-                        while (usedLanes.has(lane)) lane += 1;
-                        const nextEvent = { ...event, weekLane: lane, weekLaneCount: 1 };
-                        active.push({ end, lane, event: nextEvent });
-                        active.sort((a, b) => a.end - b.end || a.lane - b.lane);
-                        clusterEvents.push(nextEvent);
-                        clusterLaneCount = Math.max(clusterLaneCount, active.length, lane + 1);
-                        clusterEvents.forEach(item => {
-                            item.weekLaneCount = clusterLaneCount;
+                    });
+                    return clusters.flatMap(cluster => {
+                        if (cluster.events.length === 1) return cluster.events;
+                        const background = cluster.events
+                            .slice()
+                            .sort((a, b) => this.calendarEventDurationMinutes(b) - this.calendarEventDurationMinutes(a) || a.weekStart - b.weekStart)[0];
+                        return cluster.events.map(event => {
+                            const isBackground = event.id === background.id;
+                            const duration = this.calendarEventDurationMinutes(event);
+                            return {
+                                ...event,
+                                weekOverlapRole: isBackground ? 'background' : 'overlay',
+                                weekZ: isBackground ? 10 : 30 + Math.max(0, Math.round((8 * 60 - duration) / 30)),
+                            };
                         });
-                        return nextEvent;
                     });
                 },
 
@@ -3534,16 +3658,10 @@
                     const end = Math.min(start + duration, dayEnd);
                     const top = ((start - dayStart) / 60) * rowHeight;
                     const height = Math.max(1, ((end - start) / 60) * rowHeight - 2);
-                    const laneCount = Math.max(1, Number(event.weekLaneCount || 1));
-                    const lane = Math.min(Math.max(Number(event.weekLane || 0), 0), laneCount - 1);
-                    const gap = laneCount > 1 ? 3 : 0;
-                    const leftPercent = (lane / laneCount) * 100;
-                    const rightPercent = ((laneCount - lane - 1) / laneCount) * 100;
-                    const leftGap = lane > 0 ? gap / 2 : 0;
-                    const rightGap = lane < laneCount - 1 ? gap / 2 : 0;
-                    const left = `calc(${leftPercent}% + 0.25rem + ${leftGap}px)`;
-                    const right = `calc(${rightPercent}% + 0.25rem + ${rightGap}px)`;
-                    return `top:${top}px;height:${height}px;left:${left};right:${right};width:auto;z-index:${10 + lane}`;
+                    if (event.weekOverlapRole === 'overlay') {
+                        return `top:${top}px;height:${height}px;left:calc(50% + 0.125rem);right:0.25rem;width:auto;z-index:${event.weekZ || 30}`;
+                    }
+                    return `top:${top}px;height:${height}px;left:0.25rem;right:0.25rem;width:auto;z-index:${event.weekZ || 10}`;
                 },
 
                 calendarWeekEventTimeLabel(event) {
@@ -3920,11 +4038,113 @@
 
                 openCalendarEvent(event) {
                     if (!event?.locationId) return;
+                    this.eventReturnMode = this.viewMode === 'event' ? (this.eventReturnMode || 'calendar') : this.viewMode;
                     this.activeId = event.locationId;
                     this.selectedActivityId = event.subLocationId ? Number(event.subLocationId) : null;
+                    this.selectedEventId = event.subLocationId ? String(event.subLocationId) : String(event.id || event.locationId);
                     this.detailMode = event.subLocationId ? 'detail' : 'overview';
-                    this.calendarSidebarOpen = true;
+                    this.calendarSidebarOpen = false;
+                    this.viewMode = 'event';
+                    this.syncPlanSlugToUrl();
                     this.$nextTick(() => lucide.createIcons());
+                },
+
+                openEventFromUrl(eventId, sourceMode = 'event') {
+                    const detail = this.findEventDetail(eventId);
+                    this.selectedEventId = String(eventId || '');
+                    this.eventReturnMode = sourceMode === 'event' ? 'calendar' : sourceMode;
+                    if (detail?.location?.id) this.activeId = detail.location.id;
+                    if (detail?.activity?.id) this.selectedActivityId = Number(detail.activity.id);
+                    this.detailMode = detail?.activity ? 'detail' : 'overview';
+                    this.viewMode = 'event';
+                    this.$nextTick(() => lucide.createIcons());
+                },
+
+                closeEventDetail() {
+                    const nextMode = this.eventReturnMode || 'calendar';
+                    this.viewMode = nextMode === 'event' ? 'calendar' : nextMode;
+                    this.selectedEventId = null;
+                    this.selectedActivityId = null;
+                    this.syncPlanSlugToUrl();
+                    this.$nextTick(() => {
+                        if (this.viewMode === 'map' && this.map) {
+                            this.map.invalidateSize();
+                            this.updateMap(true);
+                        }
+                        lucide.createIcons();
+                    });
+                },
+
+                findEventDetail(eventId = this.selectedEventId) {
+                    const wanted = String(eventId || '').replace(/^(activity|event|sub)-/, '');
+                    if (!wanted) return null;
+                    for (const loc of this.currentPlan.locations || []) {
+                        const activity = (loc.subLocations || []).find(sub => String(sub.id) === wanted);
+                        if (activity) return { location: loc, activity };
+                        if (String(loc.id) === wanted || `stay-${loc.id}` === String(eventId)) {
+                            return { location: loc, activity: this.locationAsEventActivity(loc) };
+                        }
+                    }
+                    return null;
+                },
+
+                eventDetail() {
+                    return this.findEventDetail(this.selectedEventId || this.selectedActivityId);
+                },
+
+                locationAsEventActivity(loc) {
+                    return {
+                        id: `location-${loc?.id || ''}`,
+                        name: loc?.name || 'Địa điểm',
+                        address: loc?.name || '',
+                        activityType: 'other',
+                        durationDays: loc?.duration || 0,
+                        scheduledDate: '',
+                        scheduledTime: '',
+                        description: loc?.province ? `Điểm dừng tại ${loc.province}` : '',
+                        lat: loc?.lat,
+                        lng: loc?.lng,
+                    };
+                },
+
+                eventScheduleLabel(activity) {
+                    const date = activity?.scheduledDate || '';
+                    const time = activity?.scheduledTime || activity?.scheduledPeriod || '';
+                    return [date, time].filter(Boolean).join(' · ') || 'Chưa khai báo giờ';
+                },
+
+                eventParticipantsLabel(activity) {
+                    const adults = Number(activity?.participantAdults ?? 0);
+                    const children = Number(activity?.participantChildren ?? 0);
+                    const parts = [];
+                    if (adults > 0) parts.push(`${adults} người lớn`);
+                    if (children > 0) parts.push(`${children} trẻ em`);
+                    return parts.join(' · ') || 'Chưa khai báo';
+                },
+
+                eventCostLabel(activity, loc) {
+                    const cost = this.subActivityCost(activity, loc);
+                    return cost > 0 ? this.formatCurrency(cost) : 'Chưa khai báo / miễn phí';
+                },
+
+                eventHasEditableActivity(activity) {
+                    return Number.isFinite(Number(activity?.id));
+                },
+
+                eventThumbnailUrl(activity, loc) {
+                    const direct = activity?.imageUrl || activity?.photoUrl || activity?.thumbnailUrl || activity?.thumbUrl;
+                    if (direct) return direct;
+                    const params = new URLSearchParams();
+                    const lat = Number(activity?.lat || loc?.lat);
+                    const lng = Number(activity?.lng || loc?.lng);
+                    if (Number.isFinite(lat) && Number.isFinite(lng) && (lat !== 0 || lng !== 0)) {
+                        params.set('lat', String(lat));
+                        params.set('lng', String(lng));
+                    }
+                    if (activity?.address) params.set('address', activity.address);
+                    if (activity?.name) params.set('name', activity.name);
+                    if (loc?.name) params.set('location', loc.name);
+                    return `/api/maps/thumbnail?${params.toString()}`;
                 },
 
                 visibleDetailActivities(loc) {

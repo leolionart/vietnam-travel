@@ -13,6 +13,7 @@ import vexereRouter from './routes/vexere.js';
 import healthRouter from './routes/health.js';
 import mcpRouter from './routes/mcp.js';
 import activitiesRouter from './routes/activities.js';
+import mapsRouter from './routes/maps.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -28,6 +29,7 @@ app.use('/api/public', publicRouter);
 app.use('/api/sessions', sessionsRouter);
 app.use('/api/vexere-link', vexereRouter);
 app.use('/api/health', healthRouter);
+app.use('/api/maps', mapsRouter);
 app.use('/api', activitiesRouter);
 app.use('/api/admin', activitiesRouter);
 app.use('/mcp', mcpRouter);
