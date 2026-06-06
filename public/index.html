@@ -212,16 +212,34 @@
         </div>
     </div>
 
-    <!-- Event Detail Page -->
-    <main x-show="viewMode === 'event'"
-          x-cloak
-          x-transition:enter="transition ease-out duration-200"
-          x-transition:enter-start="opacity-0 translate-y-3"
-          x-transition:enter-end="opacity-100 translate-y-0"
-          class="fixed inset-x-3 top-24 bottom-3 z-40 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/85 shadow-2xl backdrop-blur-xl lg:inset-x-8 lg:top-24 lg:bottom-6">
-        <template x-if="eventDetail()">
-            <article class="mx-auto flex min-h-full max-w-5xl flex-col">
-                <div class="relative h-56 flex-none overflow-hidden rounded-t-2xl lg:h-80">
+    <!-- Event Detail Drawer -->
+    <div x-show="eventDetailOpen()"
+         x-cloak
+         class="fixed inset-0 z-[70] pointer-events-none">
+        <button type="button"
+                class="absolute inset-0 bg-slate-950/45 backdrop-blur-[2px] pointer-events-auto"
+                aria-label="Đóng chi tiết event"
+                @click="closeEventDetail()"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"></button>
+
+        <aside class="absolute right-0 top-0 flex h-full w-full max-w-[460px] flex-col overflow-hidden border-l border-white/10 bg-slate-950/95 shadow-2xl backdrop-blur-xl pointer-events-auto sm:right-4 sm:top-4 sm:h-[calc(100%-2rem)] sm:rounded-[2rem] sm:border"
+               role="dialog"
+               aria-modal="true"
+               aria-label="Chi tiết event"
+               x-transition:enter="transition ease-out duration-200"
+               x-transition:enter-start="translate-x-full opacity-70"
+               x-transition:enter-end="translate-x-0 opacity-100"
+               x-transition:leave="transition ease-in duration-150"
+               x-transition:leave-start="translate-x-0 opacity-100"
+               x-transition:leave-end="translate-x-full opacity-70">
+            <template x-if="eventDetail()">
+            <article class="flex min-h-0 flex-1 flex-col">
+                <div class="relative h-52 flex-none overflow-hidden sm:rounded-t-[2rem]">
                     <img :src="eventThumbnailUrl(eventDetail().activity, eventDetail().location)"
                          @error="$event.target.src = locationImg(eventDetail().location?.name || eventDetail().activity?.name)"
                          referrerpolicy="no-referrer"
@@ -230,28 +248,27 @@
                     <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-slate-950/10"></div>
                     <button type="button"
                             @click="closeEventDetail()"
-                            class="absolute left-4 top-4 inline-flex items-center gap-2 rounded-xl border border-white/15 bg-black/45 px-3 py-2 text-xs font-bold text-white backdrop-blur-md transition hover:bg-white/10">
-                        <i data-lucide="arrow-left" class="h-4 w-4"></i>
-                        Quay lại
+                            class="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white backdrop-blur-md transition hover:bg-white/10">
+                        <i data-lucide="x" class="h-5 w-5"></i>
                     </button>
                     <a :href="activityGoogleMapsUrl(eventDetail().activity, eventDetail().location)"
                        target="_blank"
                        rel="noopener"
-                       class="absolute right-4 top-4 inline-flex items-center gap-2 rounded-xl border border-sky-300/20 bg-sky-400/15 px-3 py-2 text-xs font-bold text-sky-100 backdrop-blur-md transition hover:bg-sky-400/25">
+                       class="absolute left-4 top-4 inline-flex items-center gap-2 rounded-xl border border-sky-300/20 bg-sky-400/15 px-3 py-2 text-xs font-bold text-sky-100 backdrop-blur-md transition hover:bg-sky-400/25">
                         <i data-lucide="map-pin" class="h-4 w-4"></i>
-                        Google Maps
+                        Maps
                     </a>
                     <div class="absolute bottom-5 left-5 right-5">
                         <p class="text-[10px] font-black uppercase tracking-[0.18em] text-slate-300" x-text="activityTypeLabel(eventDetail().activity?.activityType || 'other')"></p>
-                        <h2 class="mt-2 max-w-3xl text-3xl font-bold leading-tight text-white lg:text-5xl" x-text="eventDetail().activity?.name || eventDetail().location?.name"></h2>
+                        <h2 class="mt-2 text-2xl font-bold leading-tight text-white" x-text="eventDetail().activity?.name || eventDetail().location?.name"></h2>
                         <p class="mt-2 text-sm font-semibold text-slate-300" x-show="eventDetail().location?.name" x-text="eventDetail().location?.name"></p>
                     </div>
                 </div>
 
-                <div class="grid flex-1 gap-4 p-4 lg:grid-cols-[1.4fr_0.8fr] lg:p-6">
+                <div class="min-h-0 flex-1 overflow-y-auto p-4">
                     <section class="space-y-4">
                         <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                            <div class="grid gap-3 sm:grid-cols-2">
+                            <div class="grid gap-3 grid-cols-2">
                                 <div class="rounded-xl border border-white/5 bg-black/15 px-3 py-3">
                                     <p class="text-[9px] font-black uppercase tracking-wider text-slate-500">Thời gian</p>
                                     <p class="mt-1 text-sm font-bold text-white" x-text="eventScheduleLabel(eventDetail().activity)"></p>
@@ -275,9 +292,7 @@
                             <p class="text-[9px] font-black uppercase tracking-wider text-slate-500">Ghi chú</p>
                             <p class="mt-2 text-sm leading-relaxed text-slate-200" x-text="eventDetail().activity?.description || 'Chưa có ghi chú cho event này.'"></p>
                         </div>
-                    </section>
 
-                    <aside class="space-y-4">
                         <div class="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
                             <p class="text-[9px] font-black uppercase tracking-wider text-slate-500">Địa điểm</p>
                             <p class="mt-2 text-base font-bold text-white" x-text="eventDetail().activity?.address || eventDetail().activity?.name || eventDetail().location?.name"></p>
@@ -293,26 +308,27 @@
                         <div x-show="canCrudPlan() && eventHasEditableActivity(eventDetail().activity)" class="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
                             <p class="text-[9px] font-black uppercase tracking-wider text-slate-500">Chỉnh sửa</p>
                             <button type="button"
-                                    @click="startEditActivity(eventDetail().activity); viewMode = eventReturnMode || 'calendar'; calendarSidebarOpen = true; syncPlanSlugToUrl()"
+                                    @click="startEditActivity(eventDetail().activity); calendarSidebarOpen = true; closeEventDetail()"
                                     class="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/8 px-4 py-2.5 text-xs font-bold text-slate-100 transition hover:bg-white/12">
                                 <i data-lucide="pencil" class="h-4 w-4"></i>
                                 Sửa event này
                             </button>
                         </div>
-                    </aside>
+                    </section>
                 </div>
             </article>
-        </template>
-        <template x-if="!eventDetail()">
+            </template>
+            <template x-if="!eventDetail()">
             <div class="flex min-h-full items-center justify-center p-6 text-center">
                 <div>
                     <i data-lucide="calendar-x" class="mx-auto mb-4 h-10 w-10 text-slate-500"></i>
                     <p class="text-sm font-bold text-slate-200">Không tìm thấy event</p>
-                    <button type="button" @click="closeEventDetail()" class="mt-4 rounded-xl bg-white px-4 py-2 text-xs font-bold text-slate-900">Quay lại lịch</button>
+                    <button type="button" @click="closeEventDetail()" class="mt-4 rounded-xl bg-white px-4 py-2 text-xs font-bold text-slate-900">Đóng</button>
                 </div>
             </div>
-        </template>
-    </main>
+            </template>
+        </aside>
+    </div>
 
     <!-- Top Navigation -->
     <header class="fixed top-0 left-0 w-full z-50 p-4 lg:p-6 flex flex-col lg:flex-row justify-between items-center gap-4 pointer-events-none">
@@ -1628,10 +1644,8 @@
 
                 setViewMode(mode, options = {}) {
                     this.viewMode = mode;
-                    if (mode !== 'event') {
-                        this.selectedEventId = null;
-                        this.selectedActivityId = null;
-                    }
+                    this.selectedEventId = null;
+                    this.selectedActivityId = null;
                     if (!options.skipUrl) this.syncPlanSlugToUrl();
                     if (mode === 'map') {
                         this.$nextTick(() => {
@@ -1771,7 +1785,7 @@
                     const requested = params.get('view');
                     if (requested === 'calendar' || requested === 'map' || requested === 'month') return requested;
                     const cleanPath = String(pathname || '').replace(/\/+$/, '') || '/';
-                    if (cleanPath === '/event') return 'event';
+                    if (cleanPath === '/event') return 'calendar';
                     if (cleanPath === '/calendar') return 'calendar';
                     if (cleanPath === '/month') return 'month';
                     if (cleanPath === '/map') return 'map';
@@ -2098,7 +2112,7 @@
                 },
 
                 closeDetailPanel() {
-                    if (this.viewMode === 'event') {
+                    if (this.eventDetailOpen()) {
                         this.closeEventDetail();
                         return;
                     }
@@ -2361,19 +2375,17 @@
                     const slug = plan.slug || (this.isSessionPlan ? url.searchParams.get('slug') : this.currentPlanId);
                     if (slug) url.searchParams.set('slug', slug);
                     if (!this.mySessionId) url.searchParams.delete('session');
-                    if (this.viewMode === 'event' && this.selectedEventId) url.searchParams.set('event', this.selectedEventId);
+                    if (this.selectedEventId) url.searchParams.set('event', this.selectedEventId);
                     else url.searchParams.delete('event');
                     window.history.replaceState({}, '', this.urlForView(this.viewMode, url));
                 },
 
                 urlForView(mode = this.viewMode, sourceUrl = new URL(window.location.href)) {
                     const url = new URL(sourceUrl.toString());
-                    if (mode === 'event') url.pathname = '/event';
-                    else if (mode === 'month') url.pathname = '/month';
+                    if (mode === 'month') url.pathname = '/month';
                     else url.pathname = mode === 'calendar' ? '/calendar' : '/map';
                     url.searchParams.delete('view');
                     url.searchParams.delete('week');
-                    if (mode !== 'event') url.searchParams.delete('event');
                     return url.toString();
                 },
 
@@ -4061,34 +4073,30 @@
 
                 openCalendarEvent(event) {
                     if (!event?.locationId) return;
-                    this.eventReturnMode = this.viewMode === 'event' ? (this.eventReturnMode || 'calendar') : this.viewMode;
+                    this.eventReturnMode = this.viewMode;
                     this.activeId = event.locationId;
                     this.selectedActivityId = event.subLocationId ? Number(event.subLocationId) : null;
                     this.selectedEventId = event.subLocationId ? String(event.subLocationId) : String(event.id || event.locationId);
                     this.detailMode = event.subLocationId ? 'detail' : 'overview';
                     this.calendarSidebarOpen = false;
-                    this.viewMode = 'event';
                     this.syncPlanSlugToUrl();
                     this.$nextTick(() => lucide.createIcons());
                 },
 
-                openEventFromUrl(eventId, sourceMode = 'event') {
+                openEventFromUrl(eventId, sourceMode = this.viewMode) {
                     const detail = this.findEventDetail(eventId);
                     this.selectedEventId = String(eventId || '');
                     this.eventReturnMode = sourceMode === 'event' ? 'calendar' : sourceMode;
                     if (detail?.location?.id) this.activeId = detail.location.id;
                     if (detail?.activity?.id) this.selectedActivityId = Number(detail.activity.id);
                     this.detailMode = detail?.activity ? 'detail' : 'overview';
-                    this.viewMode = 'event';
                     this.$nextTick(() => lucide.createIcons());
                 },
 
-                closeEventDetail() {
-                    const nextMode = this.eventReturnMode || 'calendar';
-                    this.viewMode = nextMode === 'event' ? 'calendar' : nextMode;
+                closeEventDetail(updateUrl = true) {
                     this.selectedEventId = null;
                     this.selectedActivityId = null;
-                    this.syncPlanSlugToUrl();
+                    if (updateUrl) this.syncPlanSlugToUrl();
                     this.$nextTick(() => {
                         if (this.viewMode === 'map' && this.map) {
                             this.map.invalidateSize();
@@ -4096,6 +4104,10 @@
                         }
                         lucide.createIcons();
                     });
+                },
+
+                eventDetailOpen() {
+                    return !!this.selectedEventId;
                 },
 
                 findEventDetail(eventId = this.selectedEventId) {
