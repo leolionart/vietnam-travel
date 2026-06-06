@@ -504,16 +504,11 @@
                                                             class="absolute left-1 right-1 text-left rounded-md border px-1.5 py-1 transition-colors overflow-hidden"
                                                             :class="calendarEventClass(event.type)"
                                                             :style="calendarWeekEventStyle(event)"
-                                                            :title="`${calendarWeekEventTimeLabel(event)} · ${event.title} - ${event.meta}`">
-                                                        <div class="flex items-start gap-1 min-w-0">
-                                                            <span class="w-3.5 flex-none text-[11px] leading-none mt-0.5" x-text="calendarEventGlyph(event)"></span>
-                                                            <div class="min-w-0 flex-1">
-                                                                <div class="flex items-start gap-1 min-w-0">
-                                                                    <p class="text-[9px] font-bold leading-snug whitespace-normal break-words min-w-0" x-text="event.title"></p>
-                                                                    <span class="text-[7px] font-bold opacity-80 flex-none leading-none mt-0.5" x-text="calendarWeekEventTimeLabel(event)"></span>
-                                                                </div>
-                                                                <p x-show="calendarEventDetail(event)" class="mt-0.5 text-[8px] font-semibold leading-snug opacity-80 whitespace-normal break-words" x-text="calendarEventDetail(event)"></p>
-                                                            </div>
+                                                            :title="[event.title, calendarWeekEventTimeLabel(event), event.locationName].filter(Boolean).join(' · ')">
+                                                        <div class="min-w-0 pr-1">
+                                                            <p class="text-[9px] font-bold leading-snug whitespace-normal break-words min-w-0" x-text="event.title"></p>
+                                                            <p class="mt-0.5 text-[8px] font-semibold leading-snug text-slate-400" x-text="calendarWeekEventTimeLabel(event)"></p>
+                                                            <p x-show="event.locationName" class="mt-0.5 text-[8px] font-semibold leading-snug text-slate-300 whitespace-normal break-words" x-text="event.locationName"></p>
                                                         </div>
                                                         <span x-show="calendarEditingEnabled(event)"
                                                               @pointerdown.stop.prevent="handleCalendarResizeStart($event, event)"
@@ -3597,6 +3592,7 @@
                                     activityType,
                                     transportType: sub.transportType || '',
                                     title: sub.name,
+                                    locationName: loc.name,
                                     meta: [loc.name, this.activityTypeLabel(activityType), durationLabel, costLabel].filter(Boolean).join(' · '),
                                     durationLabel,
                                     durationMinutes,
