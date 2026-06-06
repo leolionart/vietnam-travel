@@ -46,6 +46,29 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
+        .calendar-event-glass {
+            backdrop-filter: blur(14px) saturate(1.35);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), 0 10px 24px rgba(2,6,23,0.18);
+            color: #f8fafc;
+        }
+
+        .calendar-event-glass .text-slate-600,
+        .calendar-event-glass .text-slate-700 {
+            color: rgba(226,232,240,0.78) !important;
+        }
+
+        .calendar-event-food { background: rgba(239,68,68,0.28); border-color: rgba(248,113,113,0.42); }
+        .calendar-event-cafe { background: rgba(249,115,22,0.28); border-color: rgba(251,146,60,0.42); }
+        .calendar-event-transport { background: rgba(100,116,139,0.30); border-color: rgba(148,163,184,0.42); }
+        .calendar-event-sightseeing { background: rgba(59,130,246,0.28); border-color: rgba(96,165,250,0.42); }
+        .calendar-event-stay { background: rgba(71,85,105,0.30); border-color: rgba(148,163,184,0.38); }
+
+        .calendar-event-food:hover { background: rgba(239,68,68,0.36); }
+        .calendar-event-cafe:hover { background: rgba(249,115,22,0.36); }
+        .calendar-event-transport:hover { background: rgba(100,116,139,0.40); }
+        .calendar-event-sightseeing:hover { background: rgba(59,130,246,0.36); }
+        .calendar-event-stay:hover { background: rgba(71,85,105,0.40); }
+
         body.theme-light .glass {
             background: rgba(255, 255, 255, 0.84);
             border-color: rgba(15, 23, 42, 0.12);
@@ -82,6 +105,21 @@
         body.theme-light .calendar-view button {
             color: #0f172a !important;
         }
+
+        body.theme-light .calendar-event-glass {
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.72), 0 10px 24px rgba(15,23,42,0.10);
+        }
+
+        body.theme-light .calendar-event-glass .text-slate-600,
+        body.theme-light .calendar-event-glass .text-slate-700 {
+            color: rgba(51,65,85,0.76) !important;
+        }
+
+        body.theme-light .calendar-event-food { background: rgba(239,68,68,0.16); border-color: rgba(239,68,68,0.30); }
+        body.theme-light .calendar-event-cafe { background: rgba(249,115,22,0.16); border-color: rgba(249,115,22,0.30); }
+        body.theme-light .calendar-event-transport { background: rgba(100,116,139,0.16); border-color: rgba(100,116,139,0.28); }
+        body.theme-light .calendar-event-sightseeing { background: rgba(59,130,246,0.16); border-color: rgba(59,130,246,0.30); }
+        body.theme-light .calendar-event-stay { background: rgba(71,85,105,0.15); border-color: rgba(71,85,105,0.26); }
 
         body.theme-light .calendar-view article,
         body.theme-light .calendar-view .rounded-md {
@@ -241,7 +279,7 @@
             <article class="flex min-h-0 flex-1 flex-col">
                 <div class="relative h-52 flex-none overflow-hidden sm:rounded-t-[2rem]">
                     <img :src="eventThumbnailUrl(eventDetail().activity, eventDetail().location)"
-                         @error="$event.target.src = locationImg(eventDetail().location?.name || eventDetail().activity?.name)"
+                         @error="$event.target.src = eventPreviewImage('other')"
                          referrerpolicy="no-referrer"
                          class="h-full w-full object-cover"
                          :alt="eventDetail().activity?.name || eventDetail().location?.name">
@@ -3169,13 +3207,13 @@
                         : eventOrType;
                     const eventType = typeof eventOrType === 'object' ? eventOrType?.type : eventOrType;
                     const classes = {
-                        food: 'bg-red-200/95 border-red-500/45 text-red-950 shadow-lg shadow-red-700/15 hover:bg-red-300/95',
-                        cafe: 'bg-orange-200/95 border-orange-500/45 text-orange-950 shadow-lg shadow-orange-700/15 hover:bg-orange-300/95',
-                        transport: 'bg-slate-200/95 border-slate-500/45 text-slate-950 shadow-lg shadow-slate-700/15 hover:bg-slate-300/95',
-                        sightseeing: 'bg-blue-200/95 border-blue-500/45 text-blue-950 shadow-lg shadow-blue-700/15 hover:bg-blue-300/95',
-                        visit: 'bg-blue-200/95 border-blue-500/45 text-blue-950 shadow-lg shadow-blue-700/15 hover:bg-blue-300/95',
-                        stay: 'bg-slate-200/95 border-slate-500/35 text-slate-950 shadow-lg shadow-slate-700/15 hover:bg-slate-300/95',
-                        accommodation: 'bg-slate-200/95 border-slate-500/35 text-slate-950 shadow-lg shadow-slate-700/15 hover:bg-slate-300/95',
+                        food: 'calendar-event-glass calendar-event-food',
+                        cafe: 'calendar-event-glass calendar-event-cafe',
+                        transport: 'calendar-event-glass calendar-event-transport',
+                        sightseeing: 'calendar-event-glass calendar-event-sightseeing',
+                        visit: 'calendar-event-glass calendar-event-sightseeing',
+                        stay: 'calendar-event-glass calendar-event-stay',
+                        accommodation: 'calendar-event-glass calendar-event-stay',
                     };
                     return classes[activityType] || classes[eventType] || classes.stay;
                 },
@@ -4167,9 +4205,23 @@
                 },
 
                 eventThumbnailUrl(activity, loc) {
-                    const direct = activity?.imageUrl || activity?.photoUrl || activity?.thumbnailUrl || activity?.thumbUrl;
-                    if (direct) return direct;
-                    return this.locationImg(activity?.address || activity?.name || loc?.name);
+                    const type = this.subActivityType(activity || {});
+                    return this.eventPreviewImage(type);
+                },
+
+                eventPreviewImage(type = 'other') {
+                    const normalized = String(type || 'other').toLowerCase();
+                    const files = {
+                        sightseeing: 'sightseeing',
+                        visit: 'sightseeing',
+                        accommodation: 'accommodation',
+                        stay: 'accommodation',
+                        food: 'food',
+                        cafe: 'cafe',
+                        transport: 'transport',
+                        other: 'other',
+                    };
+                    return `/assets/event-previews/${files[normalized] || 'other'}.webp`;
                 },
 
                 visibleDetailActivities(loc) {

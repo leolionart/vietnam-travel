@@ -1,5 +1,24 @@
 # Release Notes
 
+## v1.0.2 - Glass Event Cards and Generated Event Previews
+
+### Calendar event cards
+
+- Reworked calendar event cards from solid/pastel fills to translucent glass
+  tints that better match the app's overall visual system.
+- Kept activity-type color semantics while reducing saturation and opacity:
+  food red, transport gray, cafe orange, sightseeing blue, accommodation slate.
+- Added backdrop blur, soft inset highlight, and lighter shadows to event cards.
+- Added light-mode variants so event cards stay readable without looking heavy.
+
+### Event detail previews
+
+- Added generated internal preview images for sightseeing, accommodation, food,
+  cafe, transport, and fallback events.
+- Replaced activity/location image lookup for event detail thumbnails with the
+  generated internal WebP assets, avoiding unrelated external images.
+- Optimized generated previews to 1200x675 WebP assets for faster drawer load.
+
 ## v1.0.1 - Calendar Planning, Activity Costs, and MCP Plan Editing
 
 This release summarizes the user-facing and integration changes since the
