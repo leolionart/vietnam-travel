@@ -1,5 +1,11 @@
 # Release Notes
 
+## Unreleased - 2026-06-06 16:29 +07
+
+Generated before push from commits:
+
+- `303f091` Update calendar event type colors
+
 ## Unreleased - 2026-06-06 16:25 +07
 
 Generated before push from commits:
