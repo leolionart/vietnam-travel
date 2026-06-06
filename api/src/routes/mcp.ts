@@ -50,7 +50,7 @@ function getSessionPlanRef(args: Record<string, unknown>): SessionPlanRef | null
 
     if (typeof args.planSlug === 'string' || typeof args.slug === 'string') {
         const slug = (args.planSlug || args.slug) as string;
-        const plan = db.prepare('SELECT id, slug, session_id as sessionId FROM plans WHERE slug = ? AND session_id IS NOT NULL').get(slug) as SessionPlanRef | undefined;
+        const plan = db.prepare('SELECT id, slug, session_id as sessionId FROM plans WHERE slug = ?').get(slug) as SessionPlanRef | undefined;
         return plan ?? null;
     }
 
@@ -90,7 +90,8 @@ function uniqueAdminSlug(input: string): string {
 
 function getEditablePlanRef(args: Record<string, unknown>): SessionPlanRef | null {
     const sessionRef = getSessionPlanRef(args);
-    if (sessionRef) return sessionRef;
+    if (sessionRef?.sessionId) return sessionRef;
+    if (sessionRef && isAdminAuthorized(args)) return { ...sessionRef, isAdmin: true };
     if (!isAdminAuthorized(args)) return null;
 
     const slug = (args.planSlug || args.slug) as string | undefined;
