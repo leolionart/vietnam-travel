@@ -69,6 +69,11 @@
         .calendar-event-sightseeing:hover { background: rgba(59,130,246,0.36); }
         .calendar-event-stay:hover { background: rgba(71,85,105,0.40); }
 
+        .calendar-shell {
+            background: rgba(15, 23, 42, 0.56);
+            border-color: rgba(226, 232, 240, 0.08);
+        }
+
         body.theme-light .glass {
             background: rgba(255, 255, 255, 0.84);
             border-color: rgba(15, 23, 42, 0.12);
@@ -120,6 +125,11 @@
         body.theme-light .calendar-event-transport { background: rgba(100,116,139,0.16); border-color: rgba(100,116,139,0.28); }
         body.theme-light .calendar-event-sightseeing { background: rgba(59,130,246,0.16); border-color: rgba(59,130,246,0.30); }
         body.theme-light .calendar-event-stay { background: rgba(71,85,105,0.15); border-color: rgba(71,85,105,0.26); }
+
+        body.theme-light .calendar-shell {
+            background: rgba(248, 250, 252, 0.78);
+            border-color: rgba(15, 23, 42, 0.08) !important;
+        }
 
         body.theme-light .calendar-view article,
         body.theme-light .calendar-view .rounded-md {
@@ -498,7 +508,7 @@
              x-transition:enter-start="opacity-0 translate-y-3"
              x-transition:enter-end="opacity-100 translate-y-0"
              class="calendar-view fixed left-3 right-3 top-24 bottom-3 lg:left-5 lg:right-5 lg:top-24 lg:bottom-5 z-40 pointer-events-none">
-        <div class="glass h-full rounded-2xl border-white/5 shadow-2xl pointer-events-auto overflow-hidden flex flex-col">
+        <div class="calendar-shell glass h-full rounded-2xl border-white/5 shadow-2xl pointer-events-auto overflow-hidden flex flex-col">
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-2 px-3 py-2.5 lg:px-4 border-b border-white/10">
                 <div class="min-w-0">
                     <p class="text-[8px] font-bold text-slate-500 uppercase tracking-[0.18em]">Calendar view</p>
@@ -745,7 +755,7 @@
              x-transition:enter-start="opacity-0 translate-y-3"
              x-transition:enter-end="opacity-100 translate-y-0"
              class="calendar-view fixed left-3 right-3 top-24 bottom-3 lg:left-5 lg:right-5 lg:top-24 lg:bottom-5 z-40 pointer-events-none">
-        <div class="glass h-full rounded-2xl border-white/5 shadow-2xl pointer-events-auto overflow-hidden flex flex-col">
+        <div class="calendar-shell glass h-full rounded-2xl border-white/5 shadow-2xl pointer-events-auto overflow-hidden flex flex-col">
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-2 px-3 py-2.5 lg:px-4 border-b border-white/10">
                 <div class="min-w-0">
                     <p class="text-[8px] font-bold text-slate-500 uppercase tracking-[0.18em]">Month view</p>
@@ -914,7 +924,7 @@
                                                                              class="rounded-md border min-h-[40px] p-1.5"
                                                                              @dragover.prevent="calendarEditingEnabled()"
                                                                              @drop.prevent="handleCalendarDrop($event, day, part)"
-                                                                             :class="part === 'morning' ? 'bg-slate-400/5 border-slate-300/15' : (part === 'afternoon' ? 'bg-orange-400/5 border-orange-300/15' : 'bg-violet-400/5 border-violet-300/15')"
+                                                                             :class="part === 'morning' ? 'bg-white/[0.018] border-white/10' : (part === 'afternoon' ? 'bg-white/[0.024] border-white/10' : 'bg-white/[0.018] border-white/10')"
                                                                              :style="calendarDayAccentStyle(day, part)">
                                                                             <div class="flex items-center justify-between gap-2 text-[8px] font-bold uppercase leading-none mb-1"
                                                                                  :class="part === 'morning' ? 'text-slate-200' : (part === 'afternoon' ? 'text-orange-200' : 'text-violet-200')">
@@ -3297,25 +3307,25 @@
                 locationPalette(code) {
                     const palettes = {
                         HN: {
-                            dark: { bg: 'rgba(59,130,246,0.08)', soft: 'rgba(59,130,246,0.05)', border: 'rgba(147,197,253,0.22)', shadow: 'rgba(59,130,246,0.05)' },
-                            light: { bg: 'rgba(219,234,254,0.86)', soft: 'rgba(219,234,254,0.62)', border: 'rgba(59,130,246,0.30)', shadow: 'rgba(59,130,246,0.08)' },
+                            dark: { bg: 'rgba(59,130,246,0.035)', soft: 'rgba(59,130,246,0.022)' },
+                            light: { bg: 'rgba(219,234,254,0.34)', soft: 'rgba(219,234,254,0.24)' },
                         },
                         NA: {
-                            dark: { bg: 'rgba(20,184,166,0.08)', soft: 'rgba(20,184,166,0.05)', border: 'rgba(94,234,212,0.22)', shadow: 'rgba(20,184,166,0.05)' },
-                            light: { bg: 'rgba(204,251,241,0.86)', soft: 'rgba(204,251,241,0.62)', border: 'rgba(20,184,166,0.30)', shadow: 'rgba(20,184,166,0.08)' },
+                            dark: { bg: 'rgba(20,184,166,0.035)', soft: 'rgba(20,184,166,0.022)' },
+                            light: { bg: 'rgba(204,251,241,0.34)', soft: 'rgba(204,251,241,0.24)' },
                         },
                         NB: {
-                            dark: { bg: 'rgba(168,85,247,0.08)', soft: 'rgba(168,85,247,0.05)', border: 'rgba(216,180,254,0.22)', shadow: 'rgba(168,85,247,0.05)' },
-                            light: { bg: 'rgba(243,232,255,0.86)', soft: 'rgba(243,232,255,0.62)', border: 'rgba(168,85,247,0.30)', shadow: 'rgba(168,85,247,0.08)' },
+                            dark: { bg: 'rgba(168,85,247,0.035)', soft: 'rgba(168,85,247,0.022)' },
+                            light: { bg: 'rgba(243,232,255,0.34)', soft: 'rgba(243,232,255,0.24)' },
                         },
                         HL: {
-                            dark: { bg: 'rgba(245,158,11,0.08)', soft: 'rgba(245,158,11,0.05)', border: 'rgba(252,211,77,0.22)', shadow: 'rgba(245,158,11,0.05)' },
-                            light: { bg: 'rgba(254,243,199,0.88)', soft: 'rgba(254,243,199,0.62)', border: 'rgba(245,158,11,0.34)', shadow: 'rgba(245,158,11,0.08)' },
+                            dark: { bg: 'rgba(245,158,11,0.035)', soft: 'rgba(245,158,11,0.022)' },
+                            light: { bg: 'rgba(254,243,199,0.34)', soft: 'rgba(254,243,199,0.24)' },
                         },
                     };
                     const fallback = {
-                        dark: { bg: 'rgba(148,163,184,0.07)', soft: 'rgba(148,163,184,0.04)', border: 'rgba(203,213,225,0.18)', shadow: 'rgba(148,163,184,0.04)' },
-                        light: { bg: 'rgba(241,245,249,0.9)', soft: 'rgba(241,245,249,0.65)', border: 'rgba(100,116,139,0.22)', shadow: 'rgba(100,116,139,0.06)' },
+                        dark: { bg: 'rgba(148,163,184,0.03)', soft: 'rgba(148,163,184,0.02)' },
+                        light: { bg: 'rgba(241,245,249,0.36)', soft: 'rgba(241,245,249,0.24)' },
                     };
                     return palettes[code] || fallback;
                 },
@@ -3334,16 +3344,17 @@
                     if (!code) return '';
                     const palette = this.locationPalette(code)[this.theme === 'light' ? 'light' : 'dark'];
                     const bg = part === 'day' ? palette.bg : palette.soft;
-                    return `background:${bg};border-color:${palette.border};box-shadow:inset 0 0 0 1px ${palette.shadow}`;
+                    const border = this.theme === 'light' ? 'rgba(15,23,42,0.08)' : 'rgba(226,232,240,0.08)';
+                    return `background:${bg};border-color:${border}`;
                 },
 
                 calendarDayClass(day) {
                     if (day.isBlank) return 'bg-white/[0.008] border-white/5 opacity-35';
-                    if (day.hasCheckin && day.hasCheckout) return 'bg-violet-500/10 border-violet-300/30 shadow-[0_0_0_1px_rgba(196,181,253,0.08)]';
-                    if (day.hasCheckin) return 'bg-cyan-500/10 border-cyan-300/30 shadow-[0_0_0_1px_rgba(103,232,249,0.08)]';
-                    if (day.hasCheckout) return 'bg-rose-500/10 border-rose-300/30 shadow-[0_0_0_1px_rgba(253,164,175,0.08)]';
-                    if (day.isWeekend) return 'bg-amber-400/5 border-amber-400/15';
-                    return 'bg-white/[0.025] border-white/10';
+                    if (day.hasCheckin && day.hasCheckout) return 'bg-white/[0.035] border-white/10';
+                    if (day.hasCheckin) return 'bg-white/[0.03] border-white/10';
+                    if (day.hasCheckout) return 'bg-white/[0.03] border-white/10';
+                    if (day.isWeekend) return 'bg-white/[0.026] border-white/10';
+                    return 'bg-white/[0.022] border-white/10';
                 },
 
                 calendarStayEvents(day) {

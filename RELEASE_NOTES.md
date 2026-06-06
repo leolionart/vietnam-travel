@@ -1,5 +1,13 @@
 # Release Notes
 
+## v1.0.7 - Softer Calendar Backgrounds
+
+- Lightened the week and month calendar shell backgrounds so the schedule reads
+  softer against the app chrome.
+- Reduced location/day background tints and replaced colored day borders with
+  neutral borders.
+- Kept activity event card colors unchanged so event types remain scannable.
+
 ## v1.0.6 - Remove Unclassified Cost Category
 
 - Removed the "Khác" cost category from week and month cost overview cards.
