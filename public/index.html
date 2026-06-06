@@ -1127,8 +1127,35 @@
                     <!-- Card: Lưu trú (lấy từ activity) -->
                     <div class="bg-white/5 rounded-2xl p-3 lg:p-4 border border-white/5 min-w-0">
                         <p class="text-[8px] lg:text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-2">Lưu trú</p>
-                        <p class="text-xs lg:text-sm font-bold text-white leading-snug line-clamp-2" x-text="activityNames(activeLocation, 'accommodation') || '—'"></p>
-                        <p class="text-[10px] mt-1 text-slate-400 truncate" x-text="subActivityTotal(activeLocation, ['accommodation']) > 0 ? formatCurrency(subActivityTotal(activeLocation, ['accommodation'])) : 'Nhập ở activity lưu trú'"></p>
+                        <template x-if="summaryActivitiesByType(activeLocation, ['accommodation']).length">
+                            <div class="space-y-2">
+                                <template x-for="stay in summaryActivitiesByType(activeLocation, ['accommodation'])" :key="stay.id">
+                                    <div class="rounded-xl border border-white/5 bg-black/10 px-2.5 py-2">
+                                        <div class="flex min-w-0 items-start justify-between gap-2">
+                                            <p class="min-w-0 text-xs lg:text-sm font-bold text-white leading-snug line-clamp-2" x-text="stay.name"></p>
+                                            <a class="inline-flex h-6 w-6 flex-none items-center justify-center rounded-lg border border-sky-400/20 bg-sky-400/10 text-sky-200 hover:bg-sky-400/20 transition"
+                                               :href="activityGoogleMapsUrl(stay, activeLocation)"
+                                               target="_blank"
+                                               rel="noopener"
+                                               :aria-label="`Mở ${stay.name} trên Google Maps`"
+                                               title="Mở trên Google Maps">
+                                                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"></path>
+                                                    <circle cx="12" cy="10" r="3"></circle>
+                                                </svg>
+                                            </a>
+                                        </div>
+                                        <p class="mt-1 text-[10px] text-slate-400 truncate" x-text="summaryActivityMeta(stay, activeLocation)"></p>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                        <template x-if="!summaryActivitiesByType(activeLocation, ['accommodation']).length">
+                            <div>
+                                <p class="text-xs lg:text-sm font-bold text-white leading-snug">—</p>
+                                <p class="text-[10px] mt-1 text-slate-400 truncate">Nhập ở activity lưu trú</p>
+                            </div>
+                        </template>
                     </div>
                 </div>
 
@@ -2520,6 +2547,21 @@
                     const cost = this.subActivityCost(activity, loc);
                     if (cost > 0) parts.push(this.formatCurrency(cost));
                     return parts.filter(Boolean).join(' · ');
+                },
+
+                activityGoogleMapsUrl(activity, loc) {
+                    const lat = Number(activity?.lat);
+                    const lng = Number(activity?.lng);
+                    if (Number.isFinite(lat) && Number.isFinite(lng) && (lat !== 0 || lng !== 0)) {
+                        return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+                    }
+                    const query = [
+                        activity?.name,
+                        loc?.name,
+                        loc?.province,
+                        'Vietnam',
+                    ].filter(Boolean).join(' ');
+                    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
                 },
 
                 subActivityCost(sub, loc) {
