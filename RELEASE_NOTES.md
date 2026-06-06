@@ -1,5 +1,11 @@
 # Release Notes
 
+## Unreleased - 2026-06-06 16:40 +07
+
+Generated before push from commits:
+
+- `d7132f3` Publish GitHub releases from release notes
+
 ## Unreleased - 2026-06-06 16:32 +07
 
 Generated before push from commits:
