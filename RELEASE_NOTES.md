@@ -1,5 +1,12 @@
 # Release Notes
 
+## v1.0.3 - Compact Week Event Metadata
+
+- Tightened spacing between week event time, dot divider, and duration so the
+  metadata stays on one compact line.
+- Aligned week event card content to the top and reduced text line-height inside
+  compact timed cards.
+
 ## v1.0.2 - Glass Event Cards and Generated Event Previews
 
 ### Calendar event cards
