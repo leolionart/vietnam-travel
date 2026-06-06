@@ -62,12 +62,14 @@
         .calendar-event-transport { background: rgba(100,116,139,0.30); border-color: rgba(148,163,184,0.42); }
         .calendar-event-sightseeing { background: rgba(59,130,246,0.28); border-color: rgba(96,165,250,0.42); }
         .calendar-event-stay { background: rgba(71,85,105,0.30); border-color: rgba(148,163,184,0.38); }
+        .calendar-event-other { background: rgba(139,92,246,0.24); border-color: rgba(167,139,250,0.36); }
 
         .calendar-event-food:hover { background: rgba(239,68,68,0.36); }
         .calendar-event-cafe:hover { background: rgba(249,115,22,0.36); }
         .calendar-event-transport:hover { background: rgba(100,116,139,0.40); }
         .calendar-event-sightseeing:hover { background: rgba(59,130,246,0.36); }
         .calendar-event-stay:hover { background: rgba(71,85,105,0.40); }
+        .calendar-event-other:hover { background: rgba(139,92,246,0.32); }
 
         .calendar-shell {
             background: rgba(15, 23, 42, 0.56);
@@ -125,6 +127,7 @@
         body.theme-light .calendar-event-transport { background: rgba(100,116,139,0.16); border-color: rgba(100,116,139,0.28); }
         body.theme-light .calendar-event-sightseeing { background: rgba(59,130,246,0.16); border-color: rgba(59,130,246,0.30); }
         body.theme-light .calendar-event-stay { background: rgba(71,85,105,0.15); border-color: rgba(71,85,105,0.26); }
+        body.theme-light .calendar-event-other { background: rgba(139,92,246,0.14); border-color: rgba(139,92,246,0.26); }
 
         body.theme-light .calendar-shell {
             background: rgba(248, 250, 252, 0.78);
@@ -554,7 +557,7 @@
 
                 <template x-if="calendarDays().length > 0">
                     <div class="space-y-3">
-                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
+                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-2">
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Tổng chi phí</p>
                                 <p class="mt-1 text-base lg:text-xl font-bold text-white font-display" x-text="formatCurrency(totalPlanCost)"></p>
@@ -603,6 +606,14 @@
                                 <p class="mt-1 text-[9px] font-bold text-blue-300" x-text="costPercentLabel(planActivityTotal(['sightseeing']))"></p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
                                     <div class="h-full rounded-full bg-blue-300" :style="`width:${costBarWidth(planActivityTotal(['sightseeing']))}%`"></div>
+                                </div>
+                            </div>
+                            <div x-show="planActivityTotal(['other']) > 0" class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+                                <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Khác</p>
+                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['other']))"></p>
+                                <p class="mt-1 text-[9px] font-bold text-violet-300" x-text="costPercentLabel(planActivityTotal(['other']))"></p>
+                                <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
+                                    <div class="h-full rounded-full bg-violet-300" :style="`width:${costBarWidth(planActivityTotal(['other']))}%`"></div>
                                 </div>
                             </div>
                         </div>
@@ -803,7 +814,7 @@
 
                 <template x-if="calendarDays().length > 0">
                     <div class="space-y-3">
-                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
+                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-2">
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Tổng chi phí</p>
                                 <p class="mt-1 text-base lg:text-xl font-bold text-white font-display" x-text="formatCurrency(totalPlanCost)"></p>
@@ -852,6 +863,14 @@
                                 <p class="mt-1 text-[9px] font-bold text-blue-300" x-text="costPercentLabel(planActivityTotal(['sightseeing']))"></p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
                                     <div class="h-full rounded-full bg-blue-300" :style="`width:${costBarWidth(planActivityTotal(['sightseeing']))}%`"></div>
+                                </div>
+                            </div>
+                            <div x-show="planActivityTotal(['other']) > 0" class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+                                <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Khác</p>
+                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['other']))"></p>
+                                <p class="mt-1 text-[9px] font-bold text-violet-300" x-text="costPercentLabel(planActivityTotal(['other']))"></p>
+                                <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
+                                    <div class="h-full rounded-full bg-violet-300" :style="`width:${costBarWidth(planActivityTotal(['other']))}%`"></div>
                                 </div>
                             </div>
                         </div>
@@ -1100,6 +1119,7 @@
                                 <option value="food">Ăn uống</option>
                                 <option value="cafe">Cafe</option>
                                 <option value="accommodation">Lưu trú</option>
+                                <option value="other">Khác</option>
                             </select>
                         </label>
                         <label class="space-y-1">
@@ -1389,10 +1409,10 @@
                 </div>
 
                 <!-- Activities from schedule -->
-                <div x-show="summaryActivitiesByType(activeLocation, ['sightseeing', 'transport']).length">
+                <div x-show="summaryActivitiesByType(activeLocation, ['sightseeing', 'transport', 'other']).length">
                     <h4 class="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 lg:mb-4">Hoạt động từ lịch trình</h4>
                     <div class="space-y-2 lg:space-y-3">
-                        <template x-for="act in summaryActivitiesByType(activeLocation, ['sightseeing', 'transport'])" :key="act.id">
+                        <template x-for="act in summaryActivitiesByType(activeLocation, ['sightseeing', 'transport', 'other'])" :key="act.id">
                             <div class="flex items-center gap-3 text-xs lg:text-sm text-slate-300">
                                 <div class="w-1.5 h-1.5 rounded-full bg-blue-500 flex-none"></div>
                                 <div class="min-w-0">
@@ -2712,7 +2732,7 @@
 
                 subActivityType(sub) {
                     const type = sub.activityType || 'sightseeing';
-                    const allowed = ['sightseeing', 'accommodation', 'food', 'cafe', 'transport'];
+                    const allowed = ['sightseeing', 'accommodation', 'food', 'cafe', 'transport', 'other'];
                     return allowed.includes(type) ? type : 'sightseeing';
                 },
 
@@ -2723,7 +2743,8 @@
                         food: 'Ăn uống',
                         cafe: 'Cafe',
                         transport: 'Di chuyển',
-                    }[type || 'sightseeing'] || 'Tham quan';
+                        other: 'Khác',
+                    }[type || 'sightseeing'] || 'Khác';
                 },
 
                 activityDurationLabel(sub) {
@@ -2769,7 +2790,7 @@
                 },
 
                 locationActivityTypeStats(loc) {
-                    const types = ['sightseeing', 'accommodation', 'food', 'cafe', 'transport'];
+                    const types = ['sightseeing', 'accommodation', 'food', 'cafe', 'transport', 'other'];
                     return types
                         .map(type => {
                             const items = this.summaryActivitiesByType(loc, [type]);
@@ -3208,6 +3229,7 @@
                         visit: 'calendar-event-glass calendar-event-sightseeing',
                         stay: 'calendar-event-glass calendar-event-stay',
                         accommodation: 'calendar-event-glass calendar-event-stay',
+                        other: 'calendar-event-glass calendar-event-other',
                     };
                     return classes[activityType] || classes[eventType] || classes.stay;
                 },
@@ -4229,7 +4251,7 @@
 
                 calculateLocationCost(loc) {
                     if (!loc) return 0;
-                    return this.subActivityTotal(loc, ['sightseeing', 'accommodation', 'food', 'cafe', 'transport']);
+                    return this.subActivityTotal(loc, ['sightseeing', 'accommodation', 'food', 'cafe', 'transport', 'other']);
                 },
 
                 calculateTotalPlanCost(plan = this.currentPlan) {
@@ -4324,7 +4346,7 @@
                                 <td class="money">${formatMoney(this.subActivityTotal(loc, ['accommodation']))}</td>
                                 <td class="money">${formatMoney(this.subActivityTotal(loc, ['food']))}</td>
                                 <td class="money">${formatMoney(this.subActivityTotal(loc, ['cafe']))}</td>
-                                <td>${escapeHtml(this.summaryActivitiesByType(loc, ['sightseeing', 'transport']).map(item => item.name).join(', '))}</td>
+                                <td>${escapeHtml(this.summaryActivitiesByType(loc, ['sightseeing', 'transport', 'other']).map(item => item.name).join(', '))}</td>
                                 <td>${escapeHtml(this.summaryActivitiesByType(loc, ['food']).map(item => item.name).join(', '))}</td>
                                 <td>${escapeHtml(this.summaryActivitiesByType(loc, ['cafe']).map(item => item.name).join(', '))}</td>
                                 <td class="money">${formatMoney(cost)}</td>

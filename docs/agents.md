@@ -105,7 +105,7 @@ backup/restore outside the deploy path.
 
 Costs belong on activities (`sub_locations`):
 
-- `activityType`: `sightseeing`, `accommodation`, `food`, `cafe`, `transport`
+- `activityType`: `sightseeing`, `accommodation`, `food`, `cafe`, `transport`, `other`
 - `pricingMode`: `per_person`, `per_room`, `per_group`
 - `unitPrice`, `quantity`, `surcharge`, `adultPrice`, `childPrice`
 

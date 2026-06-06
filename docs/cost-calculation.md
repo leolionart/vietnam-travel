@@ -16,10 +16,10 @@ Tổng plan = Σ calculateLocationCost(loc)   // với mỗi loc chưa bị excl
 
 ## Chi phí một location
 
-`calculateLocationCost(loc)` trả về tổng của 4 khoản:
+`calculateLocationCost(loc)` trả về tổng của các khoản đã phân loại:
 
 ```
-Chi phí location = Vé tham quan + Lưu trú + Ăn uống + Di chuyển
+Chi phí location = Vé tham quan + Lưu trú + Ăn uống + Cafe + Di chuyển + Khác
 ```
 
 ### 1. Activity/sub-location
@@ -28,7 +28,7 @@ Chi phí location = Vé tham quan + Lưu trú + Ăn uống + Di chuyển
 
 | Field | Ý nghĩa |
 |---|---|
-| `activityType` | `sightseeing`, `accommodation`, `food`, `cafe`, `transport` |
+| `activityType` | `sightseeing`, `accommodation`, `food`, `cafe`, `transport`, `other` |
 | `pricingMode` | `per_person`, `per_room`, `per_group` |
 | `adultPrice` / `childPrice` | Giá theo người khi `pricingMode = per_person` |
 | `unitPrice` | Giá theo phòng/đơn vị/nhóm |
@@ -36,7 +36,9 @@ Chi phí location = Vé tham quan + Lưu trú + Ăn uống + Di chuyển
 | `surcharge` | Phụ thu cố định do user nhập |
 | `durationDays` | Số ngày activity kéo dài, dùng để hiển thị khách sạn/tour nhiều ngày |
 
-Activity loại `sightseeing` dùng cho vé tham quan. Activity loại `accommodation` hoặc `food` là nguồn chi phí lưu trú/ăn uống; parent location chỉ giữ summary và thông tin lịch trình.
+Activity loại `sightseeing` dùng cho vé tham quan. Activity loại `accommodation`,
+`food`, `cafe`, `transport`, hoặc `other` là nguồn chi phí theo từng nhóm;
+parent location chỉ giữ summary và thông tin lịch trình.
 
 Với `pricingMode = per_room`, chi phí được tính:
 
@@ -78,13 +80,24 @@ Không còn fallback về `location.stayCostPerNight`. Khách sạn/du thuyền 
 
 Không còn fallback về `location.foodBudgetPerDay`.
 
-### 5. Di chuyển đến điểm này
+### 5. Cafe
+
+Cafe = tổng `subActivityCost()` của các activity `activityType = cafe`.
+
+### 6. Di chuyển đến điểm này
 
 Di chuyển = tổng `subActivityCost()` của các activity `activityType = transport`.
 
 - `transportLabel` ở parent location chỉ là mô tả tuyến đi để hiển thị.
 - Chi phí xe/tàu/bay phải nhập bằng activity `transport`, thường là `pricingMode = per_person`.
 - Nếu có vé trẻ em riêng, nhập `childPrice`; nếu trẻ em không tính phí thì để 0.
+
+### 7. Khác
+
+Khác = tổng `subActivityCost()` của các activity `activityType = other`.
+
+Nhóm này dùng cho chi phí hoặc hoạt động đặc thù chưa khớp các nhóm chính.
+Trên overview, card "Khác" chỉ hiển thị khi tổng nhóm này lớn hơn 0.
 
 ---
 

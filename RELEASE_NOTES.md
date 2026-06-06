@@ -1,5 +1,14 @@
 # Release Notes
 
+## v1.0.8 - Conditional Other Activity Category
+
+- Restored the "Khác" activity type in the public activity form and MCP
+  add/update activity contracts.
+- Added the "Khác" cost overview card back as a conditional card that only
+  appears when the plan has declared `other` activity cost.
+- Included `other` activity costs in location, plan, summary, and print totals.
+- Added a distinct glass event style for `other` activity cards.
+
 ## v1.0.7 - Softer Calendar Backgrounds
 
 - Lightened the week and month calendar shell backgrounds so the schedule reads
