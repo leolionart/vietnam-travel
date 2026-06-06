@@ -904,8 +904,8 @@
                             <input x-model="activityDraft.name" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400" placeholder="Ví dụ: Tham quan phố cổ">
                         </label>
                         <label class="space-y-1 col-span-2">
-                            <span class="text-[9px] font-bold text-slate-500 uppercase">Địa chỉ cụ thể</span>
-                            <input x-model="activityDraft.address" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400" placeholder="Ví dụ: 123 Tràng An, Ninh Bình">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Tên địa điểm</span>
+                            <input x-model="activityDraft.address" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400" placeholder="Ví dụ: Hang Múa Ecolodge">
                         </label>
                         <label class="space-y-1">
                             <span class="text-[9px] font-bold text-slate-500 uppercase">Loại</span>
@@ -988,7 +988,13 @@
                 <!-- Detail mode: numbered sub-location list -->
                 <template x-if="detailMode === 'detail' && activeLocation.subLocations?.length > 0">
                     <div class="space-y-3">
-                        <template x-for="(sub, idx) in activeLocation.subLocations" :key="sub.id">
+                        <template x-if="selectedActivityId">
+                            <div class="flex items-center justify-between rounded-xl border border-emerald-400/15 bg-emerald-400/5 px-3 py-2">
+                                <span class="text-[10px] font-bold text-emerald-200">Đang xem chi tiết event đã chọn</span>
+                                <button type="button" @click="selectedActivityId = null" class="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-bold text-slate-300 hover:bg-white/10">Xem tất cả</button>
+                            </div>
+                        </template>
+                        <template x-for="(sub, idx) in visibleDetailActivities(activeLocation)" :key="sub.id">
                             <div class="flex items-start gap-3 rounded-2xl p-4 border transition-all"
                                  :class="excludedSubs[sub.id]
                                     ? 'bg-white/[0.02] border-white/5 opacity-50'
@@ -1442,6 +1448,7 @@
                 showActivityForm: false,
                 showLocationForm: false,
                 editingActivityId: null,
+                selectedActivityId: null,
                 activityDraft: {},
                 locationDraft: {},
                 calendarDragEvent: null,
@@ -1926,6 +1933,7 @@
                 },
 
                 setActive(id) {
+                    this.selectedActivityId = null;
                     this.activeId = id;
                     this.updateMap(false);
                 },
@@ -1933,6 +1941,7 @@
                 closeDetailPanel() {
                     this.calendarSidebarOpen = false;
                     this.activeId = null;
+                    this.selectedActivityId = null;
                     this.detailMode = 'overview';
                     this.detailScrolled = false;
                     this.markerPopup = null;
@@ -2327,6 +2336,7 @@
                     if (!this.canCrudPlan() || !this.activeLocation?.id) return;
                     this.showLocationForm = false;
                     this.editingActivityId = null;
+                    this.selectedActivityId = null;
                     this.activityDraft = {
                         name: '',
                         activityType: 'sightseeing',
@@ -2591,7 +2601,7 @@
                 },
 
                 activityLocationLabel(activity, loc) {
-                    return String(activity?.address || '').trim() || loc?.name || '';
+                    return String(activity?.address || '').trim();
                 },
 
                 activityGoogleMapsUrl(activity, loc) {
@@ -3833,9 +3843,17 @@
                 openCalendarEvent(event) {
                     if (!event?.locationId) return;
                     this.activeId = event.locationId;
+                    this.selectedActivityId = event.subLocationId ? Number(event.subLocationId) : null;
                     this.detailMode = event.subLocationId ? 'detail' : 'overview';
                     this.calendarSidebarOpen = true;
                     this.$nextTick(() => lucide.createIcons());
+                },
+
+                visibleDetailActivities(loc) {
+                    const items = loc?.subLocations || [];
+                    if (!this.selectedActivityId) return items;
+                    const selected = items.find(item => Number(item.id) === Number(this.selectedActivityId));
+                    return selected ? [selected] : items;
                 },
 
                 calculateLocationCost(loc) {
