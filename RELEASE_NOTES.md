@@ -1,5 +1,11 @@
 # Release Notes
 
+## Unreleased - 2026-06-06 22:16 +07
+
+Generated before push from commits:
+
+- `64c6160` Add event delete confirmation
+
 ## v1.0.8 - Conditional Other Activity Category
 
 - Restored the "Khác" activity type in the public activity form and MCP
