@@ -520,10 +520,16 @@
                                                             class="absolute left-1 right-1 text-left rounded-md border px-1.5 py-1 transition-colors overflow-hidden"
                                                             :class="calendarEventClass(event.type)"
                                                             :style="calendarWeekEventStyle(event)"
-                                                            :title="[event.title, calendarWeekEventTimeLabel(event), event.locationName].filter(Boolean).join(' · ')">
-                                                        <div class="min-w-0 pr-1">
+                                                            :title="[event.title, calendarWeekEventTimeLabel(event), event.durationLabel, event.locationName, event.meta].filter(Boolean).join(' · ')">
+                                                        <span class="absolute right-1 top-1 text-[10px] leading-none" x-text="calendarEventGlyph(event)"></span>
+                                                        <div class="min-w-0 pr-4">
                                                             <p class="text-[9px] font-bold leading-snug whitespace-normal break-words min-w-0" x-text="event.title"></p>
-                                                            <p class="mt-0.5 text-[8px] font-semibold leading-snug text-slate-400" x-text="calendarWeekEventTimeLabel(event)"></p>
+                                                            <p class="mt-0.5 text-[8px] font-semibold leading-snug text-slate-400">
+                                                                <span x-text="calendarWeekEventTimeLabel(event)"></span>
+                                                                <span x-show="event.durationLabel" class="mx-1 text-slate-500">·</span>
+                                                                <span x-show="event.durationLabel" x-text="event.durationLabel"></span>
+                                                            </p>
+                                                            <span x-show="event.metaCost" class="mt-1 inline-flex max-w-full rounded-md border border-white/10 bg-white/10 px-1.5 py-0.5 text-[8px] font-bold leading-none text-slate-100" x-text="event.metaCost"></span>
                                                             <p x-show="event.locationName" class="mt-0.5 text-[8px] font-semibold leading-snug text-slate-300 whitespace-normal break-words" x-text="event.locationName"></p>
                                                         </div>
                                                         <span x-show="calendarEditingEnabled(event)"
