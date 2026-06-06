@@ -1,5 +1,11 @@
 # Release Notes
 
+## Unreleased - 2026-06-06 16:32 +07
+
+Generated before push from commits:
+
+- `912b328` Use illustrative event thumbnails
+
 ## Unreleased - 2026-06-06 16:29 +07
 
 Generated before push from commits:
