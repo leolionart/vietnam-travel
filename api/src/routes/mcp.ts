@@ -271,7 +271,7 @@ const TOOL_DEFINITIONS = [
                 shareUrl: { type: 'string' }, sessionId: { type: 'string' },
                 planSlug: { type: 'string' }, locationId: { type: 'number' },
                 sortOrder: { type: 'number' },
-                name: { type: 'string' }, address: { type: 'string', description: 'Địa chỉ cụ thể để hiển thị trên calendar/Google Maps' }, lat: { type: 'number' }, lng: { type: 'number' },
+                name: { type: 'string' }, address: { type: 'string', description: 'Tên địa điểm hoặc mô tả vị trí để hiển thị' }, externalUrl: { type: 'string', description: 'Link tham khảo/đặt dịch vụ như Booking.com, website, Facebook, hoặc Google Maps' }, externalLabel: { type: 'string', description: 'Nhãn CTA cho externalUrl, ví dụ Đặt phòng hoặc Mở website' }, lat: { type: 'number' }, lng: { type: 'number' },
                 durationMinutes: { type: 'number', description: 'Thời gian tham quan (phút)' },
                 scheduledDate: { type: 'string', description: 'Ngày tham quan dạng YYYY-MM-DD' },
                 scheduledTime: { type: 'string', description: 'Giờ bắt đầu dạng HH:mm. UI sẽ tự nhóm thành sáng/chiều/tối.' },
@@ -301,7 +301,7 @@ const TOOL_DEFINITIONS = [
                 shareUrl: { type: 'string' }, sessionId: { type: 'string' },
                 planSlug: { type: 'string' }, adminPassword: { type: 'string' }, locationId: { type: 'number' }, subLocationId: { type: 'number' },
                 sortOrder: { type: 'number' },
-                name: { type: 'string' }, address: { type: 'string' }, lat: { type: 'number' }, lng: { type: 'number' },
+                name: { type: 'string' }, address: { type: 'string' }, externalUrl: { type: 'string' }, externalLabel: { type: 'string' }, lat: { type: 'number' }, lng: { type: 'number' },
                 durationMinutes: { type: 'number' },
                 durationDays: { type: 'number' },
                 scheduledDate: { type: 'string' },
@@ -493,8 +493,8 @@ function buildServer(): Server {
                     const db = getDb();
                     const maxOrder = (db.prepare('SELECT MAX(sort_order) as m FROM sub_locations WHERE location_id = ?').get(a.locationId) as { m: number | null }).m ?? 0;
                     const result = db.prepare(
-                        'INSERT INTO sub_locations (location_id, sort_order, name, address, lat, lng, duration_minutes, duration_days, scheduled_date, scheduled_period, scheduled_time, description, activity_type, transport_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price, participant_adults, participant_children) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-                    ).run(a.locationId, a.sortOrder ?? maxOrder + 1, a.name, a.address ?? '', a.lat ?? 0, a.lng ?? 0, a.durationMinutes ?? 60, a.durationDays ?? 0, a.scheduledDate ?? '', a.scheduledPeriod ?? '', a.scheduledTime ?? '', a.description ?? '', a.activityType ?? 'sightseeing', a.transportType ?? '', a.pricingMode ?? 'per_person', a.unitPrice ?? 0, a.quantity ?? 1, a.surcharge ?? 0, a.adultPrice ?? 0, a.childPrice ?? 0, a.participantAdults ?? null, a.participantChildren ?? null);
+                        'INSERT INTO sub_locations (location_id, sort_order, name, address, external_url, external_label, lat, lng, duration_minutes, duration_days, scheduled_date, scheduled_period, scheduled_time, description, activity_type, transport_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price, participant_adults, participant_children) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                    ).run(a.locationId, a.sortOrder ?? maxOrder + 1, a.name, a.address ?? '', a.externalUrl ?? '', a.externalLabel ?? '', a.lat ?? 0, a.lng ?? 0, a.durationMinutes ?? 60, a.durationDays ?? 0, a.scheduledDate ?? '', a.scheduledPeriod ?? '', a.scheduledTime ?? '', a.description ?? '', a.activityType ?? 'sightseeing', a.transportType ?? '', a.pricingMode ?? 'per_person', a.unitPrice ?? 0, a.quantity ?? 1, a.surcharge ?? 0, a.adultPrice ?? 0, a.childPrice ?? 0, a.participantAdults ?? null, a.participantChildren ?? null);
                     return ok({ id: result.lastInsertRowid, planSlug: ref.slug, sessionId: ref.sessionId ?? undefined, shareUrl: `${APP_URL}/?slug=${ref.slug}` });
                 }
 
@@ -506,7 +506,7 @@ function buildServer(): Server {
                     if (!db.prepare('SELECT id FROM sub_locations WHERE id = ? AND location_id = ?').get(a.subLocationId, a.locationId)) return err('Sub-location not found');
                     const fields: string[] = [];
                     const values: unknown[] = [];
-                    const map: Record<string, unknown> = { name: a.name, address: a.address, lat: a.lat, lng: a.lng, sort_order: a.sortOrder, duration_minutes: a.durationMinutes, duration_days: a.durationDays, scheduled_date: a.scheduledDate, scheduled_period: a.scheduledPeriod, scheduled_time: a.scheduledTime, description: a.description, activity_type: a.activityType, transport_type: a.transportType, pricing_mode: a.pricingMode, unit_price: a.unitPrice, quantity: a.quantity, surcharge: a.surcharge, adult_price: a.adultPrice, child_price: a.childPrice, participant_adults: a.participantAdults, participant_children: a.participantChildren };
+                    const map: Record<string, unknown> = { name: a.name, address: a.address, external_url: a.externalUrl, external_label: a.externalLabel, lat: a.lat, lng: a.lng, sort_order: a.sortOrder, duration_minutes: a.durationMinutes, duration_days: a.durationDays, scheduled_date: a.scheduledDate, scheduled_period: a.scheduledPeriod, scheduled_time: a.scheduledTime, description: a.description, activity_type: a.activityType, transport_type: a.transportType, pricing_mode: a.pricingMode, unit_price: a.unitPrice, quantity: a.quantity, surcharge: a.surcharge, adult_price: a.adultPrice, child_price: a.childPrice, participant_adults: a.participantAdults, participant_children: a.participantChildren };
                     for (const [k, v] of Object.entries(map)) {
                         if (v !== undefined) { fields.push(`${k} = ?`); values.push(v); }
                     }

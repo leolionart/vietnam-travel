@@ -8,6 +8,8 @@ interface DbSubLocation {
     sort_order: number;
     name: string;
     address: string;
+    external_url: string;
+    external_label: string;
     lat: number;
     lng: number;
     duration_minutes: number;
@@ -58,6 +60,8 @@ function subToPublic(sub: DbSubLocation) {
         id: sub.id,
         name: sub.name,
         address: sub.address || '',
+        externalUrl: sub.external_url || '',
+        externalLabel: sub.external_label || '',
         lat: sub.lat,
         lng: sub.lng,
         durationMinutes: sub.duration_minutes,

@@ -34,6 +34,8 @@ CREATE TABLE IF NOT EXISTS sub_locations (
     sort_order       REAL    NOT NULL DEFAULT 0,
     name             TEXT    NOT NULL,
     address          TEXT    NOT NULL DEFAULT '',
+    external_url     TEXT    NOT NULL DEFAULT '',
+    external_label   TEXT    NOT NULL DEFAULT '',
     lat              REAL    NOT NULL DEFAULT 0,
     lng              REAL    NOT NULL DEFAULT 0,
     duration_minutes INTEGER NOT NULL DEFAULT 60,

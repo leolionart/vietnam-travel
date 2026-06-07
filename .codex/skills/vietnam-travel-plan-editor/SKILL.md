@@ -218,6 +218,11 @@ Cost details belong on activities (`sub_locations`), not fixed location fields.
 - Use `address` on activities for the concrete street/place address shown on
   calendar event cards and Google Maps searches. If `address` is missing, the
   UI falls back to the parent location name.
+- Use `externalUrl` for the event detail drawer's general CTA link, such as
+  Booking.com, the venue website, Facebook, or a Google Maps fallback.
+- Use `externalLabel` only when the CTA button text should be explicit; the UI
+  can otherwise derive labels such as `Đặt phòng`, `Xem trang`, or `Mở website`
+  from `externalUrl`.
 - Hotels: use `activityType="accommodation"`, `pricingMode="per_room"`, `unitPrice` per room/night or stay unit, `quantity` for room/unit count, `surcharge` for fixed extra charges, default surcharge `0`, and `durationDays` for multi-day stay bars.
 - Tickets: use adult/child prices with `pricingMode="per_person"`.
 - Transport and meals should also be activities when they affect cost.

@@ -355,12 +355,13 @@
                             <p class="text-[9px] font-black uppercase tracking-wider text-slate-500">Địa điểm</p>
                             <p class="mt-2 text-base font-bold text-white" x-text="eventDetail().activity?.address || eventDetail().activity?.name || eventDetail().location?.name"></p>
                             <p class="mt-1 text-xs text-slate-400" x-text="[eventDetail().location?.name, eventDetail().location?.province].filter(Boolean).join(' · ')"></p>
-                            <a :href="activityGoogleMapsUrl(eventDetail().activity, eventDetail().location)"
+                            <a x-show="activityExternalUrl(eventDetail().activity)"
+                               :href="activityExternalUrl(eventDetail().activity)"
                                target="_blank"
                                rel="noopener"
                                class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-sky-400">
                                 <i data-lucide="external-link" class="h-4 w-4"></i>
-                                Mở trên Google Maps
+                                <span x-text="activityExternalLabel(eventDetail().activity)"></span>
                             </a>
                         </div>
                         <div x-show="canCrudPlan() && eventHasEditableActivity(eventDetail().activity)" class="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
@@ -1181,8 +1182,16 @@
                             <input x-model="activityDraft.name" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400" placeholder="Ví dụ: Tham quan phố cổ">
                         </label>
                         <label class="space-y-1 col-span-2">
-                            <span class="text-[9px] font-bold text-slate-500 uppercase">Tên địa điểm</span>
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Tên địa điểm / vị trí</span>
                             <input x-model="activityDraft.address" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400" placeholder="Ví dụ: Hang Múa Ecolodge">
+                        </label>
+                        <label class="space-y-1 col-span-2">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Link tham khảo / đặt dịch vụ</span>
+                            <input type="url" x-model="activityDraft.externalUrl" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400" placeholder="Booking.com, website, Facebook hoặc Google Maps">
+                        </label>
+                        <label class="space-y-1 col-span-2">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Nhãn button link</span>
+                            <input x-model="activityDraft.externalLabel" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400" placeholder="Ví dụ: Đặt phòng, Mở website, Xem địa điểm">
                         </label>
                         <label class="space-y-1">
                             <span class="text-[9px] font-bold text-slate-500 uppercase">Loại</span>
@@ -2664,6 +2673,8 @@
                         quantity: 1,
                         surcharge: 0,
                         address: '',
+                        externalUrl: '',
+                        externalLabel: '',
                         description: '',
                     };
                     this.showActivityForm = true;
@@ -2693,6 +2704,8 @@
                         quantity: Number(sub.quantity ?? 1),
                         surcharge: Number(sub.surcharge || 0),
                         address: sub.address || '',
+                        externalUrl: sub.externalUrl || '',
+                        externalLabel: sub.externalLabel || '',
                         description: sub.description || '',
                     };
                     this.showActivityForm = true;
@@ -2751,6 +2764,8 @@
                         quantity: Number(this.activityDraft.quantity ?? 1),
                         surcharge: Number(this.activityDraft.surcharge || 0),
                         address: String(this.activityDraft.address || '').trim(),
+                        externalUrl: String(this.activityDraft.externalUrl || '').trim(),
+                        externalLabel: String(this.activityDraft.externalLabel || '').trim(),
                         description: this.activityDraft.description || '',
                         lat: Number(this.activeLocation.lat || 0),
                         lng: Number(this.activeLocation.lng || 0),
@@ -2961,6 +2976,24 @@
 
                 activityLocationLabel(activity, loc) {
                     return String(activity?.address || '').trim();
+                },
+
+                activityExternalUrl(activity) {
+                    const url = String(activity?.externalUrl || '').trim();
+                    if (!url) return '';
+                    if (/^https?:\/\//i.test(url)) return url;
+                    return `https://${url}`;
+                },
+
+                activityExternalLabel(activity) {
+                    const explicit = String(activity?.externalLabel || '').trim();
+                    if (explicit) return explicit;
+                    const url = this.activityExternalUrl(activity).toLowerCase();
+                    if (!url) return '';
+                    if (url.includes('booking.com') || url.includes('agoda.') || url.includes('airbnb.')) return 'Đặt phòng';
+                    if (url.includes('maps.google.') || url.includes('goo.gl/maps') || url.includes('maps.app.goo.gl')) return 'Xem địa điểm';
+                    if (url.includes('facebook.com') || url.includes('instagram.com')) return 'Xem trang';
+                    return 'Mở website';
                 },
 
                 activityGoogleMapsUrl(activity, loc) {

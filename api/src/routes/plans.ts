@@ -210,16 +210,16 @@ router.post('/:slug/locations/:id/sub-locations', requireAuth, (req, res) => {
     const locationId = Number(req.params.id);
     if (!getLocationForPlan(planId, locationId)) { res.status(404).json({ error: 'Location not found' }); return; }
 
-    const { name, address, lat, lng, durationMinutes, durationDays, scheduledDate, scheduledPeriod, scheduledTime, description, sortOrder, activityType, transportType, pricingMode, unitPrice, quantity, surcharge, adultPrice, childPrice, participantAdults, participantChildren } = req.body as {
-        name?: string; address?: string; lat?: number; lng?: number; durationMinutes?: number; durationDays?: number; scheduledDate?: string; scheduledPeriod?: string; scheduledTime?: string; description?: string; sortOrder?: number; activityType?: string; transportType?: string; pricingMode?: string; unitPrice?: number; quantity?: number; surcharge?: number; adultPrice?: number; childPrice?: number; participantAdults?: number | null; participantChildren?: number | null;
+    const { name, address, externalUrl, externalLabel, lat, lng, durationMinutes, durationDays, scheduledDate, scheduledPeriod, scheduledTime, description, sortOrder, activityType, transportType, pricingMode, unitPrice, quantity, surcharge, adultPrice, childPrice, participantAdults, participantChildren } = req.body as {
+        name?: string; address?: string; externalUrl?: string; externalLabel?: string; lat?: number; lng?: number; durationMinutes?: number; durationDays?: number; scheduledDate?: string; scheduledPeriod?: string; scheduledTime?: string; description?: string; sortOrder?: number; activityType?: string; transportType?: string; pricingMode?: string; unitPrice?: number; quantity?: number; surcharge?: number; adultPrice?: number; childPrice?: number; participantAdults?: number | null; participantChildren?: number | null;
     };
     if (!name?.trim()) { res.status(400).json({ error: 'name is required' }); return; }
 
     const db = getDb();
     const maxOrder = (db.prepare('SELECT MAX(sort_order) as m FROM sub_locations WHERE location_id = ?').get(locationId) as { m: number | null }).m ?? 0;
     const result = db.prepare(
-        'INSERT INTO sub_locations (location_id, sort_order, name, address, lat, lng, duration_minutes, duration_days, scheduled_date, scheduled_period, scheduled_time, description, activity_type, transport_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price, participant_adults, participant_children) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(locationId, sortOrder ?? maxOrder + 1, name, address ?? '', lat ?? 0, lng ?? 0, durationMinutes ?? 60, durationDays ?? 0, scheduledDate ?? '', scheduledPeriod ?? '', scheduledTime ?? '', description ?? '', activityType ?? 'sightseeing', transportType ?? '', pricingMode ?? 'per_person', unitPrice ?? 0, quantity ?? 1, surcharge ?? 0, adultPrice ?? 0, childPrice ?? 0, participantAdults ?? null, participantChildren ?? null);
+        'INSERT INTO sub_locations (location_id, sort_order, name, address, external_url, external_label, lat, lng, duration_minutes, duration_days, scheduled_date, scheduled_period, scheduled_time, description, activity_type, transport_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price, participant_adults, participant_children) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(locationId, sortOrder ?? maxOrder + 1, name, address ?? '', externalUrl ?? '', externalLabel ?? '', lat ?? 0, lng ?? 0, durationMinutes ?? 60, durationDays ?? 0, scheduledDate ?? '', scheduledPeriod ?? '', scheduledTime ?? '', description ?? '', activityType ?? 'sightseeing', transportType ?? '', pricingMode ?? 'per_person', unitPrice ?? 0, quantity ?? 1, surcharge ?? 0, adultPrice ?? 0, childPrice ?? 0, participantAdults ?? null, participantChildren ?? null);
 
     res.status(201).json({ id: result.lastInsertRowid });
 });
@@ -236,14 +236,16 @@ router.put('/:slug/locations/:id/sub-locations/:subId', requireAuth, (req, res) 
     const existing = getSubLocationForPlan(planId, subId);
     if (!existing) { res.status(404).json({ error: 'Sub-location not found' }); return; }
 
-    const { name, address, lat, lng, durationMinutes, durationDays, scheduledDate, scheduledPeriod, scheduledTime, description, sortOrder, activityType, transportType, pricingMode, unitPrice, quantity, surcharge, adultPrice, childPrice, participantAdults, participantChildren } = req.body as {
-        name?: string; address?: string; lat?: number; lng?: number; durationMinutes?: number; durationDays?: number; scheduledDate?: string; scheduledPeriod?: string; scheduledTime?: string; description?: string; sortOrder?: number; activityType?: string; transportType?: string; pricingMode?: string; unitPrice?: number; quantity?: number; surcharge?: number; adultPrice?: number; childPrice?: number; participantAdults?: number | null; participantChildren?: number | null;
+    const { name, address, externalUrl, externalLabel, lat, lng, durationMinutes, durationDays, scheduledDate, scheduledPeriod, scheduledTime, description, sortOrder, activityType, transportType, pricingMode, unitPrice, quantity, surcharge, adultPrice, childPrice, participantAdults, participantChildren } = req.body as {
+        name?: string; address?: string; externalUrl?: string; externalLabel?: string; lat?: number; lng?: number; durationMinutes?: number; durationDays?: number; scheduledDate?: string; scheduledPeriod?: string; scheduledTime?: string; description?: string; sortOrder?: number; activityType?: string; transportType?: string; pricingMode?: string; unitPrice?: number; quantity?: number; surcharge?: number; adultPrice?: number; childPrice?: number; participantAdults?: number | null; participantChildren?: number | null;
     };
 
     const fields: string[] = [];
     const values: unknown[] = [];
     if (name !== undefined) { fields.push('name = ?'); values.push(name); }
     if (address !== undefined) { fields.push('address = ?'); values.push(address); }
+    if (externalUrl !== undefined) { fields.push('external_url = ?'); values.push(externalUrl); }
+    if (externalLabel !== undefined) { fields.push('external_label = ?'); values.push(externalLabel); }
     if (lat !== undefined) { fields.push('lat = ?'); values.push(lat); }
     if (lng !== undefined) { fields.push('lng = ?'); values.push(lng); }
     if (durationMinutes !== undefined) { fields.push('duration_minutes = ?'); values.push(durationMinutes); }
@@ -284,14 +286,16 @@ router.patch('/:slug/locations/:id/sub-locations/:subId', requireAuth, (req, res
     const existing = getSubLocationForPlan(planId, subId);
     if (!existing) { res.status(404).json({ error: 'Sub-location not found' }); return; }
 
-    const { name, address, lat, lng, durationMinutes, durationDays, scheduledDate, scheduledPeriod, scheduledTime, description, sortOrder, activityType, transportType, pricingMode, unitPrice, quantity, surcharge, adultPrice, childPrice, participantAdults, participantChildren } = req.body as {
-        name?: string; address?: string; lat?: number; lng?: number; durationMinutes?: number; durationDays?: number; scheduledDate?: string; scheduledPeriod?: string; scheduledTime?: string; description?: string; sortOrder?: number; activityType?: string; transportType?: string; pricingMode?: string; unitPrice?: number; quantity?: number; surcharge?: number; adultPrice?: number; childPrice?: number; participantAdults?: number | null; participantChildren?: number | null;
+    const { name, address, externalUrl, externalLabel, lat, lng, durationMinutes, durationDays, scheduledDate, scheduledPeriod, scheduledTime, description, sortOrder, activityType, transportType, pricingMode, unitPrice, quantity, surcharge, adultPrice, childPrice, participantAdults, participantChildren } = req.body as {
+        name?: string; address?: string; externalUrl?: string; externalLabel?: string; lat?: number; lng?: number; durationMinutes?: number; durationDays?: number; scheduledDate?: string; scheduledPeriod?: string; scheduledTime?: string; description?: string; sortOrder?: number; activityType?: string; transportType?: string; pricingMode?: string; unitPrice?: number; quantity?: number; surcharge?: number; adultPrice?: number; childPrice?: number; participantAdults?: number | null; participantChildren?: number | null;
     };
 
     const fields: string[] = [];
     const values: unknown[] = [];
     if (name !== undefined) { fields.push('name = ?'); values.push(name); }
     if (address !== undefined) { fields.push('address = ?'); values.push(address); }
+    if (externalUrl !== undefined) { fields.push('external_url = ?'); values.push(externalUrl); }
+    if (externalLabel !== undefined) { fields.push('external_label = ?'); values.push(externalLabel); }
     if (lat !== undefined) { fields.push('lat = ?'); values.push(lat); }
     if (lng !== undefined) { fields.push('lng = ?'); values.push(lng); }
     if (durationMinutes !== undefined) { fields.push('duration_minutes = ?'); values.push(durationMinutes); }

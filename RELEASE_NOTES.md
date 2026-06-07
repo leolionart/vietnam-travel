@@ -1,10 +1,17 @@
 # Release Notes
 
-## Unreleased - 2026-06-06 22:16 +07
+## v1.0.9 - Activity External CTA Links
 
-Generated before push from commits:
+![v1.0.9 event drawer CTA preview](https://github.com/leolionart/vietnam-travel/releases/download/v1.0.9/vietnam-travel-v1.0.9-event-drawer.png)
 
-- `64c6160` Add event delete confirmation
+- Added separate activity CTA fields for the event detail drawer:
+  `externalUrl` and `externalLabel`.
+- Kept the drawer's top-right Maps button dedicated to Google Maps while the
+  lower CTA can point to Booking.com, a website, Facebook, or a Maps fallback.
+- Added admin/public/API/MCP support for storing and updating the new CTA fields
+  without overloading the visible location/address field.
+- Added activity form controls for the CTA link and optional button label.
+- Preserved the recent event delete confirmation change in this release range.
 
 ## v1.0.8 - Conditional Other Activity Category
 
