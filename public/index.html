@@ -1712,6 +1712,8 @@
                 transportMarkers: [],
                 mapReady: false,
                 tileLayer: null,
+                routeSegmentCache: {},
+                mapRouteRequestId: 0,
                 markerPopup: null,      // { type, id, name, isExcluded, x, y }
                 excludedLocations: {},  // { locationId: true } — bỏ khỏi lộ trình trên map
                 mySessionId: null,      // Session của chính user này (đã tạo / đã lưu)
@@ -1943,6 +1945,8 @@
 
                 async updateMap(fitBounds = false, forceOverview = false) {
                     if (!this.map) return;
+                    const routeRequestId = (this.mapRouteRequestId || 0) + 1;
+                    this.mapRouteRequestId = routeRequestId;
 
                     Object.values(this.markers).forEach(m => this.map.removeLayer(m));
                     this.markers = {};
@@ -2013,17 +2017,20 @@
                             ...(this.hasMapCoordinates(basePoint) ? [basePoint] : []),
                             ...subs,
                         ];
+                        const detailRoutes = await Promise.all(detailRoutePoints.slice(1).map((next, index) =>
+                            this.fetchRouteSegment(detailRoutePoints[index], next, next.transportType)
+                        ));
+                        if (routeRequestId !== this.mapRouteRequestId) return;
                         for (let idx = 1; idx < detailRoutePoints.length; idx += 1) {
-                            const prev = detailRoutePoints[idx - 1];
                             const next = detailRoutePoints[idx];
                             const routeStyle = this.getRouteLegStyle(idx - 1);
-                            const route = this.estimateRouteSegment(prev, next, next.transportType);
+                            const route = detailRoutes[idx - 1];
                             const coords = route.coordinates;
                             detailRouteLayers.push(L.polyline(coords.map(([lng, lat]) => [lat, lng]), {
-                                color: routeStyle.fallback,
+                                color: route.estimated ? routeStyle.fallback : routeStyle.color,
                                 weight: 3,
-                                opacity: 0.82,
-                                dashArray: '8, 12',
+                                opacity: route.estimated ? 0.82 : 0.9,
+                                dashArray: route.estimated ? '8, 12' : '',
                                 lineJoin: 'round'
                             }));
 
@@ -2134,18 +2141,21 @@
                     };
 
                     const routeLayers = [];
+                    const routeMetrics = await Promise.all(visibleLocs.slice(1).map((loc, index) =>
+                        this.fetchRouteSegment(visibleLocs[index], loc, loc.transportType)
+                    ));
+                    if (routeRequestId !== this.mapRouteRequestId) return;
                     for (let idx = 1; idx < visibleLocs.length; idx += 1) {
-                        const prev = visibleLocs[idx - 1];
                         const loc = visibleLocs[idx];
                         const routeStyle = this.getRouteLegStyle(idx - 1);
-                        const metrics = this.estimateRouteSegment(prev, loc, loc.transportType);
+                        const metrics = routeMetrics[idx - 1];
                         const coords = metrics.coordinates;
 
                         routeLayers.push(L.polyline(coords.map(([lng, lat]) => [lat, lng]), {
-                            color: routeStyle.fallback,
+                            color: metrics.estimated ? routeStyle.fallback : routeStyle.color,
                             weight: 2.8,
-                            opacity: 0.78,
-                            dashArray: '10, 14',
+                            opacity: metrics.estimated ? 0.78 : 0.9,
+                            dashArray: metrics.estimated ? '10, 14' : '',
                             lineJoin: 'round'
                         }));
 
@@ -3047,6 +3057,51 @@
                         duration: this.estimateDrivingDurationSeconds(km, type),
                         estimated: true,
                     };
+                },
+
+                routeSegmentCacheKey(from, to, type = 'car') {
+                    const normalize = (value) => Number(value || 0).toFixed(5);
+                    return [
+                        normalize(from?.lng),
+                        normalize(from?.lat),
+                        normalize(to?.lng),
+                        normalize(to?.lat),
+                        String(type || 'car').toLowerCase(),
+                    ].join(',');
+                },
+
+                async fetchRouteSegment(from, to, type = 'car') {
+                    const fallback = this.estimateRouteSegment(from, to, type);
+                    if (!this.hasMapCoordinates(from) || !this.hasMapCoordinates(to)) return fallback;
+
+                    const key = this.routeSegmentCacheKey(from, to, type);
+                    if (this.routeSegmentCache[key]) return this.routeSegmentCache[key];
+
+                    const controller = new AbortController();
+                    const timeout = setTimeout(() => controller.abort(), 4500);
+                    try {
+                        const coords = `${from.lng},${from.lat};${to.lng},${to.lat}`;
+                        const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=false`;
+                        const res = await fetch(url, { signal: controller.signal });
+                        if (!res.ok) throw new Error(`OSRM ${res.status}`);
+                        const data = await res.json();
+                        const route = data?.routes?.[0];
+                        const coordinates = route?.geometry?.coordinates || [];
+                        if (!Array.isArray(coordinates) || coordinates.length < 2) throw new Error('OSRM empty route');
+                        const result = {
+                            coordinates,
+                            distance: Number(route.distance || fallback.distance),
+                            duration: Number(route.duration || fallback.duration),
+                            estimated: false,
+                        };
+                        this.routeSegmentCache[key] = result;
+                        return result;
+                    } catch (e) {
+                        console.warn('[map] road route fallback:', e);
+                        return fallback;
+                    } finally {
+                        clearTimeout(timeout);
+                    }
                 },
 
                 formatRouteDistance(meters) {

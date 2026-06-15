@@ -20,10 +20,10 @@ Bản đồ hoạt động theo 2 chế độ hoàn toàn khác nhau, tùy thu�
 Hiển thị **toàn bộ lộ trình** của plan:
 
 - **Markers:** Số tròn (1, 2, 3...) cho mỗi location. Marker active = xanh + to hơn (`scale-125`)
-- **Route line:** Màu xanh dương (`#3b82f6`), vẽ theo đường thực tế từ **OSRM API** (`router.project-osrm.org`)
+- **Route line:** Vẽ từng leg theo đường thực tế từ **OSRM API** (`router.project-osrm.org`), dùng màu riêng theo leg.
 - **Transport badges:** Label nổi giữa mỗi đoạn đường (ví dụ: "🚌 Xe khách ~5h")
 - **Direction arrows:** Mũi tên nhỏ dọc theo route để chỉ hướng đi
-- **Fallback:** Nếu OSRM fail → vẽ đường thẳng (`polyline`) giữa các điểm
+- **Cache/fallback:** Route road được cache theo leg trong phiên xem. Nếu OSRM fail/timeout → vẽ đường thẳng (`polyline`) nét đứt giữa các điểm.
 - **fitBounds:** Tự động zoom để toàn bộ locations vừa màn hình (padding 50px)
 - **Excluded locations:** Markers bị loại hiển thị mờ (opacity 0.4), không tham gia tính route
 
@@ -32,7 +32,7 @@ Hiển thị **toàn bộ lộ trình** của plan:
 Hiển thị **lịch trình trong một điểm dừng** (ví dụ: các địa điểm tham quan ở Ninh Bình):
 
 - **Markers:** Số tròn màu emerald cho mỗi sub-location
-- **Route line:** Màu xanh lá (`#10b981`), cũng dùng OSRM nếu có thể
+- **Route line:** Vẽ từng leg theo OSRM nếu có thể, cùng cache/fallback như overview.
 - **fitBounds:** Zoom vào khu vực sub-locations
 - **Excluded subs:** Hiển thị mờ + dashed border, không tham gia route
 

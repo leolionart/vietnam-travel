@@ -29,6 +29,8 @@
   resize interactions so touch-screen scrolling stays stable.
 - Aligned calendar event card content to the top so title and metadata no
   longer sit vertically centered inside taller cards.
+- Restored OSRM road-route drawing for overview and detail map paths, with
+  cached per-leg routes and straight-line fallback only when road routing fails.
 
 ## v1.0.9 - Activity External CTA Links
 
