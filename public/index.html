@@ -650,7 +650,10 @@
                         <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-2">
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Tổng chi phí</p>
-                                <p class="mt-1 text-sm lg:text-base xl:text-lg font-bold leading-tight text-white font-display break-words" x-text="budgetProgressLabel()"></p>
+                                <p class="mt-1 text-sm lg:text-base xl:text-lg font-bold leading-tight text-white font-display break-words">
+                                    <span x-text="formatCurrency(totalPlanCost)"></span>
+                                    <span class="font-semibold text-slate-500" x-text="` / ${formatCurrency(planBudgetLimit)}`"></span>
+                                </p>
                                 <p class="mt-1 flex items-center justify-between gap-2 text-[9px] font-bold text-slate-500">
                                     <span x-text="budgetUsageLabel(totalPlanCost)"></span>
                                     <span class="text-right text-slate-300" x-text="budgetRemainingLabel(totalPlanCost)"></span>
@@ -901,7 +904,10 @@
                         <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-2">
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Tổng chi phí</p>
-                                <p class="mt-1 text-sm lg:text-base xl:text-lg font-bold leading-tight text-white font-display break-words" x-text="budgetProgressLabel()"></p>
+                                <p class="mt-1 text-sm lg:text-base xl:text-lg font-bold leading-tight text-white font-display break-words">
+                                    <span x-text="formatCurrency(totalPlanCost)"></span>
+                                    <span class="font-semibold text-slate-500" x-text="` / ${formatCurrency(planBudgetLimit)}`"></span>
+                                </p>
                                 <p class="mt-1 flex items-center justify-between gap-2 text-[9px] font-bold text-slate-500">
                                     <span x-text="budgetUsageLabel(totalPlanCost)"></span>
                                     <span class="text-right text-slate-300" x-text="budgetRemainingLabel(totalPlanCost)"></span>
@@ -4368,10 +4374,6 @@
 
                 planTicketTotal(plan = this.currentPlan) {
                     return this.planActivityTotal(['sightseeing'], plan);
-                },
-
-                budgetProgressLabel(value = this.totalPlanCost) {
-                    return `${this.formatCurrency(value)} / ${this.formatCurrency(this.planBudgetLimit)}`;
                 },
 
                 budgetUsageLabel(value = this.totalPlanCost) {

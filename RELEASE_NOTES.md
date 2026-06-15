@@ -23,6 +23,8 @@
   legends, cost summaries, location details, and print export.
 - Updated calendar budget summaries to compare current spend against a fixed
   `150.000.000 ₫` budget and show both usage percent and remaining amount.
+- Muted the fixed budget text so the actual spend remains the primary visual
+  emphasis in the total cost card.
 
 ## v1.0.9 - Activity External CTA Links
 
