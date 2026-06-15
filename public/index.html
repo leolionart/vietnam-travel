@@ -57,6 +57,21 @@
             color: rgba(226,232,240,0.78) !important;
         }
 
+        .event-cost-chip {
+            display: inline-flex;
+            max-width: 100%;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.375rem;
+            border: 1px solid rgba(255,255,255,0.18);
+            background: rgba(15,23,42,0.62);
+            color: #f8fafc;
+            padding: 0.125rem 0.375rem;
+            font-weight: 800;
+            line-height: 1;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+        }
+
         .calendar-event-food { background: rgba(239,68,68,0.28); border-color: rgba(248,113,113,0.42); }
         .calendar-event-cafe { background: rgba(249,115,22,0.28); border-color: rgba(251,146,60,0.42); }
         .calendar-event-transport { background: rgba(100,116,139,0.30); border-color: rgba(148,163,184,0.42); }
@@ -120,6 +135,13 @@
         body.theme-light .calendar-event-glass .text-slate-600,
         body.theme-light .calendar-event-glass .text-slate-700 {
             color: rgba(51,65,85,0.76) !important;
+        }
+
+        body.theme-light .event-cost-chip {
+            border-color: rgba(15,23,42,0.12);
+            background: rgba(255,255,255,0.72);
+            color: #0f172a;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
         }
 
         body.theme-light .calendar-event-food { background: rgba(239,68,68,0.16); border-color: rgba(239,68,68,0.30); }
@@ -789,7 +811,7 @@
                                                                     <span x-show="calendarEventDurationCompactLabel(event)" class="text-slate-500"> · </span>
                                                                     <span x-show="calendarEventDurationCompactLabel(event)" x-text="calendarEventDurationCompactLabel(event)"></span>
                                                                 </span>
-                                                                <span x-show="event.metaCost" class="flex-none truncate text-right font-bold text-slate-800" x-text="event.metaCost"></span>
+                                                                <span x-show="event.metaCost" class="event-cost-chip flex-none truncate text-right text-[8px]" x-text="event.metaCost"></span>
                                                             </p>
                                                             <p x-show="event.locationName" class="mt-0.5 text-[8px] font-semibold leading-[1.05] text-slate-700 whitespace-normal break-words" x-text="event.locationName"></p>
                                                         </div>
@@ -1047,7 +1069,7 @@
                                                                                                         <span x-show="calendarEventDurationCompactLabel(event)"> · </span>
                                                                                                         <span x-show="calendarEventDurationCompactLabel(event)" x-text="calendarEventDurationCompactLabel(event)"></span>
                                                                                                     </span>
-                                                                                                    <span x-show="event.metaCost" class="flex-none truncate text-right" x-text="event.metaCost"></span>
+                                                                                                    <span x-show="event.metaCost" class="event-cost-chip flex-none truncate text-right text-[7px]" x-text="event.metaCost"></span>
                                                                                                 </p>
                                                                                                 <p x-show="calendarEventDetail(event)" class="mt-0.5 text-[8px] font-semibold leading-snug opacity-80 whitespace-normal break-words" x-text="calendarEventDetail(event)"></p>
                                                                                             </div>

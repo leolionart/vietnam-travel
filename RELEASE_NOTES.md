@@ -18,7 +18,7 @@
   route estimates so the full route appears without waiting on third-party
   routing services.
 - Tightened calendar event cards with compact duration labels such as `1h30p`
-  and aligned event cost on the same row as the time.
+  and aligned a theme-aware cost chip on the same row as the time.
 
 ## v1.0.9 - Activity External CTA Links
 
