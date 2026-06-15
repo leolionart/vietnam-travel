@@ -19,6 +19,8 @@
   routing services.
 - Tightened calendar event cards with duration-first labels such as `1h30p`,
   a right-aligned theme-aware cost chip, and compact `K` cost formatting.
+- Merged legacy cafe activities into the eating/drinking group across calendar
+  legends, cost summaries, location details, and print export.
 
 ## v1.0.9 - Activity External CTA Links
 

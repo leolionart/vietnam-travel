@@ -73,14 +73,12 @@
         }
 
         .calendar-event-food { background: rgba(239,68,68,0.28); border-color: rgba(248,113,113,0.42); }
-        .calendar-event-cafe { background: rgba(249,115,22,0.28); border-color: rgba(251,146,60,0.42); }
         .calendar-event-transport { background: rgba(100,116,139,0.30); border-color: rgba(148,163,184,0.42); }
         .calendar-event-sightseeing { background: rgba(59,130,246,0.28); border-color: rgba(96,165,250,0.42); }
         .calendar-event-stay { background: rgba(71,85,105,0.30); border-color: rgba(148,163,184,0.38); }
         .calendar-event-other { background: rgba(139,92,246,0.24); border-color: rgba(167,139,250,0.36); }
 
         .calendar-event-food:hover { background: rgba(239,68,68,0.36); }
-        .calendar-event-cafe:hover { background: rgba(249,115,22,0.36); }
         .calendar-event-transport:hover { background: rgba(100,116,139,0.40); }
         .calendar-event-sightseeing:hover { background: rgba(59,130,246,0.36); }
         .calendar-event-stay:hover { background: rgba(71,85,105,0.40); }
@@ -145,7 +143,6 @@
         }
 
         body.theme-light .calendar-event-food { background: rgba(239,68,68,0.16); border-color: rgba(239,68,68,0.30); }
-        body.theme-light .calendar-event-cafe { background: rgba(249,115,22,0.16); border-color: rgba(249,115,22,0.30); }
         body.theme-light .calendar-event-transport { background: rgba(100,116,139,0.16); border-color: rgba(100,116,139,0.28); }
         body.theme-light .calendar-event-sightseeing { background: rgba(59,130,246,0.16); border-color: rgba(59,130,246,0.30); }
         body.theme-light .calendar-event-stay { background: rgba(71,85,105,0.15); border-color: rgba(71,85,105,0.26); }
@@ -625,10 +622,7 @@
                             <span class="w-1.5 h-1.5 rounded-full bg-blue-300"></span> Tham quan
                         </span>
                         <span class="inline-flex items-center gap-1 rounded-md bg-red-500/10 text-red-300 border border-red-500/20 px-2 py-0.5">
-                            <span class="w-1.5 h-1.5 rounded-full bg-red-300"></span> Ăn
-                        </span>
-                        <span class="inline-flex items-center gap-1 rounded-md bg-orange-500/10 text-orange-300 border border-orange-500/20 px-2 py-0.5">
-                            <span class="w-1.5 h-1.5 rounded-full bg-orange-300"></span> Cafe
+                            <span class="w-1.5 h-1.5 rounded-full bg-red-300"></span> Ăn uống
                         </span>
                         <span class="inline-flex items-center gap-1 rounded-md bg-white/5 text-slate-300 border border-white/10 px-2 py-0.5">
                             <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Lưu trú
@@ -674,18 +668,10 @@
                             </div>
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Ăn uống</p>
-                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['food']))"></p>
-                                <p class="mt-1 text-[9px] font-bold text-red-300" x-text="costPercentLabel(planActivityTotal(['food']))"></p>
+                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['food', 'cafe']))"></p>
+                                <p class="mt-1 text-[9px] font-bold text-red-300" x-text="costPercentLabel(planActivityTotal(['food', 'cafe']))"></p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
-                                    <div class="h-full rounded-full bg-red-300" :style="`width:${costBarWidth(planActivityTotal(['food']))}%`"></div>
-                                </div>
-                            </div>
-                            <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-                                <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Cafe</p>
-                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['cafe']))"></p>
-                                <p class="mt-1 text-[9px] font-bold text-orange-300" x-text="costPercentLabel(planActivityTotal(['cafe']))"></p>
-                                <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
-                                    <div class="h-full rounded-full bg-orange-300" :style="`width:${costBarWidth(planActivityTotal(['cafe']))}%`"></div>
+                                    <div class="h-full rounded-full bg-red-300" :style="`width:${costBarWidth(planActivityTotal(['food', 'cafe']))}%`"></div>
                                 </div>
                             </div>
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
@@ -885,10 +871,7 @@
                             <span class="w-1.5 h-1.5 rounded-full bg-blue-300"></span> Tham quan
                         </span>
                         <span class="inline-flex items-center gap-1 rounded-md bg-red-500/10 text-red-300 border border-red-500/20 px-2 py-0.5">
-                            <span class="w-1.5 h-1.5 rounded-full bg-red-300"></span> Ăn
-                        </span>
-                        <span class="inline-flex items-center gap-1 rounded-md bg-orange-500/10 text-orange-300 border border-orange-500/20 px-2 py-0.5">
-                            <span class="w-1.5 h-1.5 rounded-full bg-orange-300"></span> Cafe
+                            <span class="w-1.5 h-1.5 rounded-full bg-red-300"></span> Ăn uống
                         </span>
                         <span class="inline-flex items-center gap-1 rounded-md bg-orange-400/10 text-orange-200 border border-orange-300/20 px-2 py-0.5">
                             <span class="w-1.5 h-1.5 rounded-full bg-orange-200"></span> Chiều
@@ -933,18 +916,10 @@
                             </div>
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Ăn uống</p>
-                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['food']))"></p>
-                                <p class="mt-1 text-[9px] font-bold text-red-300" x-text="costPercentLabel(planActivityTotal(['food']))"></p>
+                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['food', 'cafe']))"></p>
+                                <p class="mt-1 text-[9px] font-bold text-red-300" x-text="costPercentLabel(planActivityTotal(['food', 'cafe']))"></p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
-                                    <div class="h-full rounded-full bg-red-300" :style="`width:${costBarWidth(planActivityTotal(['food']))}%`"></div>
-                                </div>
-                            </div>
-                            <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-                                <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Cafe</p>
-                                <p class="mt-1 text-sm lg:text-base font-bold text-slate-100" x-text="formatCurrency(planActivityTotal(['cafe']))"></p>
-                                <p class="mt-1 text-[9px] font-bold text-orange-300" x-text="costPercentLabel(planActivityTotal(['cafe']))"></p>
-                                <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
-                                    <div class="h-full rounded-full bg-orange-300" :style="`width:${costBarWidth(planActivityTotal(['cafe']))}%`"></div>
+                                    <div class="h-full rounded-full bg-red-300" :style="`width:${costBarWidth(planActivityTotal(['food', 'cafe']))}%`"></div>
                                 </div>
                             </div>
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
@@ -1230,7 +1205,6 @@
                                 <option value="sightseeing">Tham quan</option>
                                 <option value="transport">Di chuyển</option>
                                 <option value="food">Ăn uống</option>
-                                <option value="cafe">Cafe</option>
                                 <option value="accommodation">Lưu trú</option>
                                 <option value="other">Khác</option>
                             </select>
@@ -1511,24 +1485,13 @@
                 </div>
 
                 <!-- Food from schedule -->
-                <div x-show="summaryActivitiesByType(activeLocation, ['food']).length">
+                <div x-show="summaryActivitiesByType(activeLocation, ['food', 'cafe']).length">
                     <h4 class="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 lg:mb-4">Ăn uống trong lịch trình</h4>
                     <div class="flex flex-wrap gap-2">
-                        <template x-for="food in summaryActivitiesByType(activeLocation, ['food'])" :key="food.id">
+                        <template x-for="food in summaryActivitiesByType(activeLocation, ['food', 'cafe'])" :key="food.id">
                             <span class="px-3 py-1.5 bg-white/5 rounded-full text-[9px] lg:text-[10px] font-bold text-slate-300 border border-white/5"
                                   :title="summaryActivityMeta(food, activeLocation)"
                                   x-text="food.name"></span>
-                        </template>
-                    </div>
-                </div>
-
-                <div x-show="summaryActivitiesByType(activeLocation, ['cafe']).length">
-                    <h4 class="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 lg:mb-4">Cafe trong lịch trình</h4>
-                    <div class="flex flex-wrap gap-2">
-                        <template x-for="cafe in summaryActivitiesByType(activeLocation, ['cafe'])" :key="cafe.id">
-                            <span class="px-3 py-1.5 bg-orange-300/10 rounded-full text-[9px] lg:text-[10px] font-bold text-orange-100 border border-orange-300/20"
-                                  :title="summaryActivityMeta(cafe, activeLocation)"
-                                  x-text="cafe.name"></span>
                         </template>
                     </div>
                 </div>
@@ -2816,7 +2779,7 @@
                         sightseeing: 'Tham quan',
                         accommodation: 'Lưu trú',
                         food: 'Ăn uống',
-                        cafe: 'Cafe',
+                        cafe: 'Ăn uống',
                         transport: 'Di chuyển',
                         other: 'Khác',
                     }[type || 'sightseeing'] || 'Khác';
@@ -2872,13 +2835,19 @@
                 },
 
                 locationActivityTypeStats(loc) {
-                    const types = ['sightseeing', 'accommodation', 'food', 'cafe', 'transport', 'other'];
-                    return types
-                        .map(type => {
-                            const items = this.summaryActivitiesByType(loc, [type]);
+                    const groups = [
+                        { type: 'sightseeing', types: ['sightseeing'] },
+                        { type: 'accommodation', types: ['accommodation'] },
+                        { type: 'food', types: ['food', 'cafe'] },
+                        { type: 'transport', types: ['transport'] },
+                        { type: 'other', types: ['other'] },
+                    ];
+                    return groups
+                        .map(group => {
+                            const items = this.summaryActivitiesByType(loc, group.types);
                             return {
-                                type,
-                                label: this.activityTypeLabel(type),
+                                type: group.type,
+                                label: this.activityTypeLabel(group.type),
                                 count: items.length,
                                 total: items.reduce((sum, item) => sum + this.subActivityCost(item, loc), 0),
                             };
@@ -3343,7 +3312,7 @@
                     const eventType = typeof eventOrType === 'object' ? eventOrType?.type : eventOrType;
                     const classes = {
                         food: 'calendar-event-glass calendar-event-food',
-                        cafe: 'calendar-event-glass calendar-event-cafe',
+                        cafe: 'calendar-event-glass calendar-event-food',
                         transport: 'calendar-event-glass calendar-event-transport',
                         sightseeing: 'calendar-event-glass calendar-event-sightseeing',
                         visit: 'calendar-event-glass calendar-event-sightseeing',
@@ -3357,8 +3326,7 @@
                 calendarEventIcon(event) {
                     if (event?.activityType === 'accommodation' || (event?.type === 'stay' && event?.subLocationId)) return 'bed';
                     if (event?.type === 'stay') return 'map-pin';
-                    if (event?.activityType === 'food') return 'utensils';
-                    if (event?.activityType === 'cafe') return 'coffee';
+                    if (event?.activityType === 'food' || event?.activityType === 'cafe') return 'utensils';
                     if (event?.type === 'transport' || event?.activityType === 'transport') return this.getTransportIcon(this.calendarTransportType(event));
                     if (event?.activityType === 'sightseeing' || event?.type === 'visit') return 'ticket';
                     return 'circle-dot';
@@ -3367,8 +3335,7 @@
                 calendarEventGlyph(event) {
                     if (event?.activityType === 'accommodation' || (event?.type === 'stay' && event?.subLocationId)) return '🛏';
                     if (event?.type === 'stay') return '📍';
-                    if (event?.activityType === 'food') return '🍽';
-                    if (event?.activityType === 'cafe') return '☕';
+                    if (event?.activityType === 'food' || event?.activityType === 'cafe') return '🍽';
                     if (event?.type === 'transport' || event?.activityType === 'transport') return this.transportGlyph(this.calendarTransportType(event));
                     if (event?.activityType === 'sightseeing' || event?.type === 'visit') return '🎟';
                     return '•';
@@ -3404,8 +3371,7 @@
                     if (event?.locationCode) return event.locationCode;
                     if (event?.activityType === 'accommodation' || (event?.type === 'stay' && event?.subLocationId)) return 'Ở';
                     if (event?.type === 'stay') return 'ĐĐ';
-                    if (event?.activityType === 'food') return 'Ăn';
-                    if (event?.activityType === 'cafe') return 'Cf';
+                    if (event?.activityType === 'food' || event?.activityType === 'cafe') return 'Ăn';
                     if (event?.type === 'transport' || event?.activityType === 'transport') return 'Xe';
                     if (event?.activityType === 'sightseeing' || event?.type === 'visit') return 'Vé';
                     return 'Kh';
@@ -3438,7 +3404,7 @@
                         accommodation: 'bg-white/10 border-slate-300/25 text-slate-100',
                         location: 'bg-cyan-300/10 border-cyan-300/25 text-cyan-100',
                         food: 'bg-red-300/10 border-red-300/25 text-red-100',
-                        cafe: 'bg-orange-300/10 border-orange-300/25 text-orange-100',
+                        cafe: 'bg-red-300/10 border-red-300/25 text-red-100',
                         transport: 'bg-slate-300/10 border-slate-300/25 text-slate-100',
                         sightseeing: 'bg-blue-300/10 border-blue-300/25 text-blue-100',
                         visit: 'bg-blue-300/10 border-blue-300/25 text-blue-100',
@@ -4357,7 +4323,7 @@
                         accommodation: 'accommodation',
                         stay: 'accommodation',
                         food: 'food',
-                        cafe: 'cafe',
+                        cafe: 'food',
                         transport: 'transport',
                         other: 'other',
                     };
@@ -4467,11 +4433,9 @@
                                 <td>${escapeHtml(this.locationActivitySummary(loc))}</td>
                                 <td class="money">${formatMoney(this.subActivityTotal(loc, ['transport']))}</td>
                                 <td class="money">${formatMoney(this.subActivityTotal(loc, ['accommodation']))}</td>
-                                <td class="money">${formatMoney(this.subActivityTotal(loc, ['food']))}</td>
-                                <td class="money">${formatMoney(this.subActivityTotal(loc, ['cafe']))}</td>
+                                <td class="money">${formatMoney(this.subActivityTotal(loc, ['food', 'cafe']))}</td>
                                 <td>${escapeHtml(this.summaryActivitiesByType(loc, ['sightseeing', 'transport', 'other']).map(item => item.name).join(', '))}</td>
-                                <td>${escapeHtml(this.summaryActivitiesByType(loc, ['food']).map(item => item.name).join(', '))}</td>
-                                <td>${escapeHtml(this.summaryActivitiesByType(loc, ['cafe']).map(item => item.name).join(', '))}</td>
+                                <td>${escapeHtml(this.summaryActivitiesByType(loc, ['food', 'cafe']).map(item => item.name).join(', '))}</td>
                                 <td class="money">${formatMoney(cost)}</td>
                             </tr>
                         `;
@@ -4609,10 +4573,8 @@
           <th style="width:70px">Phí di chuyển</th>
           <th style="width:72px">Lưu trú activity</th>
           <th style="width:72px">Ăn uống activity</th>
-          <th style="width:60px">Cafe activity</th>
           <th>Hoạt động</th>
           <th>Ẩm thực</th>
-          <th>Cafe</th>
           <th style="width:86px">Thành tiền</th>
         </tr>
       </thead>

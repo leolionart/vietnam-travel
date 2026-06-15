@@ -19,7 +19,7 @@ Tổng plan = Σ calculateLocationCost(loc)   // với mỗi loc chưa bị excl
 `calculateLocationCost(loc)` trả về tổng của các khoản đã phân loại:
 
 ```
-Chi phí location = Vé tham quan + Lưu trú + Ăn uống + Cafe + Di chuyển + Khác
+Chi phí location = Vé tham quan + Lưu trú + Ăn uống + Di chuyển + Khác
 ```
 
 ### 1. Activity/sub-location
@@ -37,8 +37,9 @@ Chi phí location = Vé tham quan + Lưu trú + Ăn uống + Cafe + Di chuyển 
 | `durationDays` | Số ngày activity kéo dài, dùng để hiển thị khách sạn/tour nhiều ngày |
 
 Activity loại `sightseeing` dùng cho vé tham quan. Activity loại `accommodation`,
-`food`, `cafe`, `transport`, hoặc `other` là nguồn chi phí theo từng nhóm;
-parent location chỉ giữ summary và thông tin lịch trình.
+`food`, `transport`, hoặc `other` là nguồn chi phí theo từng nhóm; activity
+legacy `cafe` được đọc chung vào nhóm `food`/Ăn uống để giữ dữ liệu cũ không mất.
+Parent location chỉ giữ summary và thông tin lịch trình.
 
 Với `pricingMode = per_room`, chi phí được tính:
 
@@ -76,15 +77,12 @@ Không còn fallback về `location.stayCostPerNight`. Khách sạn/du thuyền 
 
 ### 4. Ăn uống
 
-Ăn uống = tổng `subActivityCost()` của các activity `activityType = food`.
+Ăn uống = tổng `subActivityCost()` của các activity `activityType = food` và
+legacy `activityType = cafe`.
 
 Không còn fallback về `location.foodBudgetPerDay`.
 
-### 5. Cafe
-
-Cafe = tổng `subActivityCost()` của các activity `activityType = cafe`.
-
-### 6. Di chuyển đến điểm này
+### 5. Di chuyển đến điểm này
 
 Di chuyển = tổng `subActivityCost()` của các activity `activityType = transport`.
 
@@ -92,7 +90,7 @@ Di chuyển = tổng `subActivityCost()` của các activity `activityType = tra
 - Chi phí xe/tàu/bay phải nhập bằng activity `transport`, thường là `pricingMode = per_person`.
 - Nếu có vé trẻ em riêng, nhập `childPrice`; nếu trẻ em không tính phí thì để 0.
 
-### 7. Khác
+### 6. Khác
 
 Khác = tổng `subActivityCost()` của các activity `activityType = other`.
 

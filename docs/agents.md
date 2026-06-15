@@ -109,6 +109,9 @@ Costs belong on activities (`sub_locations`):
 - `pricingMode`: `per_person`, `per_room`, `per_group`
 - `unitPrice`, `quantity`, `surcharge`, `adultPrice`, `childPrice`
 
+Use `food` for new eating/drinking stops. Legacy `cafe` activities are still
+accepted by the API but are displayed and totaled together with `food`.
+
 Location-level description, highlight, activities, food, and cost columns are
 legacy storage only and should not be used for new UI, MCP, CLI, or admin
 workflows. Overview UI should summarize `sub_locations`.
