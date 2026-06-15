@@ -1,5 +1,16 @@
 # Release Notes
 
+## v1.0.10 - Schedule Ordered Map Itinerary
+
+- Sorted the map timeline and active location fallback by planned dates instead
+  of raw location order.
+- Sorted activity lists, detail markers, and detail route legs by scheduled
+  date plus scheduled time/period.
+- Added compact schedule labels to activity rows in the location detail panel.
+- Skipped map route points without real coordinates so detail routes no longer
+  draw through `(0,0)` placeholder data while the full itinerary list remains
+  visible.
+
 ## v1.0.9 - Activity External CTA Links
 
 ![v1.0.9 event drawer CTA preview](https://github.com/leolionart/vietnam-travel/releases/download/v1.0.9/vietnam-travel-v1.0.9-event-drawer.png)

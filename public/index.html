@@ -535,7 +535,7 @@
         <div class="glass rounded-3xl p-6 flex-1 overflow-y-auto pointer-events-auto shadow-2xl">
             <h2 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-6">Lộ trình chi tiết</h2>
             <div class="space-y-8">
-                <template x-for="(loc, index) in currentPlan.locations" :key="loc.id">
+                <template x-for="(loc, index) in orderedPlanLocations()" :key="loc.id">
                     <div class="relative timeline-item group cursor-pointer" @click="setActive(loc.id)">
                             <div class="flex items-start gap-4">
                                 <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center flex-none transition-all duration-300"
@@ -569,7 +569,7 @@
 
     <!-- Mobile Timeline (Horizontal) -->
     <div x-show="viewMode === 'map' && activeId" class="lg:hidden mobile-timeline overflow-x-auto gap-3 no-scrollbar">
-        <template x-for="(loc, index) in currentPlan.locations" :key="loc.id">
+        <template x-for="(loc, index) in orderedPlanLocations()" :key="loc.id">
             <button @click="setActive(loc.id)"
                     class="glass px-4 py-2 rounded-xl flex items-center gap-2 whitespace-nowrap transition-all flex-none"
                     :class="activeId === loc.id ? 'bg-white text-slate-900' : 'text-slate-400 border-white/5'">
@@ -1298,6 +1298,8 @@
                                     <p class="text-sm font-bold transition-colors"
                                        :class="excludedSubs[sub.id] ? 'text-slate-500 line-through' : 'text-white'"
                                        x-text="sub.name"></p>
+                                    <p class="mt-0.5 text-[10px] font-bold text-cyan-200"
+                                       x-text="scheduleActivityLabel(sub, activeLocation)"></p>
                                     <p x-show="sub.address" class="mt-0.5 text-[10px] text-slate-400 truncate" x-text="sub.address"></p>
                                     <div class="flex items-center gap-2 mt-0.5 flex-wrap">
                                         <p class="text-[10px] transition-colors"
@@ -1778,8 +1780,9 @@
                 },
 
                 get activeLocation() {
-                    if (!this.currentPlan.locations.length) return {};
-                    return this.currentPlan.locations.find(l => l.id === this.activeId) || this.currentPlan.locations[0];
+                    const ordered = this.orderedPlanLocations();
+                    if (!ordered.length) return {};
+                    return ordered.find(l => l.id === this.activeId) || ordered[0];
                 },
 
                 setViewMode(mode, options = {}) {
@@ -1964,26 +1967,31 @@
 
                     if (isDetail && !forceOverview) {
                         // Detail mode: show sub-location markers, excluded ones grayed out
-                        const subs = this.activeLocation.subLocations;
+                        const subs = this.orderedSubLocations(this.activeLocation).filter(sub => this.hasMapCoordinates(sub));
                         const visibleSubs = subs.filter(s => !this.excludedSubs[s.id]);
                         const basePoint = { lat: this.activeLocation.lat, lng: this.activeLocation.lng, name: this.activeLocation.name };
-                        const allPoints = [[basePoint.lat, basePoint.lng], ...subs.map(s => [s.lat, s.lng])];
+                        const allPoints = [
+                            ...(this.hasMapCoordinates(basePoint) ? [[basePoint.lat, basePoint.lng]] : []),
+                            ...subs.map(s => [s.lat, s.lng]),
+                        ];
 
-                        const baseMarkerHtml = `<div class="relative group">
-                            <div class="w-9 h-9 bg-blue-600 rounded-full border-2 border-white shadow-xl flex items-center justify-center text-white font-bold text-sm">⌂</div>
-                            <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-white text-slate-900 px-2 py-1 rounded text-[10px] font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity shadow-lg pointer-events-none">
-                                ${basePoint.name}
-                            </div>
-                        </div>`;
-                        this.markers[`base-${this.activeLocation.id}`] = L.marker([basePoint.lat, basePoint.lng], {
-                            icon: L.divIcon({ className: 'custom-div-icon', html: baseMarkerHtml, iconSize: [36, 36], iconAnchor: [18, 18] })
-                        }).addTo(this.map);
+                        if (this.hasMapCoordinates(basePoint)) {
+                            const baseMarkerHtml = `<div class="relative group">
+                                <div class="w-9 h-9 bg-blue-600 rounded-full border-2 border-white shadow-xl flex items-center justify-center text-white font-bold text-sm">⌂</div>
+                                <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-white text-slate-900 px-2 py-1 rounded text-[10px] font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity shadow-lg pointer-events-none">
+                                    ${basePoint.name}
+                                </div>
+                            </div>`;
+                            this.markers[`base-${this.activeLocation.id}`] = L.marker([basePoint.lat, basePoint.lng], {
+                                icon: L.divIcon({ className: 'custom-div-icon', html: baseMarkerHtml, iconSize: [36, 36], iconAnchor: [18, 18] })
+                            }).addTo(this.map);
+                        }
 
                         // Visible sub index (chỉ đánh số các sub còn trong lịch trình)
                         let visibleIdx = 0;
-                        subs.forEach((sub) => {
+                        subs.forEach((sub, subIndex) => {
                             const isExcluded = !!this.excludedSubs[sub.id];
-                            const displayNum = isExcluded ? (subs.indexOf(sub) + 1) : (++visibleIdx);
+                            const displayNum = isExcluded ? (subIndex + 1) : (++visibleIdx);
                             const markerHtml = isExcluded
                                 ? `<div class="relative group cursor-pointer" style="opacity:0.4">
                                        <div class="w-8 h-8 bg-slate-700 rounded-full border-2 border-dashed border-slate-500 shadow-xl flex items-center justify-center text-slate-400 font-bold text-xs">${displayNum}</div>
@@ -2028,7 +2036,10 @@
                         };
 
                         const detailRouteLayers = [];
-                        const detailRoutePoints = [basePoint, ...visibleSubs];
+                        const detailRoutePoints = [
+                            ...(this.hasMapCoordinates(basePoint) ? [basePoint] : []),
+                            ...visibleSubs,
+                        ];
                         for (let idx = 1; idx < detailRoutePoints.length; idx += 1) {
                             const prev = detailRoutePoints[idx - 1];
                             const next = detailRoutePoints[idx];
@@ -2088,10 +2099,10 @@
                     }
 
                     // Overview mode: show all plan locations
-                    const points = [];
-                    const visibleLocs = this.currentPlan.locations.filter(l => !this.excludedLocations[l.id]);
+                    const orderedLocs = this.orderedPlanLocations();
+                    const visibleLocs = orderedLocs.filter(l => !this.excludedLocations[l.id]);
 
-                    this.currentPlan.locations.forEach((loc, index) => {
+                    orderedLocs.forEach((loc, index) => {
                         const isActive = loc.id === this.activeId;
                         const isExcluded = !!this.excludedLocations[loc.id];
 
@@ -2118,7 +2129,6 @@
 
                         marker.on('click', (e) => this._showMarkerPopup(e, 'location', loc.id, loc.name, isExcluded));
                         this.markers[loc.id] = marker;
-                        if (!isExcluded) points.push([loc.lat, loc.lng]);
                     });
 
                     if (visibleLocs.length < 2) {
@@ -2311,7 +2321,7 @@
                         next[locId] = true;
                         // Nếu đang active location bị xoá, chuyển sang location còn lại đầu tiên
                         if (this.activeId === locId) {
-                            const firstVisible = this.currentPlan.locations.find(l => !next[l.id]);
+                            const firstVisible = this.orderedPlanLocations().find(l => !next[l.id]);
                             this.activeId = firstVisible?.id ?? null;
                         }
                     }
@@ -2496,7 +2506,7 @@
                     this.scheduleSaveStatus = '';
                     this.restoreExcluded(planId);
                     this.restoreExcludedLocations(planId);
-                    const firstLoc = this.currentPlan.locations?.[0];
+                    const firstLoc = this.orderedPlanLocations()[0];
                     this.activeId = firstLoc?.id ?? null;
                     this.resetScheduleEditState();
                     this.$nextTick(() => {
@@ -2577,7 +2587,7 @@
                     };
                     this.isSessionPlan = !!full.sessionId;
                     const sameLocation = this.currentPlan.locations.find(loc => loc.id === activeId);
-                    this.activeId = sameLocation?.id ?? this.currentPlan.locations?.[0]?.id ?? null;
+                    this.activeId = sameLocation?.id ?? this.orderedPlanLocations()[0]?.id ?? null;
                     this.resetScheduleEditState();
                     this.$nextTick(() => {
                         lucide.createIcons();
@@ -2921,7 +2931,7 @@
                 },
 
                 visibleActivities(loc) {
-                    return (loc?.subLocations || []).filter(s => !this.excludedSubs[s.id]);
+                    return this.orderedSubLocations(loc).filter(s => !this.excludedSubs[s.id]);
                 },
 
                 summaryActivitiesByType(loc, types) {
@@ -3230,6 +3240,91 @@
                     return `${day.getFullYear()}-${pad(day.getMonth() + 1)}-${pad(day.getDate())}`;
                 },
 
+                hasMapCoordinates(point) {
+                    const lat = Number(point?.lat);
+                    const lng = Number(point?.lng);
+                    return Number.isFinite(lat) && Number.isFinite(lng) && (lat !== 0 || lng !== 0);
+                },
+
+                scheduledPeriodOrder(period) {
+                    return {
+                        morning: 8 * 60,
+                        afternoon: 13 * 60,
+                        evening: 18 * 60,
+                    }[String(period || '').toLowerCase()] ?? 12 * 60;
+                },
+
+                scheduledTimeMinutes(value, fallbackPeriod = '') {
+                    const match = String(value || '').match(/^(\d{1,2})(?::(\d{2}))?/);
+                    if (!match) return this.scheduledPeriodOrder(fallbackPeriod);
+                    const hour = Math.min(Math.max(Number(match[1]) || 0, 0), 23);
+                    const minute = Math.min(Math.max(Number(match[2] || 0) || 0, 0), 59);
+                    return hour * 60 + minute;
+                },
+
+                activityScheduleSortValue(activity, fallbackIndex = 0) {
+                    const date = this.normalizeDay(activity?.scheduledDate
+                        ? new Date(`${activity.scheduledDate}T00:00:00`)
+                        : null);
+                    if (!date) return Number.MAX_SAFE_INTEGER - 100000 + fallbackIndex;
+                    return date.getTime() + this.scheduledTimeMinutes(activity?.scheduledTime, activity?.scheduledPeriod) * 60000;
+                },
+
+                locationScheduleSortValue(loc, fallbackIndex = 0) {
+                    const { start } = this.parseDateRange(loc?.dateRange || '');
+                    if (start) return start.getTime();
+                    const activityValues = (loc?.subLocations || [])
+                        .map((activity, index) => this.activityScheduleSortValue(activity, index))
+                        .filter(value => value < Number.MAX_SAFE_INTEGER - 100000);
+                    if (activityValues.length) return Math.min(...activityValues);
+                    return Number.MAX_SAFE_INTEGER - 100000 + fallbackIndex;
+                },
+
+                orderedSubLocations(loc) {
+                    return (loc?.subLocations || [])
+                        .map((activity, index) => ({ activity, index }))
+                        .sort((a, b) => {
+                            const bySchedule = this.activityScheduleSortValue(a.activity, a.index) - this.activityScheduleSortValue(b.activity, b.index);
+                            if (bySchedule !== 0) return bySchedule;
+                            return a.index - b.index;
+                        })
+                        .map(item => item.activity);
+                },
+
+                orderedPlanLocations() {
+                    return (this.currentPlan?.locations || [])
+                        .map((loc, index) => ({ loc, index }))
+                        .sort((a, b) => {
+                            const bySchedule = this.locationScheduleSortValue(a.loc, a.index) - this.locationScheduleSortValue(b.loc, b.index);
+                            if (bySchedule !== 0) return bySchedule;
+                            return a.index - b.index;
+                        })
+                        .map(item => item.loc);
+                },
+
+                scheduledPeriodLabel(period) {
+                    return {
+                        morning: 'Sáng',
+                        afternoon: 'Chiều',
+                        evening: 'Tối',
+                    }[String(period || '').toLowerCase()] || '';
+                },
+
+                scheduleActivityLabel(activity, loc = null) {
+                    const date = activity?.scheduledDate
+                        ? this.normalizeDay(new Date(`${activity.scheduledDate}T00:00:00`))
+                        : null;
+                    const dateLabel = date
+                        ? `${this.formatWeekdayShort(date)} ${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`
+                        : '';
+                    const timeLabel = activity?.scheduledTime || this.scheduledPeriodLabel(activity?.scheduledPeriod);
+                    if (dateLabel || timeLabel) return [dateLabel, timeLabel].filter(Boolean).join(' · ');
+
+                    const { start } = this.parseDateRange(loc?.dateRange || '');
+                    if (start) return `${this.formatWeekdayShort(start)} ${String(start.getDate()).padStart(2, '0')}/${String(start.getMonth() + 1).padStart(2, '0')} · chưa xếp giờ`;
+                    return 'Chưa xếp lịch';
+                },
+
                 addDays(date, days) {
                     const next = new Date(date);
                     next.setDate(next.getDate() + days);
@@ -3357,7 +3452,7 @@
                 formatPlanWeekendSummary() {
                     const seen = new Set();
                     const dates = [];
-                    for (const loc of this.currentPlan.locations || []) {
+                    for (const loc of this.orderedPlanLocations()) {
                         for (const date of this.weekendDatesInRange(loc.dateRange)) {
                             const key = date.toISOString().slice(0, 10);
                             if (!seen.has(key)) {
@@ -4023,7 +4118,7 @@
                         byDay[key].push(event);
                     };
 
-                    (this.currentPlan.locations || []).forEach((loc) => {
+                    this.orderedPlanLocations().forEach((loc) => {
                         const stayDays = this.locationStayDays(loc);
 
                         stayDays.forEach((day, dayIndex) => {
@@ -4045,7 +4140,7 @@
                         });
 
                         const visitSlots = this.locationVisitSlots(loc);
-                        (loc.subLocations || []).forEach((sub, subIndex) => {
+                        this.orderedSubLocations(loc).forEach((sub, subIndex) => {
                             if (this.excludedSubs[sub.id]) return;
                             if (!visitSlots.length) return;
                             const activityType = this.subActivityType(sub);
@@ -4139,7 +4234,7 @@
                         if (!target[key]) target[key] = [];
                         target[key].push(loc.name);
                     };
-                    for (const loc of this.currentPlan.locations || []) {
+                    for (const loc of this.orderedPlanLocations()) {
                         allDates.push(...this.locationStayDays(loc));
                         const { start, end } = this.parseDateRange(loc.dateRange);
                         if (start) addBoundary(checkinsByDay, start, loc);
@@ -4401,7 +4496,7 @@
                 },
 
                 visibleDetailActivities(loc) {
-                    const items = loc?.subLocations || [];
+                    const items = this.orderedSubLocations(loc);
                     if (!this.selectedActivityId) return items;
                     const selected = items.find(item => Number(item.id) === Number(this.selectedActivityId));
                     return selected ? [selected] : items;
