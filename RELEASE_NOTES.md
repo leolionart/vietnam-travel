@@ -21,6 +21,8 @@
   a right-aligned theme-aware cost chip, and compact `K` cost formatting.
 - Merged legacy cafe activities into the eating/drinking group across calendar
   legends, cost summaries, location details, and print export.
+- Updated calendar budget summaries to compare current spend against a fixed
+  `150.000.000 ₫` budget and show both usage percent and remaining amount.
 
 ## v1.0.9 - Activity External CTA Links
 

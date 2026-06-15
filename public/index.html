@@ -650,10 +650,13 @@
                         <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-2">
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Tổng chi phí</p>
-                                <p class="mt-1 text-base lg:text-xl font-bold text-white font-display" x-text="formatCurrency(totalPlanCost)"></p>
-                                <p class="mt-1 text-[9px] font-bold text-slate-500">100% budget</p>
+                                <p class="mt-1 text-sm lg:text-base xl:text-lg font-bold leading-tight text-white font-display break-words" x-text="budgetProgressLabel()"></p>
+                                <p class="mt-1 flex items-center justify-between gap-2 text-[9px] font-bold text-slate-500">
+                                    <span x-text="budgetUsageLabel(totalPlanCost)"></span>
+                                    <span class="text-right text-slate-300" x-text="budgetRemainingLabel(totalPlanCost)"></span>
+                                </p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
-                                    <div class="h-full rounded-full bg-white/60" style="width:100%"></div>
+                                    <div class="h-full rounded-full bg-white/60" :style="`width:${costBarWidth(totalPlanCost)}%`"></div>
                                 </div>
                             </div>
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
@@ -898,10 +901,13 @@
                         <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-2">
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Tổng chi phí</p>
-                                <p class="mt-1 text-base lg:text-xl font-bold text-white font-display" x-text="formatCurrency(totalPlanCost)"></p>
-                                <p class="mt-1 text-[9px] font-bold text-slate-500">100% budget</p>
+                                <p class="mt-1 text-sm lg:text-base xl:text-lg font-bold leading-tight text-white font-display break-words" x-text="budgetProgressLabel()"></p>
+                                <p class="mt-1 flex items-center justify-between gap-2 text-[9px] font-bold text-slate-500">
+                                    <span x-text="budgetUsageLabel(totalPlanCost)"></span>
+                                    <span class="text-right text-slate-300" x-text="budgetRemainingLabel(totalPlanCost)"></span>
+                                </p>
                                 <div class="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
-                                    <div class="h-full rounded-full bg-white/60" style="width:100%"></div>
+                                    <div class="h-full rounded-full bg-white/60" :style="`width:${costBarWidth(totalPlanCost)}%`"></div>
                                 </div>
                             </div>
                             <div class="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
@@ -1671,6 +1677,7 @@
                 activeId: null,
                 viewMode: 'map',
                 theme: 'dark',
+                planBudgetLimit: 150000000,
                 calendarWeekIndex: 0,
                 planDropdownOpen: false,
                 detailScrolled: false,
@@ -4363,7 +4370,21 @@
                     return this.planActivityTotal(['sightseeing'], plan);
                 },
 
-                costPercent(value, total = this.totalPlanCost) {
+                budgetProgressLabel(value = this.totalPlanCost) {
+                    return `${this.formatCurrency(value)} / ${this.formatCurrency(this.planBudgetLimit)}`;
+                },
+
+                budgetUsageLabel(value = this.totalPlanCost) {
+                    return `${this.costPercent(value)}% của 150tr`;
+                },
+
+                budgetRemainingLabel(value = this.totalPlanCost) {
+                    const remaining = Number(this.planBudgetLimit || 0) - Number(value || 0);
+                    if (remaining < 0) return `Vượt ${this.formatCurrency(Math.abs(remaining))}`;
+                    return `Còn ${this.formatCurrency(remaining)}`;
+                },
+
+                costPercent(value, total = this.planBudgetLimit) {
                     const rawValue = Number(value || 0);
                     const rawTotal = Number(total || 0);
                     if (!rawTotal || rawTotal <= 0) return 0;
@@ -4371,7 +4392,7 @@
                 },
 
                 costPercentLabel(value) {
-                    return `${this.costPercent(value)}% budget`;
+                    return `${this.costPercent(value)}% của 150tr`;
                 },
 
                 costBarWidth(value) {
