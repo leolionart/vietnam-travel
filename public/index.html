@@ -801,15 +801,15 @@
                                                             class="absolute left-1 right-1 text-left rounded-md border px-1.5 py-1 transition-colors overflow-hidden align-top"
                                                             :class="calendarEventClass(event)"
                                                             :style="calendarWeekEventStyle(event)"
-                                                            :title="[event.title, calendarWeekEventTimeLabel(event), event.durationLabel, event.locationName, event.meta].filter(Boolean).join(' · ')">
+                                                            :title="[event.title, calendarEventDurationCompactLabel(event), calendarWeekEventTimeLabel(event), event.locationName, event.meta].filter(Boolean).join(' · ')">
                                                         <span class="absolute right-1 top-1 text-[10px] leading-none" x-text="calendarEventGlyph(event)"></span>
-                                                        <div class="min-w-0 pr-4 leading-none">
-                                                            <p class="text-[9px] font-bold leading-[1.08] whitespace-normal break-words min-w-0" x-text="event.title"></p>
+                                                        <div class="min-w-0 leading-none">
+                                                            <p class="text-[9px] font-bold leading-[1.08] whitespace-normal break-words min-w-0 pr-4" x-text="event.title"></p>
                                                             <p class="mt-[2px] flex min-w-0 items-center justify-between gap-1 overflow-hidden whitespace-nowrap text-[8px] font-semibold leading-none text-slate-600">
                                                                 <span class="min-w-0 truncate">
-                                                                    <span x-text="calendarWeekEventTimeLabel(event)"></span>
-                                                                    <span x-show="calendarEventDurationCompactLabel(event)" class="text-slate-500"> · </span>
                                                                     <span x-show="calendarEventDurationCompactLabel(event)" x-text="calendarEventDurationCompactLabel(event)"></span>
+                                                                    <span x-show="calendarEventDurationCompactLabel(event)" class="text-slate-500"> · </span>
+                                                                    <span x-text="calendarWeekEventTimeLabel(event)"></span>
                                                                 </span>
                                                                 <span x-show="event.metaCost" class="event-cost-chip flex-none truncate text-right text-[8px]" x-text="event.metaCost"></span>
                                                             </p>
@@ -1056,7 +1056,7 @@
                                                                                             @dragend="handleCalendarDragEnd()"
                                                                                             class="w-full text-left rounded border px-1 py-0.5 transition-colors"
                                                                                             :class="calendarEventClass(event)"
-                                                                                            :title="`${event.time ? event.time + ' · ' : ''}${event.title} - ${event.meta}`">
+                                                                                            :title="[calendarEventDurationCompactLabel(event), calendarWeekEventTimeLabel(event), event.title, event.meta].filter(Boolean).join(' · ')">
                                                                                         <div class="flex items-start gap-1 min-w-0">
                                                                                             <span class="w-3.5 flex-none text-[11px] leading-none mt-0.5" x-text="calendarEventGlyph(event)"></span>
                                                                                             <div class="min-w-0 flex-1">
@@ -1065,9 +1065,9 @@
                                                                                                 </div>
                                                                                                 <p class="mt-0.5 flex min-w-0 items-center justify-between gap-1 overflow-hidden whitespace-nowrap text-[7px] font-bold leading-none opacity-80">
                                                                                                     <span class="min-w-0 truncate">
-                                                                                                        <span x-text="calendarWeekEventTimeLabel(event)"></span>
-                                                                                                        <span x-show="calendarEventDurationCompactLabel(event)"> · </span>
                                                                                                         <span x-show="calendarEventDurationCompactLabel(event)" x-text="calendarEventDurationCompactLabel(event)"></span>
+                                                                                                        <span x-show="calendarEventDurationCompactLabel(event)"> · </span>
+                                                                                                        <span x-text="calendarWeekEventTimeLabel(event)"></span>
                                                                                                     </span>
                                                                                                     <span x-show="event.metaCost" class="event-cost-chip flex-none truncate text-right text-[7px]" x-text="event.metaCost"></span>
                                                                                                 </p>
@@ -2775,6 +2775,14 @@
                     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
                 },
 
+                formatCalendarCost(value) {
+                    const amount = Number(value || 0);
+                    if (!Number.isFinite(amount) || amount <= 0) return '';
+                    const thousands = Math.round(amount / 1000);
+                    if (thousands <= 0) return String(Math.round(amount));
+                    return `${new Intl.NumberFormat('vi-VN').format(thousands)}K`;
+                },
+
                 ticketAdultTotal(loc) {
                     const subs = (loc.subLocations || []).filter(s => this.subActivityType(s) === 'sightseeing');
                     return subs.reduce((sum, s) => sum + (s.adultPrice || 0), 0);
@@ -4022,7 +4030,7 @@
                             if (activityType === 'accommodation') {
                                 const durationLabel = this.activityDurationLabel(sub);
                                 const costValue = this.subActivityCost(sub, loc);
-                                const costLabel = costValue > 0 ? this.formatCurrency(costValue) : '';
+                                const costLabel = this.formatCalendarCost(costValue);
                                 eventDays.forEach((day, dayIndex) => add(day, {
                                     id: `stay-activity-${sub.id}-${this.localDateKey(day)}`,
                                     groupId: `stay-activity-${sub.id}`,
@@ -4046,7 +4054,7 @@
                             const durationMinutes = Number(sub.durationMinutes || 0);
                             const travelNote = activityType === 'transport' ? this.transportCalendarNote(sub) : '';
                             const costValue = this.subActivityCost(sub, loc);
-                            const costLabel = costValue > 0 ? this.formatCurrency(costValue) : '';
+                            const costLabel = this.formatCalendarCost(costValue);
                             eventDays.forEach((day, dayIndex) => {
                                 const type = activityType === 'transport' ? 'transport' : 'visit';
                                 add(day, {
