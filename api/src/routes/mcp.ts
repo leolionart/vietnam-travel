@@ -130,6 +130,7 @@ const TOOL_DEFINITIONS = [
                 slug: { type: 'string', description: 'URL slug mong muốn, vd: ha-noi-sapa-2026. Nếu trùng sẽ tự thêm suffix.' },
                 name: { type: 'string', description: 'Tên hiển thị, vd: Hà Nội → Sapa 2026' },
                 dateRange: { type: 'string', description: 'Tuỳ chọn, vd: 01/06/2026 - 05/06/2026' },
+                budgetLimit: { type: 'number', description: 'Tổng ngân sách VND cho plan, vd: 150000000' },
                 adminPassword: { type: 'string', description: 'Admin password để tạo plan prod/admin thay vì session plan' },
             },
         },
@@ -189,6 +190,7 @@ const TOOL_DEFINITIONS = [
                 slug: { type: 'string', description: 'Slug hiện tại' },
                 name: { type: 'string' },
                 dateRange: { type: 'string' },
+                budgetLimit: { type: 'number', description: 'Tổng ngân sách VND mới cho plan, vd: 150000000' },
                 newSlug: { type: 'string', description: 'Slug mới nếu cần đổi' },
                 adminPassword: { type: 'string', description: 'Admin password để chỉnh plan prod/admin thay vì chỉ session plan' },
             },
@@ -383,7 +385,7 @@ function buildServer(): Server {
                 case 'create_plan': {
                     if (isAdminAuthorized(a)) {
                         const slug = typeof a.slug === 'string' && a.slug.trim() ? uniqueAdminSlug(a.slug) : uniqueAdminSlug(a.name as string);
-                        const plan = createPlan({ slug, name: a.name as string, dateRange: a.dateRange as string | undefined });
+                        const plan = createPlan({ slug, name: a.name as string, dateRange: a.dateRange as string | undefined, budgetLimit: a.budgetLimit as number | undefined });
                         return ok({ ...plan, shareUrl: `${APP_URL}/?slug=${plan.slug}` });
                     } else {
                         const sessionId = randomUUID().replace(/-/g, '').slice(0, 16);
@@ -391,6 +393,7 @@ function buildServer(): Server {
                             slug: a.slug as string | undefined,
                             name: a.name as string,
                             dateRange: a.dateRange as string | undefined,
+                            budgetLimit: a.budgetLimit as number | undefined,
                             sessionId,
                         });
                         return ok({ ...plan, sessionId, shareUrl: `${APP_URL}/?slug=${plan.slug}` });
@@ -436,7 +439,7 @@ function buildServer(): Server {
                     const ref = getEditablePlanRef(a);
                     if (!ref) return err('Plan not found or admin password missing. Provide session shareUrl/sessionId, or adminPassword with slug/planSlug.');
                     if (!ref.sessionId && ref.isAdmin) {
-                        const plan = updatePlan(ref.slug, { name: a.name as string | undefined, slug: a.newSlug as string | undefined, dateRange: a.dateRange as string | undefined });
+                        const plan = updatePlan(ref.slug, { name: a.name as string | undefined, slug: a.newSlug as string | undefined, dateRange: a.dateRange as string | undefined, budgetLimit: a.budgetLimit as number | undefined });
                         if (!plan) return err(`Plan "${ref.slug}" not found`);
                         return ok({ ...plan, shareUrl: `${APP_URL}/?slug=${plan.slug}` });
                     }
@@ -444,6 +447,11 @@ function buildServer(): Server {
                     if (a.name !== undefined) db.prepare('UPDATE plans SET name = ?, updated_at = ? WHERE id = ?').run(a.name, Date.now(), ref.id);
                     if (a.newSlug !== undefined) db.prepare('UPDATE plans SET slug = ?, updated_at = ? WHERE id = ?').run(a.newSlug, Date.now(), ref.id);
                     if (a.dateRange !== undefined) db.prepare('UPDATE plans SET date_range = ?, updated_at = ? WHERE id = ?').run(a.dateRange, Date.now(), ref.id);
+                    if (a.budgetLimit !== undefined) {
+                        const budgetLimit = Number(a.budgetLimit);
+                        if (!Number.isFinite(budgetLimit) || budgetLimit <= 0) return err('budgetLimit must be a positive number');
+                        db.prepare('UPDATE plans SET budget_limit = ?, updated_at = ? WHERE id = ?').run(Math.round(budgetLimit), Date.now(), ref.id);
+                    }
                     return ok(planPayload({ ...ref, slug: (a.newSlug as string | undefined) ?? ref.slug }));
                 }
 

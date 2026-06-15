@@ -21,10 +21,12 @@
   a right-aligned theme-aware cost chip, and compact `K` cost formatting.
 - Merged legacy cafe activities into the eating/drinking group across calendar
   legends, cost summaries, location details, and print export.
-- Updated calendar budget summaries to compare current spend against a fixed
-  `150.000.000 ₫` budget and show both usage percent and remaining amount.
-- Muted the fixed budget text so the actual spend remains the primary visual
-  emphasis in the total cost card.
+- Updated calendar budget summaries to compare current spend against the plan
+  budget and show both usage percent and remaining amount below the amount.
+- Removed the inline `/ 150.000.000 ₫` label from calendar total cost cards so
+  the real spend stays visually primary.
+- Added API and MCP support for setting `budgetLimit` when AI tools create or
+  update a plan.
 - Added a calendar `Move view only` mode that disables event drag/drop and
   resize interactions so touch-screen scrolling stays stable.
 - Aligned calendar event card content to the top so title and metadata no

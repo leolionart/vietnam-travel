@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS plans (
     slug       TEXT    NOT NULL UNIQUE,
     name       TEXT    NOT NULL,
     date_range TEXT    NOT NULL DEFAULT '',
+    budget_limit INTEGER NOT NULL DEFAULT 150000000,
     session_id TEXT    UNIQUE,
     created_at INTEGER NOT NULL DEFAULT (unixepoch('now') * 1000),
     updated_at INTEGER NOT NULL DEFAULT (unixepoch('now') * 1000)

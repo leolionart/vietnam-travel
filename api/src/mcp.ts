@@ -77,8 +77,8 @@ class RemoteClient {
 let localMode: {
     listPlans: () => unknown;
     getPlanBySlug: (slug: string) => unknown;
-    createPlan: (d: { slug: string; name: string; dateRange?: string }) => unknown;
-    updatePlan: (slug: string, d: { name?: string; slug?: string; dateRange?: string }) => unknown;
+    createPlan: (d: { slug: string; name: string; dateRange?: string; budgetLimit?: number }) => unknown;
+    updatePlan: (slug: string, d: { name?: string; slug?: string; dateRange?: string; budgetLimit?: number }) => unknown;
     deletePlan: (slug: string) => boolean;
     addLocation: (planId: number, input: Record<string, unknown>) => number;
     updateLocation: (planId: number, id: number, input: Record<string, unknown>) => boolean;
@@ -225,6 +225,7 @@ const TOOL_DEFINITIONS = [
                 slug: { type: 'string', description: 'URL slug mong muốn, vd: ha-noi-sapa-2026' },
                 name: { type: 'string', description: 'Tên hiển thị, vd: Hà Nội → Sapa 2026' },
                 dateRange: { type: 'string', description: 'Tuỳ chọn, vd: 01/06/2026 - 05/06/2026' },
+                budgetLimit: { type: 'number', description: 'Tổng ngân sách VND cho plan, vd: 150000000' },
             },
         },
     },
@@ -238,6 +239,7 @@ const TOOL_DEFINITIONS = [
                 slug: { type: 'string', description: 'Slug hiện tại' },
                 name: { type: 'string' },
                 dateRange: { type: 'string' },
+                budgetLimit: { type: 'number', description: 'Tổng ngân sách VND mới cho plan, vd: 150000000' },
                 newSlug: { type: 'string', description: 'Đổi slug mới nếu cần' },
             },
         },
@@ -501,13 +503,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 }
 
                 case 'create_plan': {
-                    const result = await client.post('/api/plans', stripMcpMeta({ slug: args.slug, name: args.name, dateRange: args.dateRange })) as { slug: string; sessionId?: string };
+                    const result = await client.post('/api/plans', stripMcpMeta({ slug: args.slug, name: args.name, dateRange: args.dateRange, budgetLimit: args.budgetLimit })) as { slug: string; sessionId?: string };
                     const shareUrl = `${REMOTE_API_URL}/?slug=${result.slug}`;
                     return ok({ ...result, shareUrl });
                 }
 
                 case 'update_plan':
-                    return ok(await client.put(`/api/plans/${slug}`, stripMcpMeta({ name: args.name, slug: args.newSlug, dateRange: args.dateRange })));
+                    return ok(await client.put(`/api/plans/${slug}`, stripMcpMeta({ name: args.name, slug: args.newSlug, dateRange: args.dateRange, budgetLimit: args.budgetLimit })));
 
                 case 'delete_plan':
                     return ok(await client.del(`/api/plans/${slug}`));
@@ -584,10 +586,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 }));
 
             case 'create_plan':
-                return ok(L.createPlan({ slug: args.slug as string, name: args.name as string, dateRange: args.dateRange as string | undefined }));
+                return ok(L.createPlan({ slug: args.slug as string, name: args.name as string, dateRange: args.dateRange as string | undefined, budgetLimit: args.budgetLimit as number | undefined }));
 
             case 'update_plan': {
-                const plan = L.updatePlan(args.slug as string, { name: args.name as string | undefined, slug: args.newSlug as string | undefined, dateRange: args.dateRange as string | undefined });
+                const plan = L.updatePlan(args.slug as string, { name: args.name as string | undefined, slug: args.newSlug as string | undefined, dateRange: args.dateRange as string | undefined, budgetLimit: args.budgetLimit as number | undefined });
                 if (!plan) return err(`Plan "${args.slug}" not found`);
                 return ok(plan);
             }

@@ -32,13 +32,13 @@ function getSubLocationForPlan(planId: number, subId: number): boolean {
 
 // POST /api/public/plans — tạo session plan (không có trong admin list, chỉ truy cập qua sessionId)
 router.post('/plans', (req, res) => {
-    const { slug, name, dateRange } = req.body as { slug?: string; name?: string; dateRange?: string };
+    const { slug, name, dateRange, budgetLimit } = req.body as { slug?: string; name?: string; dateRange?: string; budgetLimit?: number };
     if (!name) {
         res.status(400).json({ error: 'name is required' });
         return;
     }
     const sessionId = generateSessionId();
-    const plan = createPublicSessionPlan({ slug, name, dateRange, sessionId });
+    const plan = createPublicSessionPlan({ slug, name, dateRange, budgetLimit, sessionId });
     res.status(201).json({ ...plan, sessionId });
 });
 
@@ -54,11 +54,16 @@ router.delete('/plans/:slug', (req, res) => {
 router.patch('/plans/:slug', (req, res) => {
     const planId = getSessionPlanId(req.params.slug);
     if (!planId) { res.status(404).json({ error: 'Plan not found' }); return; }
-    const { name, slug, dateRange } = req.body as { name?: string; slug?: string; dateRange?: string };
+    const { name, slug, dateRange, budgetLimit } = req.body as { name?: string; slug?: string; dateRange?: string; budgetLimit?: number };
     const db = getDb();
     if (name !== undefined) db.prepare('UPDATE plans SET name = ?, updated_at = ? WHERE id = ?').run(name, Date.now(), planId);
     if (slug !== undefined) db.prepare('UPDATE plans SET slug = ?, updated_at = ? WHERE id = ?').run(slug, Date.now(), planId);
     if (dateRange !== undefined) db.prepare('UPDATE plans SET date_range = ?, updated_at = ? WHERE id = ?').run(dateRange, Date.now(), planId);
+    if (budgetLimit !== undefined) {
+        const budget = Number(budgetLimit);
+        if (!Number.isFinite(budget) || budget <= 0) { res.status(400).json({ error: 'budgetLimit must be a positive number' }); return; }
+        db.prepare('UPDATE plans SET budget_limit = ?, updated_at = ? WHERE id = ?').run(Math.round(budget), Date.now(), planId);
+    }
     const plan = db.prepare('SELECT session_id FROM plans WHERE id = ?').get(planId) as { session_id: string };
     res.json(getPlanBySessionId(plan.session_id));
 });

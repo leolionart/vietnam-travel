@@ -652,7 +652,6 @@
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Tổng chi phí</p>
                                 <p class="mt-1 text-sm lg:text-base xl:text-lg font-bold leading-tight text-white font-display break-words">
                                     <span x-text="formatCurrency(totalPlanCost)"></span>
-                                    <span class="font-semibold text-slate-500" x-text="` / ${formatCurrency(planBudgetLimit)}`"></span>
                                 </p>
                                 <p class="mt-1 flex items-center justify-between gap-2 text-[9px] font-bold text-slate-500">
                                     <span x-text="budgetUsageLabel(totalPlanCost)"></span>
@@ -913,7 +912,6 @@
                                 <p class="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">Tổng chi phí</p>
                                 <p class="mt-1 text-sm lg:text-base xl:text-lg font-bold leading-tight text-white font-display break-words">
                                     <span x-text="formatCurrency(totalPlanCost)"></span>
-                                    <span class="font-semibold text-slate-500" x-text="` / ${formatCurrency(planBudgetLimit)}`"></span>
                                 </p>
                                 <p class="mt-1 flex items-center justify-between gap-2 text-[9px] font-bold text-slate-500">
                                     <span x-text="budgetUsageLabel(totalPlanCost)"></span>
@@ -1750,6 +1748,11 @@
 
                 get currentPlan() {
                     return this.plans[this.currentPlanId] || { locations: [] };
+                },
+
+                get currentPlanBudgetLimit() {
+                    const budget = Number(this.currentPlan?.budgetLimit ?? this.currentPlan?.budget ?? this.planBudgetLimit);
+                    return Number.isFinite(budget) && budget > 0 ? budget : this.planBudgetLimit;
                 },
 
                 get activeLocation() {
@@ -2799,6 +2802,18 @@
                     const thousands = Math.round(amount / 1000);
                     if (thousands <= 0) return String(Math.round(amount));
                     return `${new Intl.NumberFormat('vi-VN').format(thousands)}K`;
+                },
+
+                formatBudgetShort(value) {
+                    const amount = Number(value || 0);
+                    if (!Number.isFinite(amount) || amount <= 0) return 'budget';
+                    if (amount >= 1000000 && amount % 1000000 === 0) {
+                        return `${new Intl.NumberFormat('vi-VN').format(amount / 1000000)}tr`;
+                    }
+                    if (amount >= 1000 && amount % 1000 === 0) {
+                        return `${new Intl.NumberFormat('vi-VN').format(amount / 1000)}K`;
+                    }
+                    return this.formatCurrency(amount);
                 },
 
                 ticketAdultTotal(loc) {
@@ -4465,16 +4480,16 @@
                 },
 
                 budgetUsageLabel(value = this.totalPlanCost) {
-                    return `${this.costPercent(value)}% của 150tr`;
+                    return `${this.costPercent(value)}% của ${this.formatBudgetShort(this.currentPlanBudgetLimit)}`;
                 },
 
                 budgetRemainingLabel(value = this.totalPlanCost) {
-                    const remaining = Number(this.planBudgetLimit || 0) - Number(value || 0);
+                    const remaining = Number(this.currentPlanBudgetLimit || 0) - Number(value || 0);
                     if (remaining < 0) return `Vượt ${this.formatCurrency(Math.abs(remaining))}`;
                     return `Còn ${this.formatCurrency(remaining)}`;
                 },
 
-                costPercent(value, total = this.planBudgetLimit) {
+                costPercent(value, total = this.currentPlanBudgetLimit) {
                     const rawValue = Number(value || 0);
                     const rawTotal = Number(total || 0);
                     if (!rawTotal || rawTotal <= 0) return 0;
@@ -4482,7 +4497,7 @@
                 },
 
                 costPercentLabel(value) {
-                    return `${this.costPercent(value)}% của 150tr`;
+                    return `${this.costPercent(value)}% của ${this.formatBudgetShort(this.currentPlanBudgetLimit)}`;
                 },
 
                 costBarWidth(value) {

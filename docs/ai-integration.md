@@ -59,6 +59,18 @@ current MCP session.
 - `analyze_activity_proximity`
 - `search_vexere_trips`
 
+`create_plan` and `update_plan` accept `budgetLimit` as a VND number. The app
+uses this value for the calendar budget percent, remaining amount, and progress
+bar.
+
+```json
+{
+  "name": "My Trip",
+  "dateRange": "01/07/2026 - 05/07/2026",
+  "budgetLimit": 150000000
+}
+```
+
 ## Vexere Search
 
 Use `search_vexere_trips` to check coach/bus fare and availability. Vexere
@@ -93,7 +105,7 @@ Create a session plan without admin credentials:
 npm --prefix api run cli -- create-plan \
   --api-url https://trips.naai.studio \
   --public \
-  --json '{"name":"My Trip","dateRange":"01/07/2026 - 05/07/2026"}'
+  --json '{"name":"My Trip","dateRange":"01/07/2026 - 05/07/2026","budgetLimit":150000000}'
 ```
 
 Edit an admin/sample plan only when the user supplies an admin password in the

@@ -50,9 +50,34 @@ interface DbPlan {
     slug: string;
     name: string;
     date_range: string;
+    budget_limit: number;
     session_id: string | null;
     created_at: number;
     updated_at: number;
+}
+
+interface PlanWriteInput {
+    slug: string;
+    name: string;
+    dateRange?: string;
+    budgetLimit?: number;
+}
+
+function normalizeBudgetLimit(value: unknown): number | undefined {
+    if (value === undefined || value === null || value === '') return undefined;
+    const budget = Number(value);
+    if (!Number.isFinite(budget) || budget <= 0) return undefined;
+    return Math.round(budget);
+}
+
+function planSummaryToPublic(plan: DbPlan) {
+    return {
+        id: plan.id,
+        slug: plan.slug,
+        name: plan.name,
+        dateRange: plan.date_range,
+        budgetLimit: plan.budget_limit,
+    };
 }
 
 function subToPublic(sub: DbSubLocation) {
@@ -118,12 +143,7 @@ function locationToPublic(loc: DbLocation, prevProvince?: string) {
 export function listPlans() {
     const db = getDb();
     const plans = db.prepare('SELECT * FROM plans WHERE session_id IS NULL ORDER BY id ASC').all() as DbPlan[];
-    return plans.map(p => ({
-        id: p.id,
-        slug: p.slug,
-        name: p.name,
-        dateRange: p.date_range,
-    }));
+    return plans.map(planSummaryToPublic);
 }
 
 export function getPlanBySlug(slug: string) {
@@ -145,24 +165,27 @@ export function getPlanBySlug(slug: string) {
         slug: plan.slug,
         name: plan.name,
         dateRange: plan.date_range,
+        budgetLimit: plan.budget_limit,
         sessionId: plan.session_id,
         locations,
     };
 }
 
-export function createPlan(data: { slug: string; name: string; dateRange?: string }) {
+export function createPlan(data: PlanWriteInput) {
     const db = getDb();
+    const budgetLimit = normalizeBudgetLimit(data.budgetLimit);
     const result = db.prepare(
-        'INSERT INTO plans (slug, name, date_range) VALUES (?, ?, ?)'
-    ).run(data.slug, data.name, data.dateRange || '');
+        'INSERT INTO plans (slug, name, date_range, budget_limit) VALUES (?, ?, ?, ?)'
+    ).run(data.slug, data.name, data.dateRange || '', budgetLimit ?? 150000000);
     return getPlanBySlug(data.slug)!;
 }
 
-export function createSessionPlan(data: { slug: string; name: string; dateRange?: string; sessionId: string }) {
+export function createSessionPlan(data: PlanWriteInput & { sessionId: string }) {
     const db = getDb();
+    const budgetLimit = normalizeBudgetLimit(data.budgetLimit);
     db.prepare(
-        'INSERT INTO plans (slug, name, date_range, session_id) VALUES (?, ?, ?, ?)'
-    ).run(data.slug, data.name, data.dateRange || '', data.sessionId);
+        'INSERT INTO plans (slug, name, date_range, budget_limit, session_id) VALUES (?, ?, ?, ?, ?)'
+    ).run(data.slug, data.name, data.dateRange || '', budgetLimit ?? 150000000, data.sessionId);
     return getPlanBySessionId(data.sessionId)!;
 }
 
@@ -177,7 +200,7 @@ function slugify(input: string): string {
     return slug || 'trip';
 }
 
-export function createPublicSessionPlan(data: { slug?: string; name: string; dateRange?: string; sessionId: string }) {
+export function createPublicSessionPlan(data: { slug?: string; name: string; dateRange?: string; budgetLimit?: number; sessionId: string }) {
     const db = getDb();
     const baseSlug = slugify(data.slug || data.name);
     let slug = baseSlug;
@@ -187,7 +210,7 @@ export function createPublicSessionPlan(data: { slug?: string; name: string; dat
         slug = `${baseSlug}-${suffix}`.slice(0, 96);
         i += 1;
     }
-    return createSessionPlan({ slug, name: data.name, dateRange: data.dateRange, sessionId: data.sessionId });
+    return createSessionPlan({ slug, name: data.name, dateRange: data.dateRange, budgetLimit: data.budgetLimit, sessionId: data.sessionId });
 }
 
 export function getPlanBySessionId(sessionId: string) {
@@ -209,15 +232,17 @@ export function getPlanBySessionId(sessionId: string) {
         slug: plan.slug,
         name: plan.name,
         dateRange: plan.date_range,
+        budgetLimit: plan.budget_limit,
         sessionId: plan.session_id,
         locations,
     };
 }
 
-export function updatePlan(slug: string, data: { name?: string; slug?: string; dateRange?: string }) {
+export function updatePlan(slug: string, data: { name?: string; slug?: string; dateRange?: string; budgetLimit?: number }) {
     const db = getDb();
     const plan = db.prepare('SELECT * FROM plans WHERE slug = ?').get(slug) as DbPlan | undefined;
     if (!plan) return null;
+    const budgetLimit = normalizeBudgetLimit(data.budgetLimit);
 
     if (data.name !== undefined) {
         db.prepare('UPDATE plans SET name = ?, updated_at = ? WHERE id = ?')
@@ -230,6 +255,11 @@ export function updatePlan(slug: string, data: { name?: string; slug?: string; d
     if (data.dateRange !== undefined) {
         db.prepare('UPDATE plans SET date_range = ?, updated_at = ? WHERE id = ?')
             .run(data.dateRange, Date.now(), plan.id);
+    }
+    if (data.budgetLimit !== undefined) {
+        if (budgetLimit === undefined) return null;
+        db.prepare('UPDATE plans SET budget_limit = ?, updated_at = ? WHERE id = ?')
+            .run(budgetLimit, Date.now(), plan.id);
     }
 
     const newSlug = data.slug ?? slug;

@@ -56,13 +56,13 @@ router.get('/:slug/activity-analysis', (req, res) => {
 
 // POST /api/plans
 router.post('/', requireAuth, (req, res) => {
-    const { slug, name, dateRange } = req.body as { slug?: string; name?: string; dateRange?: string };
+    const { slug, name, dateRange, budgetLimit } = req.body as { slug?: string; name?: string; dateRange?: string; budgetLimit?: number };
     if (!slug || !name) {
         res.status(400).json({ error: 'slug and name are required' });
         return;
     }
     try {
-        const plan = createPlan({ slug, name, dateRange });
+        const plan = createPlan({ slug, name, dateRange, budgetLimit });
         res.status(201).json(plan);
     } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
@@ -76,7 +76,7 @@ router.post('/', requireAuth, (req, res) => {
 
 // PUT /api/plans/:slug
 router.put('/:slug', requireAuth, (req, res) => {
-    const plan = updatePlan(req.params.slug, req.body as { name?: string; slug?: string; dateRange?: string });
+    const plan = updatePlan(req.params.slug, req.body as { name?: string; slug?: string; dateRange?: string; budgetLimit?: number });
     if (!plan) {
         res.status(404).json({ error: 'Plan not found' });
         return;
@@ -86,7 +86,7 @@ router.put('/:slug', requireAuth, (req, res) => {
 
 // PATCH /api/plans/:slug
 router.patch('/:slug', requireAuth, (req, res) => {
-    const plan = updatePlan(req.params.slug, req.body as { name?: string; slug?: string; dateRange?: string });
+    const plan = updatePlan(req.params.slug, req.body as { name?: string; slug?: string; dateRange?: string; budgetLimit?: number });
     if (!plan) {
         res.status(404).json({ error: 'Plan not found' });
         return;
