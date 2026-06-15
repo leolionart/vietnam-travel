@@ -27,6 +27,8 @@
   emphasis in the total cost card.
 - Added a calendar `Move view only` mode that disables event drag/drop and
   resize interactions so touch-screen scrolling stays stable.
+- Aligned calendar event card content to the top so title and metadata no
+  longer sit vertically centered inside taller cards.
 
 ## v1.0.9 - Activity External CTA Links
 
