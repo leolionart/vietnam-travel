@@ -10,6 +10,13 @@
 - Skipped map route points without real coordinates so detail routes no longer
   draw through `(0,0)` placeholder data while the full itinerary list remains
   visible.
+- Removed the separate per-event "remove from itinerary" action so event
+  management uses the single delete flow.
+- Removed legacy per-event exclusion state from cost, calendar, map, and
+  session reads.
+- Replaced remote per-leg route fetching on map render with immediate local
+  route estimates so the full route appears without waiting on third-party
+  routing services.
 
 ## v1.0.9 - Activity External CTA Links
 

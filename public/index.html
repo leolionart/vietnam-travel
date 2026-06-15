@@ -1283,42 +1283,28 @@
                         </template>
                         <template x-for="(sub, idx) in visibleDetailActivities(activeLocation)" :key="sub.id">
                             <div class="flex items-start gap-3 rounded-2xl p-4 border transition-all"
-                                 :class="excludedSubs[sub.id]
-                                    ? 'bg-white/[0.02] border-white/5 opacity-50'
-                                    : 'bg-white/5 border-white/5'">
+                                 class="bg-white/5 border-white/5">
                                 <!-- Index badge -->
-                                <div class="w-8 h-8 rounded-full flex items-center justify-center flex-none transition-colors"
-                                     :class="excludedSubs[sub.id] ? 'bg-slate-700/40 border border-slate-600/30' : 'bg-emerald-600/20 border border-emerald-500/30'">
-                                    <span class="text-[11px] font-bold transition-colors"
-                                          :class="excludedSubs[sub.id] ? 'text-slate-500' : 'text-emerald-400'"
-                                          x-text="idx + 1"></span>
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center flex-none bg-emerald-600/20 border border-emerald-500/30">
+                                    <span class="text-[11px] font-bold text-emerald-400" x-text="idx + 1"></span>
                                 </div>
                                 <!-- Content -->
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-bold transition-colors"
-                                       :class="excludedSubs[sub.id] ? 'text-slate-500 line-through' : 'text-white'"
-                                       x-text="sub.name"></p>
+                                    <p class="text-sm font-bold text-white" x-text="sub.name"></p>
                                     <p class="mt-0.5 text-[10px] font-bold text-cyan-200"
                                        x-text="scheduleActivityLabel(sub, activeLocation)"></p>
                                     <p x-show="sub.address" class="mt-0.5 text-[10px] text-slate-400 truncate" x-text="sub.address"></p>
                                     <div class="flex items-center gap-2 mt-0.5 flex-wrap">
-                                        <p class="text-[10px] transition-colors"
-                                           :class="excludedSubs[sub.id] ? 'text-slate-600' : 'text-emerald-400'"
-                                           x-text="activityDurationLabel(sub)"></p>
-                                        <template x-if="!excludedSubs[sub.id]">
-                                            <span class="text-[10px] text-violet-300 bg-violet-400/10 px-1.5 py-0.5 rounded-full" x-text="activityTypeLabel(sub.activityType)"></span>
-                                        </template>
-                                        <template x-if="subActivityCost(sub, activeLocation) > 0 && !excludedSubs[sub.id]">
+                                        <p class="text-[10px] text-emerald-400" x-text="activityDurationLabel(sub)"></p>
+                                        <span class="text-[10px] text-violet-300 bg-violet-400/10 px-1.5 py-0.5 rounded-full" x-text="activityTypeLabel(sub.activityType)"></span>
+                                        <template x-if="subActivityCost(sub, activeLocation) > 0">
                                             <span class="text-[10px] text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded-full" x-text="formatCurrency(subActivityCost(sub, activeLocation))"></span>
                                         </template>
-                                        <template x-if="subActivityCost(sub, activeLocation) === 0 && !excludedSubs[sub.id]">
+                                        <template x-if="subActivityCost(sub, activeLocation) === 0">
                                             <span class="text-[10px] text-green-400 bg-green-400/10 px-1.5 py-0.5 rounded-full">Miễn phí</span>
                                         </template>
-                                        <template x-if="excludedSubs[sub.id]">
-                                            <span class="text-[10px] text-slate-500 bg-slate-700/40 px-1.5 py-0.5 rounded-full">Bỏ qua</span>
-                                        </template>
                                     </div>
-                                    <p x-show="sub.description && !excludedSubs[sub.id]" class="text-[11px] text-slate-400 mt-1 leading-relaxed" x-text="sub.description"></p>
+                                    <p x-show="sub.description" class="text-[11px] text-slate-400 mt-1 leading-relaxed" x-text="sub.description"></p>
                                 </div>
                                 <div class="flex flex-none items-center gap-1">
                                     <button x-show="canCrudPlan()"
@@ -1333,28 +1319,7 @@
                                             title="Xoá event">
                                         <i data-lucide="trash-2" class="h-3 w-3"></i>
                                     </button>
-                                    <button @click="toggleSub(sub.id)"
-                                            class="mt-0.5 flex h-7 w-7 items-center justify-center rounded-full text-sm transition-all"
-                                            :class="excludedSubs[sub.id]
-                                                ? 'bg-slate-700 text-slate-400 hover:bg-emerald-500/20 hover:text-emerald-400'
-                                                : 'bg-white/8 text-slate-400 hover:bg-red-500/20 hover:text-red-400'"
-                                            :title="excludedSubs[sub.id] ? 'Thêm lại vào lịch trình' : 'Bỏ khỏi lịch trình'">
-                                        <span x-text="excludedSubs[sub.id] ? '+' : '×'"></span>
-                                    </button>
                                 </div>
-                            </div>
-                        </template>
-
-                        <!-- Savings summary khi có địa điểm bị bỏ -->
-                        <template x-if="activeLocation.subLocations.some(s => excludedSubs[s.id])">
-                            <div class="flex items-center justify-between bg-amber-500/5 border border-amber-500/15 rounded-xl px-4 py-2.5">
-                                <span class="text-[10px] text-slate-400">
-                                    Bỏ qua <span class="text-amber-400 font-bold" x-text="activeLocation.subLocations.filter(s => excludedSubs[s.id]).length"></span>
-                                    / <span x-text="activeLocation.subLocations.length"></span> địa điểm
-                                </span>
-                                <span class="text-[10px] font-bold text-amber-400">
-                                    Tiết kiệm <span x-text="formatCurrency(activeLocation.subLocations.filter(s => excludedSubs[s.id]).reduce((sum, s) => sum + subActivityCost(s, activeLocation), 0))"></span>
-                                </span>
                             </div>
                         </template>
                     </div>
@@ -1602,7 +1567,7 @@
         </button>
     </div>
 
-    <!-- Marker popup: Xem / Bỏ qua -->
+    <!-- Marker popup -->
     <div x-show="markerPopup" x-cloak class="fixed inset-0 z-[1000]" @click="markerPopup = null"></div>
     <div x-show="markerPopup"
          x-cloak
@@ -1649,21 +1614,6 @@
                     <span class="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center flex-none text-blue-400 text-[11px]">↗</span>
                     <span class="text-xs text-white font-medium">Xem trên Google Maps</span>
                 </a>
-                <button @click="toggleSub(markerPopup.id); markerPopup = null"
-                        class="flex items-center gap-2.5 w-full px-2.5 py-2 rounded-xl hover:bg-white/8 transition-colors text-left">
-                    <span class="w-5 h-5 rounded-full bg-slate-600/40 flex items-center justify-center flex-none text-slate-400 text-[11px]">–</span>
-                    <span class="text-xs text-slate-300">Bỏ qua điểm này</span>
-                </button>
-            </div>
-        </template>
-        <!-- Excluded sub-location -->
-        <template x-if="markerPopup?.type === 'sub' && markerPopup?.isExcluded">
-            <div class="p-1.5">
-                <button @click="toggleSub(markerPopup.id); markerPopup = null"
-                        class="flex items-center gap-2.5 w-full px-2.5 py-2 rounded-xl hover:bg-white/8 transition-colors text-left">
-                    <span class="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-none text-emerald-400 text-[11px]">+</span>
-                    <span class="text-xs text-white font-medium">Thêm lại vào lịch trình</span>
-                </button>
             </div>
         </template>
     </div>
@@ -1741,7 +1691,6 @@
                 mapReady: false,
                 tileLayer: null,
                 markerPopup: null,      // { type, id, name, isExcluded, x, y }
-                excludedSubs: {},       // { subLocationId: true }
                 excludedLocations: {},  // { locationId: true } — bỏ khỏi lộ trình trên map
                 mySessionId: null,      // Session của chính user này (đã tạo / đã lưu)
                 sessionSourceId: null,  // Session được share từ người khác (read-only source)
@@ -1832,9 +1781,8 @@
                     return `https://loremflickr.com/800/600/${ascii},vietnam/all?lock=${h}`;
                 },
 
-                // Getter có explicit dependency vào excludedSubs và excludedLocations để Alpine track mutation.
+                // Getter có explicit dependency vào excludedLocations để Alpine track mutation.
                 get totalPlanCost() {
-                    void this.excludedSubs;
                     void this.excludedLocations;
                     return this.calculateTotalPlanCost();
                 },
@@ -1968,7 +1916,6 @@
                     if (isDetail && !forceOverview) {
                         // Detail mode: show sub-location markers, excluded ones grayed out
                         const subs = this.orderedSubLocations(this.activeLocation).filter(sub => this.hasMapCoordinates(sub));
-                        const visibleSubs = subs.filter(s => !this.excludedSubs[s.id]);
                         const basePoint = { lat: this.activeLocation.lat, lng: this.activeLocation.lng, name: this.activeLocation.name };
                         const allPoints = [
                             ...(this.hasMapCoordinates(basePoint) ? [[basePoint.lat, basePoint.lng]] : []),
@@ -1987,33 +1934,20 @@
                             }).addTo(this.map);
                         }
 
-                        // Visible sub index (chỉ đánh số các sub còn trong lịch trình)
-                        let visibleIdx = 0;
                         subs.forEach((sub, subIndex) => {
-                            const isExcluded = !!this.excludedSubs[sub.id];
-                            const displayNum = isExcluded ? (subIndex + 1) : (++visibleIdx);
-                            const markerHtml = isExcluded
-                                ? `<div class="relative group cursor-pointer" style="opacity:0.4">
-                                       <div class="w-8 h-8 bg-slate-700 rounded-full border-2 border-dashed border-slate-500 shadow-xl flex items-center justify-center text-slate-400 font-bold text-xs">${displayNum}</div>
-                                       <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-white text-slate-900 px-2 py-1 rounded text-[10px] font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity shadow-lg pointer-events-none">
-                                           ${sub.name}
-                                       </div>
-                                       <div class="absolute -bottom-5 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-2 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">Thêm lại</div>
-                                   </div>`
-                                : `<div class="relative group cursor-pointer">
+                            const markerHtml = `<div class="relative group cursor-pointer">
                                        <div class="w-8 h-8 bg-emerald-600 rounded-full border-2 border-white shadow-xl flex items-center justify-center text-white font-bold text-xs">
-                                           ${displayNum}
+                                           ${subIndex + 1}
                                        </div>
                                        <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-white text-slate-900 px-2 py-1 rounded text-[10px] font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity shadow-lg pointer-events-none">
                                            ${sub.name}
                                        </div>
-                                       <div class="absolute -bottom-5 left-1/2 -translate-x-1/2 bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">Bỏ qua</div>
                                    </div>`;
 
                             const marker = L.marker([sub.lat, sub.lng], {
                                 icon: L.divIcon({ className: 'custom-div-icon', html: markerHtml, iconSize: [32, 32], iconAnchor: [16, 16] })
                             }).addTo(this.map);
-                            marker.on('click', (e) => this._showMarkerPopup(e, 'sub', sub.id, sub.name, isExcluded, sub.lat, sub.lng));
+                            marker.on('click', (e) => this._showMarkerPopup(e, 'sub', sub.id, sub.name, false, sub.lat, sub.lng));
                             this.markers[sub.id] = marker;
                         });
 
@@ -2038,48 +1972,44 @@
                         const detailRouteLayers = [];
                         const detailRoutePoints = [
                             ...(this.hasMapCoordinates(basePoint) ? [basePoint] : []),
-                            ...visibleSubs,
+                            ...subs,
                         ];
                         for (let idx = 1; idx < detailRoutePoints.length; idx += 1) {
                             const prev = detailRoutePoints[idx - 1];
                             const next = detailRoutePoints[idx];
                             const routeStyle = this.getRouteLegStyle(idx - 1);
-                            try {
-                                const route = await this.fetchDrivingRoute(prev, next);
-                                const coords = route.coordinates;
-                                detailRouteLayers.push(L.polyline(coords.map(([lng, lat]) => [lat, lng]), {
-                                    color: routeStyle.color,
-                                    weight: 3,
-                                    opacity: 0.82,
-                                    dashArray: '8, 12',
-                                    lineJoin: 'round'
-                                }));
+                            const route = this.estimateRouteSegment(prev, next, next.transportType);
+                            const coords = route.coordinates;
+                            detailRouteLayers.push(L.polyline(coords.map(([lng, lat]) => [lat, lng]), {
+                                color: routeStyle.fallback,
+                                weight: 3,
+                                opacity: 0.82,
+                                dashArray: '8, 12',
+                                lineJoin: 'round'
+                            }));
 
-                                const mid = coords[Math.floor(coords.length / 2)];
-                                addDetailRouteBadge(mid[1], mid[0], `${idx - 1}→${idx}`, route, routeStyle);
+                            const mid = coords[Math.floor(coords.length / 2)];
+                            addDetailRouteBadge(mid[1], mid[0], `${idx - 1}→${idx}`, route, routeStyle);
 
-                                [0.35, 0.7].forEach(p => {
-                                    const i = Math.floor(p * (coords.length - 1));
-                                    if (i <= 0 || i >= coords.length - 1) return;
-                                    const [lng1, lat1] = coords[i - 1];
-                                    const [lng2, lat2] = coords[i + 1];
-                                    const bearing = this.routeBearing(lat1, lng1, lat2, lng2);
-                                    const [aLng, aLat] = coords[i];
-                                    const arrow = L.marker([aLat, aLng], {
-                                        icon: L.divIcon({
-                                            className: '',
-                                            html: `<span style="display:block;color:${routeStyle.arrow};font-size:9px;line-height:1;transform:translate(-50%,-50%) rotate(${bearing}deg);pointer-events:none;filter:drop-shadow(0 1px 3px rgba(0,0,0,1))">▲</span>`,
-                                            iconSize: [0, 0],
-                                            iconAnchor: [0, 0]
-                                        }),
-                                        interactive: false,
-                                        zIndexOffset: 100
-                                    }).addTo(this.map);
-                                    this.transportMarkers.push(arrow);
-                                });
-                            } catch (error) {
-                                console.warn(`Không vẽ đường bộ ${prev.name} -> ${next.name}:`, error);
-                            }
+                            [0.35, 0.7].forEach(p => {
+                                const i = Math.floor(p * (coords.length - 1));
+                                if (i <= 0 || i >= coords.length - 1) return;
+                                const [lng1, lat1] = coords[i - 1];
+                                const [lng2, lat2] = coords[i + 1];
+                                const bearing = this.routeBearing(lat1, lng1, lat2, lng2);
+                                const [aLng, aLat] = coords[i];
+                                const arrow = L.marker([aLat, aLng], {
+                                    icon: L.divIcon({
+                                        className: '',
+                                        html: `<span style="display:block;color:${routeStyle.arrow};font-size:9px;line-height:1;transform:translate(-50%,-50%) rotate(${bearing}deg);pointer-events:none;filter:drop-shadow(0 1px 3px rgba(0,0,0,1))">▲</span>`,
+                                        iconSize: [0, 0],
+                                        iconAnchor: [0, 0]
+                                    }),
+                                    interactive: false,
+                                    zIndexOffset: 100
+                                }).addTo(this.map);
+                                this.transportMarkers.push(arrow);
+                            });
                         }
                         if (detailRouteLayers.length) {
                             this.polyline = L.featureGroup(detailRouteLayers).addTo(this.map);
@@ -2095,6 +2025,7 @@
                             const bounds = L.latLngBounds(allPoints);
                             this.map.fitBounds(bounds, { padding: [60, 60] });
                         }
+                        this.mapReady = true;
                         return;
                     }
 
@@ -2136,6 +2067,7 @@
                         if (visibleLocs.length === 1) {
                             this.map.flyTo([visibleLocs[0].lat, visibleLocs[0].lng], 10, { duration: 1 });
                         }
+                        this.mapReady = true;
                         return;
                     }
 
@@ -2167,37 +2099,16 @@
                         const prev = visibleLocs[idx - 1];
                         const loc = visibleLocs[idx];
                         const routeStyle = this.getRouteLegStyle(idx - 1);
-                        let coords = [];
-                        let metrics = null;
+                        const metrics = this.estimateRouteSegment(prev, loc, loc.transportType);
+                        const coords = metrics.coordinates;
 
-                        try {
-                            const route = await this.fetchDrivingRoute(prev, loc);
-                            coords = route.coordinates;
-                            metrics = { distance: route.distance, duration: route.duration, estimated: false };
-                            routeLayers.push(L.polyline(coords.map(([lng, lat]) => [lat, lng]), {
-                                color: routeStyle.color,
-                                weight: 3,
-                                opacity: 0.78,
-                                dashArray: '12, 18',
-                                lineJoin: 'round'
-                            }));
-                        } catch (error) {
-                            console.error(`Lỗi khi vẽ route đường bộ ${prev.name} -> ${loc.name}, fallback về đường thẳng:`, error);
-                            coords = [[prev.lng, prev.lat], [loc.lng, loc.lat]];
-                            const km = this.haversineKm(prev, loc);
-                            metrics = {
-                                distance: km * 1000,
-                                duration: this.estimateDrivingDurationSeconds(km, loc.transportType),
-                                estimated: true,
-                            };
-                            routeLayers.push(L.polyline([[prev.lat, prev.lng], [loc.lat, loc.lng]], {
-                                color: routeStyle.fallback,
-                                weight: 2.5,
-                                opacity: 0.7,
-                                dashArray: '4, 10',
-                                lineJoin: 'round'
-                            }));
-                        }
+                        routeLayers.push(L.polyline(coords.map(([lng, lat]) => [lat, lng]), {
+                            color: routeStyle.fallback,
+                            weight: 2.8,
+                            opacity: 0.78,
+                            dashArray: '10, 14',
+                            lineJoin: 'round'
+                        }));
 
                         if (coords.length) {
                             const mid = coords[Math.floor(coords.length / 2)];
@@ -2243,14 +2154,11 @@
 
                     if (fitBounds && this.polyline) {
                         this.map.fitBounds(this.polyline.getBounds(), { padding: [50, 50] });
-                        // Đăng ký listener SAU khi fitBounds — lúc này Leaflet mới biết tiles nào cần load
-                        if (!this.mapReady && this.tileLayer) {
-                            this.tileLayer.once('load', () => { this.mapReady = true; });
-                            setTimeout(() => { this.mapReady = true; }, 7000); // safety fallback
-                        }
+                        this.mapReady = true;
                     } else if (this.activeId) {
                         const loc = this.activeLocation;
                         this.map.flyTo([loc.lat, loc.lng], 13, { duration: 1.5 });
+                        this.mapReady = true;
                     }
                 },
 
@@ -2276,28 +2184,8 @@
                     this.$nextTick(() => this.updateMap(true, true));
                 },
 
-                toggleSub(subId) {
-                    const next = { ...this.excludedSubs };
-                    if (next[subId]) {
-                        delete next[subId];
-                    } else {
-                        next[subId] = true;
-                    }
-                    this.excludedSubs = next;
-                    this.saveExcluded();
-                    this.scheduleSessionSave();
-                    this.updateMap(false);
-                },
-
-                saveExcluded() {
-                    if (!this.currentPlanId) return;
-                    localStorage.setItem(`vt_ex_${this.currentPlanId}`, JSON.stringify(this.excludedSubs));
-                },
-
                 restoreExcluded(planId) {
-                    const saved = localStorage.getItem(`vt_ex_${planId}`);
-                    if (!saved) return;
-                    try { this.excludedSubs = JSON.parse(saved); } catch (e) {}
+                    if (planId) localStorage.removeItem(`vt_ex_${planId}`);
                 },
 
                 restoreExcludedLocations(planId) {
@@ -2334,7 +2222,7 @@
                 // ── Session methods ──────────────────────────────────────
 
                 buildCustom() {
-                    return { excludedSubs: this.excludedSubs, excludedLocations: this.excludedLocations, schedules: this.scheduleOverrides };
+                    return { excludedSubs: {}, excludedLocations: this.excludedLocations, schedules: this.scheduleOverrides };
                 },
 
                 captureCurrentSchedules() {
@@ -2382,7 +2270,6 @@
                         // Lần đầu user thay đổi gì → sẽ tự động fork thành session riêng
                         this.sessionSourceId = id;
 
-                        this.excludedSubs = sess.custom?.excludedSubs || {};
                         this.excludedLocations = sess.custom?.excludedLocations || {};
                         this.scheduleOverrides = sess.custom?.schedules || {};
                         this.applyScheduleOverrides();
@@ -2498,7 +2385,6 @@
                     this.mySessionId = null;
                     this.sessionSourceId = null;
                     this.isSessionPlan = !!this.currentPlan.sessionId;
-                    this.excludedSubs = {};
                     this.excludedLocations = {};
                     this.scheduleOverrides = {};
                     this.pendingScheduleChanges = {};
@@ -2859,24 +2745,24 @@
                 },
 
                 ticketAdultTotal(loc) {
-                    const subs = (loc.subLocations || []).filter(s => !this.excludedSubs[s.id] && this.subActivityType(s) === 'sightseeing');
+                    const subs = (loc.subLocations || []).filter(s => this.subActivityType(s) === 'sightseeing');
                     return subs.reduce((sum, s) => sum + (s.adultPrice || 0), 0);
                 },
 
                 ticketChildTotal(loc) {
-                    const subs = (loc.subLocations || []).filter(s => !this.excludedSubs[s.id] && this.subActivityType(s) === 'sightseeing');
+                    const subs = (loc.subLocations || []).filter(s => this.subActivityType(s) === 'sightseeing');
                     return subs.reduce((sum, s) => sum + (s.childPrice || 0), 0);
                 },
 
                 participantAdultRate(loc) {
                     return (loc.subLocations || [])
-                        .filter(s => !this.excludedSubs[s.id] && (s.pricingMode || 'per_person') === 'per_person')
+                        .filter(s => (s.pricingMode || 'per_person') === 'per_person')
                         .reduce((sum, s) => sum + Number(s.adultPrice || 0), 0);
                 },
 
                 participantChildRate(loc) {
                     return (loc.subLocations || [])
-                        .filter(s => !this.excludedSubs[s.id] && (s.pricingMode || 'per_person') === 'per_person')
+                        .filter(s => (s.pricingMode || 'per_person') === 'per_person')
                         .reduce((sum, s) => sum + Number(s.childPrice || 0), 0);
                 },
 
@@ -2925,13 +2811,13 @@
 
                 activityNames(loc, type) {
                     return (loc.subLocations || [])
-                        .filter(s => !this.excludedSubs[s.id] && this.subActivityType(s) === type)
+                        .filter(s => this.subActivityType(s) === type)
                         .map(s => s.name)
                         .join(' · ');
                 },
 
                 visibleActivities(loc) {
-                    return this.orderedSubLocations(loc).filter(s => !this.excludedSubs[s.id]);
+                    return this.orderedSubLocations(loc);
                 },
 
                 summaryActivitiesByType(loc, types) {
@@ -3040,7 +2926,7 @@
                 subActivityTotal(loc, types) {
                     const allowed = new Set(types);
                     return (loc.subLocations || [])
-                        .filter(s => !this.excludedSubs[s.id] && allowed.has(this.subActivityType(s)))
+                        .filter(s => allowed.has(this.subActivityType(s)))
                         .reduce((sum, s) => sum + this.subActivityCost(s, loc), 0);
                 },
 
@@ -3093,79 +2979,14 @@
                     return palette[index % palette.length];
                 },
 
-                async fetchDrivingRoute(from, to) {
-                    try {
-                        const valhallaRes = await fetch('https://valhalla1.openstreetmap.de/route', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                locations: [
-                                    { lat: from.lat, lon: from.lng },
-                                    { lat: to.lat, lon: to.lng },
-                                ],
-                                costing: 'auto',
-                                directions_options: { units: 'kilometers' },
-                            }),
-                        });
-                        if (!valhallaRes.ok) throw new Error(`Valhalla ${valhallaRes.status}`);
-                        const valhallaData = await valhallaRes.json();
-                        const leg = valhallaData.trip?.legs?.[0];
-                        const summary = valhallaData.trip?.summary || {};
-                        if (!leg?.shape) throw new Error('Valhalla no shape');
-                        const coordinates = this.decodeValhallaShape(leg.shape);
-                        if (coordinates.length < 2) throw new Error('Valhalla empty shape');
-                        return {
-                            coordinates,
-                            distance: Number(summary.length || 0) * 1000,
-                            duration: Number(summary.time || 0),
-                        };
-                    } catch (valhallaError) {
-                        console.warn('Valhalla route failed, trying OSRM:', valhallaError);
-                    }
-
-                    const mapCoords = `${from.lng},${from.lat};${to.lng},${to.lat}`;
-                    const osrmRes = await fetch(`https://router.project-osrm.org/route/v1/driving/${mapCoords}?overview=full&geometries=geojson&steps=false`);
-                    if (!osrmRes.ok) throw new Error(`OSRM ${osrmRes.status}`);
-                    const osrmData = await osrmRes.json();
-                    const route = osrmData.routes?.[0];
-                    if (!route?.geometry?.coordinates?.length) throw new Error('OSRM no route');
+                estimateRouteSegment(from, to, type = 'car') {
+                    const km = this.haversineKm(from, to);
                     return {
-                        coordinates: route.geometry.coordinates,
-                        distance: route.distance,
-                        duration: route.duration,
+                        coordinates: [[from.lng, from.lat], [to.lng, to.lat]],
+                        distance: km * 1000,
+                        duration: this.estimateDrivingDurationSeconds(km, type),
+                        estimated: true,
                     };
-                },
-
-                decodeValhallaShape(shape) {
-                    let index = 0;
-                    let lat = 0;
-                    let lng = 0;
-                    const coordinates = [];
-                    const precision = 1e6;
-
-                    while (index < shape.length) {
-                        let result = 1;
-                        let shift = 0;
-                        let byte = null;
-                        do {
-                            byte = shape.charCodeAt(index++) - 63 - 1;
-                            result += byte << shift;
-                            shift += 5;
-                        } while (byte >= 0x1f);
-                        lat += (result & 1) ? ~(result >> 1) : (result >> 1);
-
-                        result = 1;
-                        shift = 0;
-                        do {
-                            byte = shape.charCodeAt(index++) - 63 - 1;
-                            result += byte << shift;
-                            shift += 5;
-                        } while (byte >= 0x1f);
-                        lng += (result & 1) ? ~(result >> 1) : (result >> 1);
-
-                        coordinates.push([lng / precision, lat / precision]);
-                    }
-                    return coordinates;
                 },
 
                 formatRouteDistance(meters) {
@@ -4141,7 +3962,6 @@
 
                         const visitSlots = this.locationVisitSlots(loc);
                         this.orderedSubLocations(loc).forEach((sub, subIndex) => {
-                            if (this.excludedSubs[sub.id]) return;
                             if (!visitSlots.length) return;
                             const activityType = this.subActivityType(sub);
                             const scheduledPeriod = sub.scheduledTime
