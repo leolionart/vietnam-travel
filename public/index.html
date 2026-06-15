@@ -826,10 +826,17 @@
                     </div>
                 </template>
             </div>
-            <div x-show="calendarScheduleDirty || calendarScheduleSaving || scheduleSaveStatus"
+            <div
                  class="flex flex-col gap-2 border-t border-white/10 bg-slate-950/55 px-3 py-2.5 backdrop-blur-xl lg:flex-row lg:items-center lg:justify-between lg:px-4">
                 <div class="flex flex-wrap items-center gap-1.5 text-[10px]">
-                    <span class="rounded-md border border-white/10 bg-white/5 px-2 py-1 font-bold text-slate-300">Chỉnh lịch thủ công</span>
+                    <button type="button"
+                            @click="setCalendarMoveOnly(true)"
+                            class="rounded-md border px-2 py-1 font-bold transition-colors"
+                            :class="calendarMoveOnly ? 'border-blue-400/30 bg-blue-400/15 text-blue-100' : 'border-white/10 bg-white/5 text-slate-400 hover:text-slate-200'">Move view only</button>
+                    <button type="button"
+                            @click="setCalendarMoveOnly(false)"
+                            class="rounded-md border px-2 py-1 font-bold transition-colors"
+                            :class="!calendarMoveOnly ? 'border-emerald-400/30 bg-emerald-400/15 text-emerald-100' : 'border-white/10 bg-white/5 text-slate-400 hover:text-slate-200'">Chỉnh lịch</button>
                     <span x-show="calendarScheduleDirty" class="rounded-md border border-amber-400/25 bg-amber-400/10 px-2 py-1 font-bold text-amber-200">Chưa lưu thay đổi</span>
                     <span x-show="scheduleSaveStatus" class="rounded-md border px-2 py-1 font-bold" :class="calendarScheduleDirty ? 'border-rose-400/25 bg-rose-400/10 text-rose-200' : 'border-emerald-400/20 bg-emerald-400/10 text-emerald-200'" x-text="scheduleSaveStatus"></span>
                 </div>
@@ -1080,10 +1087,17 @@
                     </div>
                 </template>
             </div>
-            <div x-show="calendarScheduleDirty || calendarScheduleSaving || scheduleSaveStatus"
+            <div
                  class="flex flex-col gap-2 border-t border-white/10 bg-slate-950/55 px-3 py-2.5 backdrop-blur-xl lg:flex-row lg:items-center lg:justify-between lg:px-4">
                 <div class="flex flex-wrap items-center gap-1.5 text-[10px]">
-                    <span class="rounded-md border border-white/10 bg-white/5 px-2 py-1 font-bold text-slate-300">Chỉnh lịch thủ công</span>
+                    <button type="button"
+                            @click="setCalendarMoveOnly(true)"
+                            class="rounded-md border px-2 py-1 font-bold transition-colors"
+                            :class="calendarMoveOnly ? 'border-blue-400/30 bg-blue-400/15 text-blue-100' : 'border-white/10 bg-white/5 text-slate-400 hover:text-slate-200'">Move view only</button>
+                    <button type="button"
+                            @click="setCalendarMoveOnly(false)"
+                            class="rounded-md border px-2 py-1 font-bold transition-colors"
+                            :class="!calendarMoveOnly ? 'border-emerald-400/30 bg-emerald-400/15 text-emerald-100' : 'border-white/10 bg-white/5 text-slate-400 hover:text-slate-200'">Chỉnh lịch</button>
                     <span x-show="calendarScheduleDirty" class="rounded-md border border-amber-400/25 bg-amber-400/10 px-2 py-1 font-bold text-amber-200">Chưa lưu thay đổi</span>
                     <span x-show="scheduleSaveStatus" class="rounded-md border px-2 py-1 font-bold" :class="calendarScheduleDirty ? 'border-rose-400/25 bg-rose-400/10 text-rose-200' : 'border-emerald-400/20 bg-emerald-400/10 text-emerald-200'" x-text="scheduleSaveStatus"></span>
                 </div>
@@ -1684,6 +1698,7 @@
                 viewMode: 'map',
                 theme: 'dark',
                 planBudgetLimit: 150000000,
+                calendarMoveOnly: true,
                 calendarWeekIndex: 0,
                 planDropdownOpen: false,
                 detailScrolled: false,
@@ -1763,6 +1778,20 @@
                     this.$nextTick(() => lucide.createIcons());
                 },
 
+                setCalendarMoveOnly(value) {
+                    this.calendarMoveOnly = Boolean(value);
+                    localStorage.setItem('vt_calendar_move_only', this.calendarMoveOnly ? '1' : '0');
+                    if (this.calendarMoveOnly) {
+                        this.calendarDragEvent = null;
+                        this.calendarResizeEvent = null;
+                        if (this._calendarResizeMoveHandler) {
+                            window.removeEventListener('pointermove', this._calendarResizeMoveHandler);
+                            this._calendarResizeMoveHandler = null;
+                        }
+                    }
+                    this.$nextTick(() => lucide.createIcons());
+                },
+
                 selectedPlanName() {
                     const plan = this.planList.find(item => item.slug === this.currentPlanId);
                     return plan?.name || this.currentPlan.name || 'Chọn kế hoạch';
@@ -1797,6 +1826,9 @@
                 async init() {
                     const savedTheme = localStorage.getItem('vt_theme');
                     if (savedTheme === 'light' || savedTheme === 'dark') this.theme = savedTheme;
+                    const savedCalendarMoveOnly = localStorage.getItem('vt_calendar_move_only');
+                    if (savedCalendarMoveOnly === '0') this.calendarMoveOnly = false;
+                    if (savedCalendarMoveOnly === '1') this.calendarMoveOnly = true;
                     lucide.createIcons();
 
                     try {
@@ -3495,6 +3527,7 @@
                 },
 
                 calendarEditingEnabled(event = null) {
+                    if (this.calendarMoveOnly) return false;
                     if (event && !event.subLocationId) return false;
                     return this.viewMode === 'calendar' || this.viewMode === 'month';
                 },

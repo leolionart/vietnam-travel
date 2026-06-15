@@ -25,6 +25,8 @@
   `150.000.000 ₫` budget and show both usage percent and remaining amount.
 - Muted the fixed budget text so the actual spend remains the primary visual
   emphasis in the total cost card.
+- Added a calendar `Move view only` mode that disables event drag/drop and
+  resize interactions so touch-screen scrolling stays stable.
 
 ## v1.0.9 - Activity External CTA Links
 
