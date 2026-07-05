@@ -355,10 +355,14 @@
                                     <p class="mt-1 text-sm font-bold text-white" x-text="activityDurationLabel(eventDetail().activity)"></p>
                                 </div>
                                 <div class="rounded-xl border border-white/5 bg-black/15 px-3 py-3">
-                                    <p class="text-[9px] font-black uppercase tracking-wider text-slate-500">Chi phí</p>
+                                    <p class="text-[9px] font-black uppercase tracking-wider text-slate-500">Chi phí dự kiến</p>
                                     <p class="mt-1 text-sm font-bold text-amber-200" x-text="eventCostLabel(eventDetail().activity, eventDetail().location)"></p>
                                 </div>
                                 <div class="rounded-xl border border-white/5 bg-black/15 px-3 py-3">
+                                    <p class="text-[9px] font-black uppercase tracking-wider text-slate-500">Chi phí thực tế</p>
+                                    <p class="mt-1 text-sm font-bold text-emerald-400" x-text="eventDetail().activity?.actualCost ? formatCurrency(eventDetail().activity.actualCost) : 'Chưa cập nhật'"></p>
+                                </div>
+                                <div class="rounded-xl border border-white/5 bg-black/15 px-3 py-3 col-span-2">
                                     <p class="text-[9px] font-black uppercase tracking-wider text-slate-500">Người tham gia</p>
                                     <p class="mt-1 text-sm font-bold text-white" x-text="eventParticipantsLabel(eventDetail().activity)"></p>
                                 </div>
@@ -1282,6 +1286,10 @@
                             <input type="number" min="0" step="1" x-model="activityDraft.quantity" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400">
                         </label>
                         <label class="space-y-1 col-span-2">
+                            <span class="text-[9px] font-bold text-slate-500 uppercase">Chi phí thực tế</span>
+                            <input type="number" min="0" step="1000" x-model="activityDraft.actualCost" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400" placeholder="0">
+                        </label>
+                        <label class="space-y-1 col-span-2">
                             <span class="text-[9px] font-bold text-slate-500 uppercase">Mô tả</span>
                             <textarea rows="2" x-model="activityDraft.description" class="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-xs text-white outline-none focus:border-emerald-400"></textarea>
                         </label>
@@ -1327,10 +1335,13 @@
                                         <p class="text-[10px] text-emerald-400" x-text="activityDurationLabel(sub)"></p>
                                         <span class="text-[10px] text-violet-300 bg-violet-400/10 px-1.5 py-0.5 rounded-full" x-text="activityTypeLabel(sub.activityType)"></span>
                                         <template x-if="subActivityCost(sub, activeLocation) > 0">
-                                            <span class="text-[10px] text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded-full" x-text="formatCurrency(subActivityCost(sub, activeLocation))"></span>
+                                            <span class="text-[10px] text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded-full" x-text="'Dự kiến: ' + formatCurrency(subActivityCost(sub, activeLocation))"></span>
                                         </template>
                                         <template x-if="subActivityCost(sub, activeLocation) === 0">
-                                            <span class="text-[10px] text-green-400 bg-green-400/10 px-1.5 py-0.5 rounded-full">Miễn phí</span>
+                                            <span class="text-[10px] text-green-400 bg-green-400/10 px-1.5 py-0.5 rounded-full">Dự kiến: Miễn phí</span>
+                                        </template>
+                                        <template x-if="sub.actualCost > 0">
+                                            <span class="text-[10px] text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded-full" x-text="'Thực tế: ' + formatCurrency(sub.actualCost)"></span>
                                         </template>
                                     </div>
                                     <p x-show="sub.description" class="text-[11px] text-slate-400 mt-1 leading-relaxed" x-text="sub.description"></p>
@@ -2620,6 +2631,7 @@
                         unitPrice: 0,
                         quantity: 1,
                         surcharge: 0,
+                        actualCost: 0,
                         address: '',
                         externalUrl: '',
                         externalLabel: '',
@@ -2651,6 +2663,7 @@
                         unitPrice: Number(sub.unitPrice || 0),
                         quantity: Number(sub.quantity ?? 1),
                         surcharge: Number(sub.surcharge || 0),
+                        actualCost: Number(sub.actualCost || 0),
                         address: sub.address || '',
                         externalUrl: sub.externalUrl || '',
                         externalLabel: sub.externalLabel || '',
@@ -2711,6 +2724,7 @@
                         unitPrice: Number(this.activityDraft.unitPrice || 0),
                         quantity: Number(this.activityDraft.quantity ?? 1),
                         surcharge: Number(this.activityDraft.surcharge || 0),
+                        actualCost: Number(this.activityDraft.actualCost || 0),
                         address: String(this.activityDraft.address || '').trim(),
                         externalUrl: String(this.activityDraft.externalUrl || '').trim(),
                         externalLabel: String(this.activityDraft.externalLabel || '').trim(),

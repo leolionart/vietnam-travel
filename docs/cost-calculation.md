@@ -35,11 +35,16 @@ Chi phí location = Vé tham quan + Lưu trú + Ăn uống + Di chuyển + Khác
 | `quantity` | Số phòng/đơn vị/nhóm do user nhập |
 | `surcharge` | Phụ thu cố định do user nhập |
 | `durationDays` | Số ngày activity kéo dài, dùng để hiển thị khách sạn/tour nhiều ngày |
+| `actualCost` | Chi phí thực tế đã chi cho activity, lưu riêng để đối chiếu với dự toán |
 
 Activity loại `sightseeing` dùng cho vé tham quan. Activity loại `accommodation`,
 `food`, `transport`, hoặc `other` là nguồn chi phí theo từng nhóm; activity
 legacy `cafe` được đọc chung vào nhóm `food`/Ăn uống để giữ dữ liệu cũ không mất.
 Parent location chỉ giữ summary và thông tin lịch trình.
+
+`actualCost` không tham gia các công thức dự toán bên dưới. Các tổng ngân sách
+hiện tại vẫn dùng `unitPrice`, `quantity`, `surcharge`, `adultPrice`,
+`childPrice`, và số người tham gia như trước.
 
 Với `pricingMode = per_room`, chi phí được tính:
 

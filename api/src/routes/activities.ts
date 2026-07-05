@@ -42,6 +42,7 @@ type ActivityInput = {
     childPrice?: number;
     participantAdults?: number | null;
     participantChildren?: number | null;
+    actualCost?: number;
 };
 
 function getPlanIdBySlug(slug: string): number | null {
@@ -89,7 +90,8 @@ function listActivitiesForPlan(planId: number) {
             s.adult_price as adultPrice,
             s.child_price as childPrice,
             s.participant_adults as participantAdults,
-            s.participant_children as participantChildren
+            s.participant_children as participantChildren,
+            s.actual_cost as actualCost
         FROM sub_locations s
         JOIN locations l ON l.id = s.location_id
         WHERE l.plan_id = ?
@@ -111,8 +113,8 @@ function insertActivity(locationId: number, input: ActivityInput) {
     const db = getDb();
     const maxOrder = (db.prepare('SELECT MAX(sort_order) as m FROM sub_locations WHERE location_id = ?').get(locationId) as { m: number | null }).m ?? 0;
     const result = db.prepare(
-        'INSERT INTO sub_locations (location_id, sort_order, name, address, external_url, external_label, lat, lng, duration_minutes, duration_days, scheduled_date, scheduled_period, scheduled_time, description, activity_type, transport_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price, participant_adults, participant_children) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(locationId, input.sortOrder ?? maxOrder + 1, input.name, input.address ?? '', input.externalUrl ?? '', input.externalLabel ?? '', input.lat ?? 0, input.lng ?? 0, input.durationMinutes ?? 60, input.durationDays ?? 0, input.scheduledDate ?? '', input.scheduledPeriod ?? '', input.scheduledTime ?? '', input.description ?? '', input.activityType ?? 'sightseeing', input.transportType ?? '', input.pricingMode ?? 'per_person', input.unitPrice ?? 0, input.quantity ?? 1, input.surcharge ?? 0, input.adultPrice ?? 0, input.childPrice ?? 0, input.participantAdults ?? null, input.participantChildren ?? null);
+        'INSERT INTO sub_locations (location_id, sort_order, name, address, external_url, external_label, lat, lng, duration_minutes, duration_days, scheduled_date, scheduled_period, scheduled_time, description, activity_type, transport_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price, participant_adults, participant_children, actual_cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(locationId, input.sortOrder ?? maxOrder + 1, input.name, input.address ?? '', input.externalUrl ?? '', input.externalLabel ?? '', input.lat ?? 0, input.lng ?? 0, input.durationMinutes ?? 60, input.durationDays ?? 0, input.scheduledDate ?? '', input.scheduledPeriod ?? '', input.scheduledTime ?? '', input.description ?? '', input.activityType ?? 'sightseeing', input.transportType ?? '', input.pricingMode ?? 'per_person', input.unitPrice ?? 0, input.quantity ?? 1, input.surcharge ?? 0, input.adultPrice ?? 0, input.childPrice ?? 0, input.participantAdults ?? null, input.participantChildren ?? null, input.actualCost ?? 0);
     return { id: result.lastInsertRowid };
 }
 
@@ -145,6 +147,7 @@ function updateActivity(activityId: number, input: ActivityInput): boolean {
         child_price: input.childPrice,
         participant_adults: input.participantAdults,
         participant_children: input.participantChildren,
+        actual_cost: input.actualCost,
     };
     const fields: string[] = [];
     const values: unknown[] = [];

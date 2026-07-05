@@ -1,5 +1,13 @@
 # Release Notes
 
+## Unreleased - Actual Activity Costs
+
+- Added an `actualCost` field for activities so planned estimates and real
+  paid/spent costs can be recorded separately.
+- Exposed actual activity costs through public/admin APIs, CLI output, MCP tool
+  schemas, and the public activity edit form.
+- Kept existing estimated cost calculations unchanged.
+
 ## v1.0.10 - Schedule Ordered Map Itinerary
 
 - Sorted the map timeline and active location fallback by planned dates instead

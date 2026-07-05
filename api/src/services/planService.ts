@@ -28,6 +28,7 @@ interface DbSubLocation {
     child_price: number;
     participant_adults: number | null;
     participant_children: number | null;
+    actual_cost: number;
 }
 
 interface DbLocation {
@@ -105,6 +106,7 @@ function subToPublic(sub: DbSubLocation) {
         childPrice: sub.child_price,
         participantAdults: sub.participant_adults,
         participantChildren: sub.participant_children,
+        actualCost: sub.actual_cost || 0,
     };
 }
 

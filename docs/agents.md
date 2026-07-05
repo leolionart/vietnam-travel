@@ -108,6 +108,8 @@ Costs belong on activities (`sub_locations`):
 - `activityType`: `sightseeing`, `accommodation`, `food`, `cafe`, `transport`, `other`
 - `pricingMode`: `per_person`, `per_room`, `per_group`
 - `unitPrice`, `quantity`, `surcharge`, `adultPrice`, `childPrice`
+- `actualCost`: real paid/spent cost for the activity, stored separately from
+  estimated cost fields and not used in current budget estimate totals
 
 Use `food` for new eating/drinking stops. Legacy `cafe` activities are still
 accepted by the API but are displayed and totaled together with `food`.

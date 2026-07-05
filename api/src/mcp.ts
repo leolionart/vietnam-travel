@@ -350,6 +350,7 @@ const TOOL_DEFINITIONS = [
                 participantAdults: { type: 'number', description: 'Số người lớn tham gia activity này' },
                 participantChildren: { type: 'number', description: 'Số trẻ em tham gia activity này' },
                 durationDays: { type: 'number', description: 'Số ngày activity kéo dài, dùng cho lưu trú/tour nhiều ngày' },
+                actualCost: { type: 'number', description: 'Chi phí thực tế của activity (VND)' },
             },
         },
     },
@@ -386,6 +387,7 @@ const TOOL_DEFINITIONS = [
                 childPrice: { type: 'number' },
                 participantAdults: { type: 'number' },
                 participantChildren: { type: 'number' },
+                actualCost: { type: 'number', description: 'Chi phí thực tế của activity (VND)' },
             },
         },
     },
@@ -635,8 +637,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 const db = L.getDb();
                 const maxOrder = (db.prepare('SELECT MAX(sort_order) as m FROM sub_locations WHERE location_id = ?').get(args.locationId) as { m: number | null }).m ?? 0;
                 const result = db.prepare(
-                    'INSERT INTO sub_locations (location_id, sort_order, name, address, external_url, external_label, lat, lng, duration_minutes, duration_days, scheduled_date, scheduled_period, scheduled_time, description, activity_type, transport_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price, participant_adults, participant_children) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-                ).run(args.locationId, args.sortOrder ?? maxOrder + 1, args.name, args.address ?? '', args.externalUrl ?? '', args.externalLabel ?? '', args.lat ?? 0, args.lng ?? 0, args.durationMinutes ?? 60, args.durationDays ?? 0, args.scheduledDate ?? '', args.scheduledPeriod ?? '', args.scheduledTime ?? '', args.description ?? '', args.activityType ?? 'sightseeing', args.transportType ?? '', args.pricingMode ?? 'per_person', args.unitPrice ?? 0, args.quantity ?? 1, args.surcharge ?? 0, args.adultPrice ?? 0, args.childPrice ?? 0, args.participantAdults ?? null, args.participantChildren ?? null);
+                    'INSERT INTO sub_locations (location_id, sort_order, name, address, external_url, external_label, lat, lng, duration_minutes, duration_days, scheduled_date, scheduled_period, scheduled_time, description, activity_type, transport_type, pricing_mode, unit_price, quantity, surcharge, adult_price, child_price, participant_adults, participant_children, actual_cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                ).run(args.locationId, args.sortOrder ?? maxOrder + 1, args.name, args.address ?? '', args.externalUrl ?? '', args.externalLabel ?? '', args.lat ?? 0, args.lng ?? 0, args.durationMinutes ?? 60, args.durationDays ?? 0, args.scheduledDate ?? '', args.scheduledPeriod ?? '', args.scheduledTime ?? '', args.description ?? '', args.activityType ?? 'sightseeing', args.transportType ?? '', args.pricingMode ?? 'per_person', args.unitPrice ?? 0, args.quantity ?? 1, args.surcharge ?? 0, args.adultPrice ?? 0, args.childPrice ?? 0, args.participantAdults ?? null, args.participantChildren ?? null, args.actualCost ?? 0);
                 return ok({ id: result.lastInsertRowid });
             }
 
@@ -648,7 +650,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 if (!db.prepare('SELECT id FROM sub_locations WHERE id = ? AND location_id = ?').get(args.subLocationId, args.locationId)) return err('Sub-location not found');
                 const fields: string[] = [];
                 const values: unknown[] = [];
-                const map: Record<string, unknown> = { name: args.name, address: args.address, external_url: args.externalUrl, external_label: args.externalLabel, lat: args.lat, lng: args.lng, sort_order: args.sortOrder, duration_minutes: args.durationMinutes, duration_days: args.durationDays, scheduled_date: args.scheduledDate, scheduled_period: args.scheduledPeriod, scheduled_time: args.scheduledTime, description: args.description, activity_type: args.activityType, transport_type: args.transportType, pricing_mode: args.pricingMode, unit_price: args.unitPrice, quantity: args.quantity, surcharge: args.surcharge, adult_price: args.adultPrice, child_price: args.childPrice, participant_adults: args.participantAdults, participant_children: args.participantChildren };
+                const map: Record<string, unknown> = { name: args.name, address: args.address, external_url: args.externalUrl, external_label: args.externalLabel, lat: args.lat, lng: args.lng, sort_order: args.sortOrder, duration_minutes: args.durationMinutes, duration_days: args.durationDays, scheduled_date: args.scheduledDate, scheduled_period: args.scheduledPeriod, scheduled_time: args.scheduledTime, description: args.description, activity_type: args.activityType, transport_type: args.transportType, pricing_mode: args.pricingMode, unit_price: args.unitPrice, quantity: args.quantity, surcharge: args.surcharge, adult_price: args.adultPrice, child_price: args.childPrice, participant_adults: args.participantAdults, participant_children: args.participantChildren, actual_cost: args.actualCost };
                 for (const [k, v] of Object.entries(map)) {
                     if (v !== undefined) { fields.push(`${k} = ?`); values.push(v); }
                 }

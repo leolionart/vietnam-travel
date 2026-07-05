@@ -54,8 +54,8 @@ Without a password, or with --public, they write to a public session plan instea
   update-location <slug> <locationId> --json '{"durationDays":3}'
   delete-location <slug> <locationId>
   reorder-locations <slug> --json '{"orderedIds":[3,1,2]}'
-  add-activity <slug> <locationId> --json '{"name":"Hotel","activityType":"accommodation","pricingMode":"per_room","unitPrice":800000,"quantity":1,"surcharge":0,"durationDays":2}'
-  update-activity <slug> <locationId> <activityId> --json '{"childPrice":0}'
+  add-activity <slug> <locationId> --json '{"name":"Hotel","activityType":"accommodation","pricingMode":"per_room","unitPrice":800000,"quantity":1,"surcharge":0,"durationDays":2,"actualCost":850000}'
+  update-activity <slug> <locationId> <activityId> --json '{"childPrice":0,"actualCost":900000}'
   delete-activity <slug> <locationId> <activityId>
   reorder-activities <slug> <locationId> --json '{"orderedIds":[2,1]}'
 
@@ -268,6 +268,7 @@ function formatPlan(plan: any, format: Format): string {
                 activity.participantAdults != null ? `${activity.participantAdults} adult(s)` : null,
                 activity.participantChildren != null ? `${activity.participantChildren} child(ren)` : null,
                 activity.surcharge ? `surcharge ${money(activity.surcharge)}` : null,
+                activity.actualCost ? `actual ${money(activity.actualCost)}` : null,
             ].filter(Boolean);
             lines.push(`- ${activity.name}${parts.length ? `: ${parts.join(', ')}` : ''}`);
         }
