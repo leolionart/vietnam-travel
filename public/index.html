@@ -638,7 +638,7 @@
                 </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-2.5 lg:p-3">
+            <div x-ref="weekCalendarScrollContainer" class="flex-1 overflow-y-auto p-2.5 lg:p-3">
                 <template x-if="calendarDays().length === 0">
                     <div class="h-full min-h-[320px] flex items-center justify-center text-center">
                         <div>
@@ -711,7 +711,9 @@
 
                         <div class="space-y-3">
                             <template x-for="week in calendarWeeks()" :key="week.key">
-                                <section class="rounded-xl border border-white/10 bg-white/[0.012] p-2">
+                                <section class="rounded-xl border border-white/10 bg-white/[0.012] p-2"
+                                         :data-calendar-week-index="week.index"
+                                         :data-current-week="week.isCurrent ? 'true' : null">
                                     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-2 mb-2 px-1">
                                         <div>
                                             <h3 class="text-sm lg:text-lg font-bold text-white" x-text="week.label"></h3>
@@ -898,7 +900,7 @@
                 </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-2.5 lg:p-3">
+            <div x-ref="monthCalendarScrollContainer" class="flex-1 overflow-y-auto p-2.5 lg:p-3">
                 <template x-if="calendarDays().length === 0">
                     <div class="h-full min-h-[320px] flex items-center justify-center text-center">
                         <div>
@@ -988,7 +990,9 @@
                                         </div>
                                         <div class="space-y-1.5">
                                             <template x-for="week in month.weeks" :key="week.key">
-                                                <div class="relative grid grid-cols-7 gap-1.5">
+                                                <div class="relative grid grid-cols-7 gap-1.5"
+                                                     :data-month-week-index="week.globalWeekIndex"
+                                                     :data-current-week="week.isCurrent ? 'true' : null">
                                                     <template x-for="day in week.days" :key="day.key">
                                                         <article class="rounded-lg border p-1.5 min-h-[136px]"
                                                                  :class="calendarDayClass(day)"
@@ -1756,6 +1760,7 @@
                 planList: [],    // lightweight list: [{slug, name, dateRange}]
                 planLoading: false,
                 isSessionPlan: false,   // true khi đang xem session plan (tạo bởi public MCP)
+                calendarWeekExplicit: false,
 
                 get currentPlan() {
                     return this.plans[this.currentPlanId] || { locations: [] };
@@ -1784,7 +1789,10 @@
                             lucide.createIcons();
                         });
                     } else {
-                        this.$nextTick(() => lucide.createIcons());
+                        this.$nextTick(() => {
+                            lucide.createIcons();
+                            if (mode === 'calendar' || mode === 'month') this.scrollToCalendarWeek(undefined, 'smooth');
+                        });
                     }
                 },
 
@@ -1860,7 +1868,9 @@
                             window.location.href = `/admin/login?return=${encodeURIComponent(url.pathname + url.search)}`;
                             return;
                         }
-                        const requestedWeek = Math.max(0, Number(url.searchParams.get('week') || 1) - 1);
+                        const weekParam = url.searchParams.get('week');
+                        this.calendarWeekExplicit = weekParam !== null && Number.isFinite(Number(weekParam));
+                        const requestedWeek = this.calendarWeekExplicit ? Math.max(0, Number(weekParam || 1) - 1) : null;
                         const slugParam = url.searchParams.get('slug') || url.searchParams.get('plan');
                         const sessionParam = url.searchParams.get('session');
                         const eventParam = url.searchParams.get('event');
@@ -1887,8 +1897,11 @@
                                 await this.loadSession(sessionParam);
                             }
                         }
-                        this.calendarWeekIndex = Number.isFinite(requestedWeek) ? requestedWeek : 0;
+                        this.calendarWeekIndex = Number.isFinite(requestedWeek) ? requestedWeek : this.currentCalendarWeekIndex();
                         this.clampCalendarWeek();
+                        if (this.viewMode === 'calendar' || this.viewMode === 'month') {
+                            this.$nextTick(() => this.scrollToCalendarWeek(this.calendarWeekIndex, 'auto'));
+                        }
                         if (eventParam) this.openEventFromUrl(eventParam, pathViewMode);
                     } catch (e) {
                         console.error("Lỗi khi tải dữ liệu kế hoạch:", e);
@@ -1918,8 +1931,15 @@
                         this.updateMap();
                     });
                     this.$watch('currentPlanId', () => {
+                        if (!this.calendarWeekExplicit) {
+                            const currentWeekIndex = this.currentCalendarWeekIndex();
+                            if (currentWeekIndex >= 0) this.calendarWeekIndex = currentWeekIndex;
+                        }
                         this.clampCalendarWeek();
-                        this.$nextTick(() => lucide.createIcons());
+                        this.$nextTick(() => {
+                            lucide.createIcons();
+                            if (this.viewMode === 'calendar' || this.viewMode === 'month') this.scrollToCalendarWeek(this.calendarWeekIndex, 'auto');
+                        });
                         this.updateMap();
                         this.syncPlanSlugToUrl();
                     });
@@ -4256,9 +4276,63 @@
                     return days;
                 },
 
+                currentCalendarWeekIndex(date = new Date()) {
+                    const targetKey = this.localDateKey(date);
+                    if (!targetKey) return -1;
+                    const weeks = this.calendarWeeks();
+                    return weeks.findIndex(week => (week.days || []).some(day => !day.isBlank && this.localDateKey(day.date) === targetKey));
+                },
+
+                scrollToCalendarWeek(index = this.calendarWeekIndex, behavior = 'auto') {
+                    const weeks = this.calendarWeeks();
+                    if (!weeks.length) return;
+                    const fallbackIndex = this.currentCalendarWeekIndex();
+                    const targetIndex = Math.min(
+                        Math.max(Number.isFinite(Number(index)) ? Number(index) : fallbackIndex, 0),
+                        weeks.length - 1
+                    );
+
+                    this.$nextTick(() => {
+                        const scrollWhenReady = (attempt = 0) => {
+                            const isMonthView = this.viewMode === 'month';
+                            const container = isMonthView
+                                ? this.$refs.monthCalendarScrollContainer
+                                : this.$refs.weekCalendarScrollContainer;
+                            const selector = isMonthView
+                                ? `[data-month-week-index="${targetIndex}"]`
+                                : `[data-calendar-week-index="${targetIndex}"]`;
+                            const target = container?.querySelector(selector);
+                            if ((!container || !target) && attempt < 8) {
+                                window.setTimeout(() => scrollWhenReady(attempt + 1), 100);
+                                return;
+                            }
+                            if (!container || !target) return;
+
+                            const containerCanScroll = container.scrollHeight > container.clientHeight + 1;
+                            const containerRect = container.getBoundingClientRect();
+                            const targetRect = target.getBoundingClientRect();
+                            const top = targetRect.top - containerRect.top - 12;
+
+                            if (containerCanScroll) {
+                                container.scrollTo({
+                                    top: Math.max(container.scrollTop + top, 0),
+                                    behavior,
+                                });
+                            } else {
+                                window.scrollTo({
+                                    top: Math.max(window.scrollY + targetRect.top - 12, 0),
+                                    behavior,
+                                });
+                            }
+                        };
+                        window.setTimeout(scrollWhenReady, 120);
+                    });
+                },
+
                 calendarWeeks() {
                     const days = this.calendarDays();
                     const weeks = [];
+                    const currentKey = this.localDateKey(new Date());
                     const formatShort = (date) => {
                         if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
                         const pad = (n) => String(n).padStart(2, '0');
@@ -4271,9 +4345,11 @@
                         const end = realDays[realDays.length - 1]?.date;
                         weeks.push({
                             key: `week-${index / 7}`,
+                            index: index / 7,
                             label: `Tuần ${weeks.length + 1}`,
                             range: start && end ? `${formatShort(start)} - ${formatShort(end)}` : '',
                             days: weekDays,
+                            isCurrent: !!currentKey && weekDays.some(day => !day.isBlank && this.localDateKey(day.date) === currentKey),
                         });
                     }
                     return weeks;
@@ -4307,6 +4383,7 @@
                     const days = this.calendarDays().filter(day => !day.isBlank);
                     if (!days.length) return [];
                     const months = [];
+                    const currentKey = this.localDateKey(new Date());
                     const formatShort = (date) => {
                         if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
                         const pad = (n) => String(n).padStart(2, '0');
@@ -4335,10 +4412,17 @@
                             label: cursor.toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' }),
                             range: realDays.length ? `${formatShort(realDays[0].date)} - ${formatShort(realDays[realDays.length - 1].date)}` : '',
                             days: monthDays,
-                            weeks: Array.from({ length: Math.ceil(monthDays.length / 7) }, (_, weekIndex) => ({
-                                key: `${year}-${String(month + 1).padStart(2, '0')}-week-${weekIndex + 1}`,
-                                days: monthDays.slice(weekIndex * 7, weekIndex * 7 + 7),
-                            })),
+                            weeks: Array.from({ length: Math.ceil(monthDays.length / 7) }, (_, weekIndex) => {
+                                const weekDays = monthDays.slice(weekIndex * 7, weekIndex * 7 + 7);
+                                const realWeekDays = weekDays.filter(day => !day.isBlank);
+                                const globalWeekIndex = realWeekDays.length ? this.currentCalendarWeekIndex(realWeekDays[0].date) : -1;
+                                return {
+                                    key: `${year}-${String(month + 1).padStart(2, '0')}-week-${weekIndex + 1}`,
+                                    globalWeekIndex,
+                                    isCurrent: !!currentKey && weekDays.some(day => !day.isBlank && this.localDateKey(day.date) === currentKey),
+                                    days: weekDays,
+                                };
+                            }),
                         });
                         cursor.setMonth(cursor.getMonth() + 1);
                     }

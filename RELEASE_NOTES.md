@@ -1,5 +1,12 @@
 # Release Notes
 
+## Unreleased - Current Week Calendar Scroll
+
+- Week and month calendar views now detect the trip week containing today and
+  scroll to that week when the page loads.
+- Preserved explicit `?week=` links so shared week URLs still open at the
+  requested week instead of the current week.
+
 ## Unreleased - Actual Activity Costs
 
 - Added an `actualCost` field for activities so planned estimates and real
